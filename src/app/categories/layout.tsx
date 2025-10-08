@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from "next";
-import "./globals.css";
-import { SessionProvider } from "@/components/providers/SessionProvider";
+//import "./globals.css";
+import Header from "../component/parts/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,11 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TASA | Skill and Service Hub | Young Talent Marketplace",
-  description:
-    "Connect with qualified professionals. Find expert services in programming, design, marketing, and more. Trusted platform for hiring skilled professionals.",
-  keywords:
-    "professional services, freelancers, experts, TASA, hiring, skilled professionals, young talents, skills, services",
+  title: "TASA | Categories | Skill and Service Hub",
+  description:"Explore all skills and services",
+  keywords:"skills, services, categories",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -37,10 +35,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
-      <body>
-        <SessionProvider>{children}</SessionProvider>
-      </body>
-    </html>
+    <>
+    
+        {children}
+    </>
   );
 }
