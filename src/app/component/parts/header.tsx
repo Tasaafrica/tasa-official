@@ -77,7 +77,6 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleLoginSuccess = () => {
     // Handle successful login - could redirect or update UI
-    console.log("Login successful!");
   };
 
   const getUserInitials = (name: string) => {

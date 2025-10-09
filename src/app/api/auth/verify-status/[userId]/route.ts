@@ -25,10 +25,9 @@ export async function GET(
       );
     }
 
-    console.log("Checking email verification status for user:", userId);
-
     // Call your backend API to check verification status
-    const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+    const baseUrl =
+      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
     const response = await fetch(
       `${baseUrl}/api/auth/verify-status/${userId}`,
       {
@@ -40,9 +39,7 @@ export async function GET(
       }
     );
 
-    console.log("Backend verification status response:", response.status);
     const data = await response.json();
-    console.log("Backend verification status data:", data);
 
     if (!response.ok) {
       return NextResponse.json(

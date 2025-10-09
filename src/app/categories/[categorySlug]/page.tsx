@@ -40,7 +40,8 @@ export default async function CategoryPage({
 }: {
   params: Promise<{ categorySlug: string }>;
 }) {
-  const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+  const baseUrl =
+    process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
   const { categorySlug } = await params;
 
   //method

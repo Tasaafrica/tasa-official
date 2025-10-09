@@ -16,10 +16,9 @@ export async function POST(request: NextRequest) {
     const { email } = await request.json();
     const userEmail = email || session.user.email;
 
-    console.log("Sending magic link for email:", userEmail);
-
     // Call your backend API to send magic link
-    const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+    const baseUrl =
+      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
     const response = await fetch(
       `${baseUrl}/api/email-verification/send-magic-link`,
       {
@@ -32,9 +31,7 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    console.log("Backend magic link response status:", response.status);
     const data = await response.json();
-    console.log("Backend magic link response data:", data);
 
     if (!response.ok) {
       return NextResponse.json(

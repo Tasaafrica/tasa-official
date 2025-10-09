@@ -22,10 +22,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Verifying magic link token for user:", session.user.email);
-
     // Call your backend API to verify magic link
-    const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+    const baseUrl =
+      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
     const response = await fetch(
       `${baseUrl}/api/email-verification/verify-magic-link`,
       {
@@ -38,9 +37,7 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    console.log("Backend verify magic link response status:", response.status);
     const data = await response.json();
-    console.log("Backend verify magic link response data:", data);
 
     if (!response.ok) {
       return NextResponse.json(

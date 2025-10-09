@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+const baseUrl =
+  process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
 
 export async function GET(
   request: NextRequest,
@@ -28,8 +29,6 @@ export async function GET(
       );
     }
 
-    console.log(`Fetching user profile for ID: ${userId}`);
-
     const response = await fetch(
       `${baseUrl}/api/user/${userId}?t=${Date.now()}`,
       {
@@ -43,8 +42,6 @@ export async function GET(
         },
       }
     );
-
-    console.log(`Backend response status: ${response.status}`);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -62,7 +59,6 @@ export async function GET(
     }
 
     const data = await response.json();
-    console.log("User profile data received:", data);
 
     return NextResponse.json(data);
   } catch (error) {
@@ -99,7 +95,6 @@ export async function PUT(
     }
 
     const body = await request.json();
-    console.log(`Updating user profile for ID: ${userId}`, body);
 
     const response = await fetch(
       `${baseUrl}/api/user/${userId}?t=${Date.now()}`,
@@ -115,8 +110,6 @@ export async function PUT(
         body: JSON.stringify(body),
       }
     );
-
-    console.log(`Backend response status: ${response.status}`);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -134,7 +127,6 @@ export async function PUT(
     }
 
     const data = await response.json();
-    console.log("User profile updated:", data);
 
     return NextResponse.json(data);
   } catch (error) {
@@ -170,8 +162,6 @@ export async function DELETE(
       );
     }
 
-    console.log(`Deleting user profile for ID: ${userId}`);
-
     const response = await fetch(
       `${baseUrl}/api/user/${userId}?t=${Date.now()}`,
       {
@@ -185,8 +175,6 @@ export async function DELETE(
         },
       }
     );
-
-    console.log(`Backend response status: ${response.status}`);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -204,7 +192,6 @@ export async function DELETE(
     }
 
     const data = await response.json();
-    console.log("User profile deleted:", data);
 
     return NextResponse.json(data);
   } catch (error) {

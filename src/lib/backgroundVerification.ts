@@ -7,8 +7,6 @@ import { startBackgroundVerificationCheck } from "./verificationChecker";
  * This should be called after user signs in
  */
 export function initializeBackgroundVerification(userId: string): void {
-  console.log("Initializing background verification for user:", userId);
-
   // Start the background check
   startBackgroundVerificationCheck(userId);
 
@@ -30,7 +28,6 @@ export function cleanupBackgroundVerification(): void {
   if (intervalId) {
     clearInterval(intervalId);
     (window as any).__verificationIntervalId = null;
-    console.log("Cleaned up background verification");
   }
 }
 
@@ -39,6 +36,5 @@ export function cleanupBackgroundVerification(): void {
  * This can be called from anywhere in the app
  */
 export function triggerVerificationCheck(userId: string): void {
-  console.log("Manually triggering verification check for user:", userId);
   startBackgroundVerificationCheck(userId);
 }

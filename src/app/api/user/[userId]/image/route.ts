@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+const baseUrl =
+  process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
 
 export async function POST(
   request: NextRequest,
@@ -38,12 +39,6 @@ export async function POST(
       );
     }
 
-    console.log(`Uploading image for user ID: ${userId}`, {
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type,
-    });
-
     // Create new FormData for backend
     const backendFormData = new FormData();
     backendFormData.append("file", file);
@@ -78,7 +73,6 @@ export async function POST(
     }
 
     const data = await response.json();
-    console.log("Image uploaded successfully:", data);
 
     return NextResponse.json(data);
   } catch (error) {
@@ -114,8 +108,6 @@ export async function DELETE(
       );
     }
 
-    console.log(`Deleting image for user ID: ${userId}`);
-
     const response = await fetch(
       `${baseUrl}/api/user/${userId}/image?t=${Date.now()}`,
       {
@@ -129,8 +121,6 @@ export async function DELETE(
         },
       }
     );
-
-    console.log(`Backend response status: ${response.status}`);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -146,7 +136,6 @@ export async function DELETE(
     }
 
     const data = await response.json();
-    console.log("Image deleted successfully:", data);
 
     return NextResponse.json(data);
   } catch (error) {
@@ -182,8 +171,6 @@ export async function GET(
       );
     }
 
-    console.log(`Getting image info for user ID: ${userId}`);
-
     const response = await fetch(
       `${baseUrl}/api/user/${userId}/image?t=${Date.now()}`,
       {
@@ -197,8 +184,6 @@ export async function GET(
         },
       }
     );
-
-    console.log(`Backend response status: ${response.status}`);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -214,7 +199,6 @@ export async function GET(
     }
 
     const data = await response.json();
-    console.log("Image info retrieved:", data);
 
     return NextResponse.json(data);
   } catch (error) {

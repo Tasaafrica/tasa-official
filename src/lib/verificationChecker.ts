@@ -29,7 +29,6 @@ export async function checkEmailVerification(
     // Check cache first
     const cachedStatus = getCachedVerificationStatus(userId);
     if (cachedStatus) {
-      console.log("Using cached verification status for user:", userId);
       return {
         success: true,
         data: {
@@ -39,8 +38,6 @@ export async function checkEmailVerification(
         },
       };
     }
-
-    console.log("Fetching fresh verification status for user:", userId);
 
     // Fetch from API
     const response = await fetch(`/api/auth/verify-status/${userId}`);
@@ -87,8 +84,6 @@ export async function needsEmailVerification(userId: string): Promise<boolean> {
  * This function can be customized based on your UI framework
  */
 export function showEmailVerificationPrompt(): void {
-  console.log("Email verification required - showing prompt");
-
   // Dispatch a custom event that the EmailVerificationAlert can listen to
   const event = new CustomEvent("emailVerificationRequired", {
     detail: { timestamp: Date.now() },
@@ -105,18 +100,14 @@ export async function startBackgroundVerificationCheck(
   userId: string
 ): Promise<void> {
   try {
-    console.log("Starting background verification check for user:", userId);
-
     const result = await checkEmailVerification(userId);
 
     if (result.success && result.data) {
       const { isEmailVerified, requiresVerification } = result.data;
 
       if (requiresVerification && !isEmailVerified) {
-        console.log("Email verification required for user:", userId);
         showEmailVerificationPrompt();
       } else {
-        console.log("Email is verified for user:", userId);
       }
     } else {
       console.error("Failed to check verification status:", result.error);
@@ -133,5 +124,4 @@ export async function startBackgroundVerificationCheck(
 export function clearUserVerificationCache(userId: string): void {
   const { clearCachedVerificationStatus } = require("./verificationCache");
   clearCachedVerificationStatus(userId);
-  console.log("Cleared verification cache for user:", userId);
 }

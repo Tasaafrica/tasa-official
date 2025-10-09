@@ -76,7 +76,8 @@ export default function PopularCategory({
         }
 
         // Fetch fresh data from API if not in cache
-        const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+        const baseUrl =
+          process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
         const response = await fetch(`${baseUrl}/api/featured-categories`, {
           cache: "no-store",
         });

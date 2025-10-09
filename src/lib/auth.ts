@@ -34,7 +34,8 @@ export const authOptions: NextAuthOptions = {
 
         try {
           // Call your API to authenticate user
-          const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+          const baseUrl =
+            process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
           console.log("Attempting to authenticate with:", baseUrl);
           console.log("Credentials:", {
             email: credentials.email,
@@ -52,12 +53,6 @@ export const authOptions: NextAuthOptions = {
             }),
           });
 
-          console.log("Auth response status:", response.status);
-          console.log(
-            "Auth response headers:",
-            Object.fromEntries(response.headers.entries())
-          );
-
           if (!response.ok) {
             const errorText = await response.text();
             console.error("Auth failed:", response.status, errorText);
@@ -65,13 +60,8 @@ export const authOptions: NextAuthOptions = {
           }
 
           const result = await response.json();
-          console.log("Auth result:", result);
 
           if (result.success && result.data && result.data.user) {
-            console.log(
-              "Authentication successful for user:",
-              result.data.user.email
-            );
             return {
               id: result.data.user._id,
               email: result.data.user.email,

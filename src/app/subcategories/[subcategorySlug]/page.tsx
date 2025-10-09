@@ -61,7 +61,8 @@ export default async function SubcategoryPage({
 }: {
   params: Promise<{ subcategorySlug: string }>;
 }) {
-  const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+  const baseUrl =
+    process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
   const { subcategorySlug } = await params;
 
   // Fetch subcategory details

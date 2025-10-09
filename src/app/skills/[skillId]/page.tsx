@@ -63,7 +63,8 @@ export default async function SkillPage({
 }: {
   params: Promise<{ skillId: string }>;
 }) {
-  const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+  const baseUrl =
+    process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
   const { skillId } = await params;
 
   // Validate skillId
@@ -72,17 +73,12 @@ export default async function SkillPage({
   }
 
   try {
-    console.log(
-      `Fetching skill with ID: ${skillId} from ${baseUrl}/api/skills/${skillId}`
-    );
-
     // Test API connectivity first
     try {
       const healthResponse = await fetch(`${baseUrl}/api/health`, {
         cache: "no-store",
         method: "GET",
       });
-      console.log(`API health check: ${healthResponse.status}`);
     } catch (healthError) {
       console.warn(
         "API health check failed, but continuing with skill fetch:",
@@ -94,8 +90,6 @@ export default async function SkillPage({
     const skillResponse = await fetch(`${baseUrl}/api/skills/${skillId}`, {
       cache: "no-store",
     });
-
-    console.log(`Skill response status: ${skillResponse.status}`);
 
     if (!skillResponse.ok) {
       if (skillResponse.status === 404) {
@@ -112,7 +106,6 @@ export default async function SkillPage({
     }
 
     const skillData = await skillResponse.json();
-    console.log("Skill data received:", skillData);
 
     const skill: Skill = skillData.data || skillData;
 
@@ -122,20 +115,14 @@ export default async function SkillPage({
 
     const category = skill.category;
     const subcategory = skill.subcategory;
-    console.log("Category:", category, "Subcategory:", subcategory);
 
     // Fetch vendors with this skill
-    console.log(
-      `Fetching vendors for skill ${skillId} from ${baseUrl}/api/vendors/skill/id/${skillId}`
-    );
     const vendorsResponse = await fetch(
       `${baseUrl}/api/vendors/skill/id/${skillId}?page=1&limit=20&sortBy=rating&sortOrder=desc`,
       {
         cache: "no-store",
       }
     );
-
-    console.log(`Vendors response status: ${vendorsResponse.status}`);
 
     if (!vendorsResponse.ok) {
       console.warn(
@@ -147,7 +134,6 @@ export default async function SkillPage({
     let vendors = [];
     if (vendorsResponse.ok) {
       const vendorsData = await vendorsResponse.json();
-      console.log("Vendors data received:", vendorsData);
 
       const vendorsWithSkill = vendorsData.data || vendorsData || [];
       vendors = vendorsWithSkill.vendors || [];
@@ -323,7 +309,8 @@ export default async function SkillPage({
                 </p>
                 <p className="text-xs text-red-500 mt-2">
                   API URL:{" "}
-                  {process.env.PRODUCTION_URL || "http://localhost:5000"}
+                  {process.env.PRODUCTION_URL ||
+                    "https://tasa-server.onrender.com"}
                 </p>
                 <p className="text-xs text-red-500">Skill ID: {skillId}</p>
               </div>

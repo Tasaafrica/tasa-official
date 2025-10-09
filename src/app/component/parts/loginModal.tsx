@@ -160,8 +160,6 @@ export default function LoginModal({
       const data = await response.json();
       if (data.error === false && data.data) {
         const flattenedData = data.data.flat();
-        console.log("Countries from API:", flattenedData);
-        console.log("Total countries:", flattenedData.length);
         setCountries(flattenedData);
       }
     } catch (error) {
@@ -185,7 +183,6 @@ export default function LoginModal({
         }
       );
       const data = await response.json();
-      console.log("States API response:", data);
       if (data.error === false && data.data && data.data.states) {
         setStates(data.data.states);
       }
@@ -210,9 +207,7 @@ export default function LoginModal({
         }
       );
       const data = await response.json();
-      console.log("Cities API response:", data);
       if (data.error === false && data.data) {
-        console.log("Setting cities:", data.data);
         setCities(data.data);
       }
     } catch (error) {
@@ -277,7 +272,6 @@ export default function LoginModal({
 
   // Handle city selection
   const handleCitySelect = (city: string) => {
-    console.log("City selected:", city);
     setSelectedCity(city);
     signupForm.setValue("city", city);
     setCityDropdownOpen(false);
@@ -471,31 +465,22 @@ export default function LoginModal({
       setError(null);
       setSuccess(null);
 
-      console.log("Login modal sign in with:", {
-        email: data.email,
-        password: "[REDACTED]",
-      });
-
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirect: false,
       });
 
-      console.log("Login modal sign in result:", result);
-
       if (result?.error) {
         console.error("Login modal sign in error:", result.error);
         setError("Invalid email or password");
       } else if (result?.ok) {
-        console.log("Login modal sign in successful");
         setSuccess("Successfully signed in!");
         setTimeout(() => {
           onSuccess?.();
           onClose();
         }, 1000);
       } else {
-        console.log("Login modal sign in result:", result);
         setError("Sign in failed. Please try again.");
       }
     } catch (error) {
@@ -513,12 +498,6 @@ export default function LoginModal({
       setError(null);
       setSuccess(null);
 
-      console.log("Login modal signup with data:", {
-        ...data,
-        password: "[REDACTED]",
-        confirmPassword: "[REDACTED]",
-      });
-
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
@@ -527,9 +506,7 @@ export default function LoginModal({
         body: JSON.stringify(data),
       });
 
-      console.log("Login modal signup response status:", response.status);
       const result = await response.json();
-      console.log("Login modal signup response data:", result);
 
       if (!response.ok) {
         setError(result.error || result.message || "Failed to create account");

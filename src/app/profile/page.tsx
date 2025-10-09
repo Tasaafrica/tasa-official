@@ -86,7 +86,6 @@ export default function ProfilePage() {
   const fetchUserProfile = async () => {
     if (!user?.id) return;
 
-    console.log("Fetching user profile for ID:", user.id);
     setIsLoadingProfile(true);
     try {
       const response = await fetch(`/api/user/${user.id}?t=${Date.now()}`, {
@@ -98,9 +97,6 @@ export default function ProfilePage() {
       });
       const data = await response.json();
 
-      console.log("API Response Status:", response.status);
-      console.log("API Response Data:", data);
-
       if (response.ok && data.success) {
         const userData = data.data.user || data.data;
         const newData = {
@@ -110,7 +106,6 @@ export default function ProfilePage() {
           location: userData.location || "",
           bio: userData.bio || "",
         };
-        console.log("Processed Profile Data:", newData);
         setProfileData(newData);
         setDisplayData(newData);
 
@@ -158,11 +153,9 @@ export default function ProfilePage() {
         }
       );
       const data = await response.json();
-      //console.log("Profile image fetched:", data);
 
       if (response.ok && data.success && data.data.profileImage) {
         setImagePreview(data.data.profileImage);
-        // console.log("Profile image fetched:", data.data.profileImage);
       }
     } catch (error) {
       console.error("Error fetching profile image:", error);

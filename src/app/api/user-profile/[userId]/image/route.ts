@@ -25,8 +25,6 @@ export async function POST(
       );
     }
 
-    console.log("Uploading profile image for user:", userId);
-
     // Get the form data from the request
     const formData = await request.formData();
     const image = formData.get("image") as File;
@@ -59,7 +57,8 @@ export async function POST(
     }
 
     // Call your backend API to upload the image
-    const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+    const baseUrl =
+      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
     const backendFormData = new FormData();
     backendFormData.append("image", image);
 
@@ -74,9 +73,7 @@ export async function POST(
       }
     );
 
-    console.log("Backend upload image response:", response.status);
     const data = await response.json();
-    console.log("Backend upload image data:", data);
 
     if (!response.ok) {
       return NextResponse.json(
@@ -121,10 +118,9 @@ export async function DELETE(
       );
     }
 
-    console.log("Deleting profile image for user:", userId);
-
     // Call your backend API to delete the image
-    const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+    const baseUrl =
+      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
     const response = await fetch(
       `${baseUrl}/api/user-profile/${userId}/image`,
       {
@@ -136,9 +132,7 @@ export async function DELETE(
       }
     );
 
-    console.log("Backend delete image response:", response.status);
     const data = await response.json();
-    console.log("Backend delete image data:", data);
 
     if (!response.ok) {
       return NextResponse.json(
@@ -183,10 +177,9 @@ export async function GET(
       );
     }
 
-    console.log("Getting profile image info for user:", userId);
-
     // Call your backend API to get image info
-    const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+    const baseUrl =
+      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
     const response = await fetch(
       `${baseUrl}/api/user-profile/${userId}/image`,
       {
@@ -198,9 +191,7 @@ export async function GET(
       }
     );
 
-    console.log("Backend get image info response:", response.status);
     const data = await response.json();
-    console.log("Backend get image info data:", data);
 
     if (!response.ok) {
       return NextResponse.json(

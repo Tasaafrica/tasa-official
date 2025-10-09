@@ -25,10 +25,9 @@ export async function GET(
       );
     }
 
-    console.log("Fetching user profile for user:", userId);
-
     // Call your backend API to get user profile
-    const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+    const baseUrl =
+      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
     const response = await fetch(`${baseUrl}/api/user-profile/${userId}`, {
       method: "GET",
       headers: {
@@ -37,9 +36,7 @@ export async function GET(
       },
     });
 
-    console.log("Backend profile response:", response.status);
     const data = await response.json();
-    console.log("Backend profile data:", data);
 
     if (!response.ok) {
       return NextResponse.json(
@@ -85,10 +82,10 @@ export async function PUT(
     }
 
     const body = await request.json();
-    console.log("Updating user profile for user:", userId, "with data:", body);
 
     // Call your backend API to update user profile
-    const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
+    const baseUrl =
+      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
     const response = await fetch(`${baseUrl}/api/user-profile/${userId}`, {
       method: "PUT",
       headers: {
@@ -98,9 +95,7 @@ export async function PUT(
       body: JSON.stringify(body),
     });
 
-    console.log("Backend update profile response:", response.status);
     const data = await response.json();
-    console.log("Backend update profile data:", data);
 
     if (!response.ok) {
       return NextResponse.json(

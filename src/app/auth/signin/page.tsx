@@ -70,8 +70,6 @@ export default function SignInPage() {
         redirect: false,
       });
 
-      console.log("Sign in result:", result);
-
       if (result?.error) {
         console.error("Sign in error:", result.error);
         setError("Invalid email or password");
@@ -79,7 +77,6 @@ export default function SignInPage() {
         console.log("Sign in successful, redirecting...");
         router.push("/");
       } else {
-        console.log("Sign in result:", result);
         setError("Sign in failed. Please try again.");
       }
     } catch (error) {

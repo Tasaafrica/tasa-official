@@ -126,18 +126,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       const searchResults: SearchResult[] = [];
 
       try {
-        const baseUrl = process.env.PRODUCTION_URL || "http://localhost:5000";
-        console.log("Searching for:", query);
-        console.log(
-          "Skills API URL:",
-          `${baseUrl}/api/skills/search/${encodeURIComponent(query)}`
-        );
-        console.log(
-          "Vendors API URL:",
-          `${baseUrl}/api/vendors/search?q=${encodeURIComponent(
-            query
-          )}&limit=10`
-        );
+        const baseUrl =
+          process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
 
         // Search skills
         const skillsResponse = await fetch(
@@ -151,7 +141,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         if (skillsResponse.ok) {
           try {
             const skillsResult = await skillsResponse.json();
-            console.log("Skills API Response:", skillsResult);
 
             // Handle different response formats
             let skillsData: Skill[] = [];
@@ -193,7 +182,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
         // Results are already in the correct order (skills only)
 
-        console.log("Final search results:", searchResults);
         setResults(searchResults);
       } catch (err) {
         console.error("Error during search:", err);

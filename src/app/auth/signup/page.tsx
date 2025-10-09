@@ -265,12 +265,6 @@ export default function SignUpPage() {
       setError(null);
       setSuccess(null);
 
-      console.log("Submitting signup form with data:", {
-        ...data,
-        password: "[REDACTED]",
-        confirmPassword: "[REDACTED]",
-      });
-
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
@@ -279,9 +273,7 @@ export default function SignUpPage() {
         body: JSON.stringify(data),
       });
 
-      console.log("Signup response status:", response.status);
       const result = await response.json();
-      console.log("Signup response data:", result);
 
       if (!response.ok) {
         setError(result.error || result.message || "Registration failed");
