@@ -56,6 +56,16 @@ interface Category {
   description?: string;
 }
 
+// Generate static params for common subcategories
+export async function generateStaticParams() {
+  // Return empty array to allow on-demand generation
+  // This ensures the page can be statically generated when accessed
+  return [];
+}
+
+// Allow both static and dynamic generation
+export const dynamicParams = true;
+
 export default async function SubcategoryPage({
   params,
 }: {

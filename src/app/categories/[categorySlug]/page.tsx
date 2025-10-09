@@ -35,6 +35,16 @@ interface Category {
   icon?: string;
 }
 
+// Generate static params for common categories
+export async function generateStaticParams() {
+  // Return empty array to allow on-demand generation
+  // This ensures the page can be statically generated when accessed
+  return [];
+}
+
+// Allow both static and dynamic generation
+export const dynamicParams = true;
+
 export default async function CategoryPage({
   params,
 }: {
