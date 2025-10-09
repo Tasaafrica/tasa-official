@@ -60,9 +60,39 @@ interface Subcategory {
 
 // Generate static params for common skills
 export async function generateStaticParams() {
-  // Return empty array to allow on-demand generation
-  // This ensures the page can be statically generated when accessed
-  return [];
+  // Fetch actual skills to pre-generate common pages
+  try {
+    const baseUrl =
+      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+    const response = await fetch(`${baseUrl}/api/categories/structured/all`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) {
+      console.warn("Failed to fetch skills for static generation");
+      return [];
+    }
+
+    const categories = await response.json();
+    const categoryList = Array.isArray(categories)
+      ? categories
+      : categories.data || [];
+
+    // Extract skills from all categories and subcategories
+    const skills = categoryList.flatMap((category: any) =>
+      (category.subcategories || []).flatMap((sub: any) =>
+        (sub.skills || []).map((skill: any) => ({
+          skillId: skill._id,
+        }))
+      )
+    );
+
+    // Return first 30 skills for static generation
+    return skills.slice(0, 30);
+  } catch (error) {
+    console.warn("Error fetching skills for static generation:", error);
+    return [];
+  }
 }
 
 // Allow both static and dynamic generation
@@ -126,30 +156,8 @@ export default async function SkillPage({
     const category = skill.category;
     const subcategory = skill.subcategory;
 
-    // Fetch vendors with this skill
-    const vendorsResponse = await fetch(
-      `${baseUrl}/api/vendors/skill/id/${skillId}?page=1&limit=20&sortBy=rating&sortOrder=desc`,
-      {
-        next: { revalidate: 3600 },
-      }
-    );
-
-    if (!vendorsResponse.ok) {
-      console.warn(
-        `Failed to fetch vendors: ${vendorsResponse.status} ${vendorsResponse.statusText}`
-      );
-      // Continue without vendors rather than failing completely
-    }
-
-    let vendors = [];
-    if (vendorsResponse.ok) {
-      const vendorsData = await vendorsResponse.json();
-
-      const vendorsWithSkill = vendorsData.data || vendorsData || [];
-      vendors = vendorsWithSkill.vendors || [];
-    } else {
-      console.warn("Vendors fetch failed, continuing without vendors");
-    }
+    // Vendors functionality temporarily disabled
+    const vendors = [];
 
     // Get category and subcategory slugs for breadcrumbs
     const categorySlug =
@@ -167,9 +175,7 @@ export default async function SkillPage({
         <Header variant="white" />
         <PlainHero
           title={skill.name}
-          description={`Professional ${skill.name.toLowerCase()} services with ${
-            vendors.length
-          } qualified providers`}
+          description={`Professional ${skill.name.toLowerCase()} services`}
           breadcrumbs={[
             {
               label: category?.name || "Category",
@@ -220,10 +226,10 @@ export default async function SkillPage({
                     <Users className="h-6 w-6 text-teal-600" />
                     <div className="text-center">
                       <span className="text-3xl font-bold text-teal-700 block">
-                        {vendors.length}
+                        Coming Soon
                       </span>
                       <p className="text-teal-600 font-medium text-sm">
-                        Available Providers
+                        Provider Directory
                       </p>
                     </div>
                   </div>
@@ -236,26 +242,23 @@ export default async function SkillPage({
                   Available Providers
                 </h2>
 
-                {vendors.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-gray-400 mb-4">
-                      <Users className="h-12 w-12 mx-auto mb-2" />
-                      <p className="text-lg font-medium text-gray-600">
-                        No providers found
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        There are currently no providers available for this
-                        skill.
-                      </p>
-                    </div>
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-4">
+                    <Users className="h-16 w-16 mx-auto" />
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {vendors.map((vendor: any) => (
-                      <UserCard key={vendor._id} user={vendor} />
-                    ))}
-                  </div>
-                )}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Provider Directory Coming Soon
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    We're working on connecting you with qualified professionals
+                    for this skill.
+                  </p>
+                  <Link href="/vendor">
+                    <Button className="bg-teal-600 hover:bg-teal-700 text-white">
+                      Become a Provider
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

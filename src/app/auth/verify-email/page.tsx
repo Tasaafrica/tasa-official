@@ -1,5 +1,8 @@
 "use client";
 
+// This is a client component that should not be statically generated
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";

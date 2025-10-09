@@ -1,13 +1,10 @@
-"use client";
+// Server Component - Better performance and SEO
 import Header from "@/app/component/parts/header";
 import PopularCategory from "@/app/component/parts/popularCategory";
-import SearchModal from "@/app/component/parts/searchModal";
 import Link from "next/link";
 import { Button } from "@/app/component/ui/button";
 import FooterLinksSection from "@/app/component/parts/footerLinksSection";
 import EmailVerificationWrapper from "@/components/layout/EmailVerificationWrapper";
-//import type { Category, Subcategory, Skill } from "@/apiTypes";
-import { useState } from "react";
 import {
   Search,
   Briefcase,
@@ -20,8 +17,7 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
-  // Search modal state
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  // No client state needed - search modal is handled in Header component
 
   return (
     <EmailVerificationWrapper>
@@ -41,13 +37,14 @@ export default function HomePage() {
                 need, or share your talents with the world.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Button
-                  size="lg"
-                  onClick={() => setIsSearchModalOpen(true)}
-                  className="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-gray-700 hover:from-teal-700 hover:to-gray-800 text-white shadow-lg"
-                >
-                  <Search className="mr-2 h-5 w-5" /> Find a Service
-                </Button>
+                <Link href="/categories">
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-gray-700 hover:from-teal-700 hover:to-gray-800 text-white shadow-lg"
+                  >
+                    <Search className="mr-2 h-5 w-5" /> Find a Service
+                  </Button>
+                </Link>
                 <Link href="/offer-skill">
                   <Button
                     size="lg"
@@ -216,11 +213,7 @@ export default function HomePage() {
 
         <FooterLinksSection />
 
-        {/* Search Modal */}
-        <SearchModal
-          isOpen={isSearchModalOpen}
-          onClose={() => setIsSearchModalOpen(false)}
-        />
+        {/* Search functionality is now handled in the Header component */}
       </div>
     </EmailVerificationWrapper>
   );

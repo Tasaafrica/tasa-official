@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+
+// This is a client component that should not be statically generated
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import Header from "@/app/component/parts/header";
 import FooterLinksSection from "@/app/component/parts/footerLinksSection";
