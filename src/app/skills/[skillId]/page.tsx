@@ -76,7 +76,7 @@ export default async function SkillPage({
     // Test API connectivity first
     try {
       const healthResponse = await fetch(`${baseUrl}/api/health`, {
-        cache: "no-store",
+        next: { revalidate: 3600 },
         method: "GET",
       });
     } catch (healthError) {
@@ -88,7 +88,7 @@ export default async function SkillPage({
 
     //fetch skill details
     const skillResponse = await fetch(`${baseUrl}/api/skills/${skillId}`, {
-      cache: "no-store",
+      next: { revalidate: 3600 },
     });
 
     if (!skillResponse.ok) {
@@ -120,7 +120,7 @@ export default async function SkillPage({
     const vendorsResponse = await fetch(
       `${baseUrl}/api/vendors/skill/id/${skillId}?page=1&limit=20&sortBy=rating&sortOrder=desc`,
       {
-        cache: "no-store",
+        next: { revalidate: 3600 },
       }
     );
 

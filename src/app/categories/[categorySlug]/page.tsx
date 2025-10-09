@@ -48,7 +48,7 @@ export default async function CategoryPage({
   const apiResponse = await fetch(
     `${baseUrl}/api/categories/${categorySlug}/subcategories`,
     {
-      cache: "no-store",
+      next: { revalidate: 3600 }, // Revalidate every hour
     }
   );
   if (!apiResponse.ok) return notFound();

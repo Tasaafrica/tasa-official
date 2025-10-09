@@ -25,7 +25,7 @@ async function getCategories(): Promise<Category[]> {
     const baseUrl =
       process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
     const response = await fetch(`${baseUrl}/api/categories/structured/all`, {
-      cache: "no-store", // Ensure fresh data from server
+      next: { revalidate: 3600 }, // Revalidate every hour (3600 seconds)
     });
 
     if (!response.ok) {

@@ -69,7 +69,7 @@ export default async function SubcategoryPage({
   const apiResponse = await fetch(
     `${baseUrl}/api/subcategories/slug/${subcategorySlug}`,
     {
-      cache: "no-store",
+      next: { revalidate: 3600 }, // Revalidate every hour
     }
   );
   //if (!apiResponse.ok) return notFound();
@@ -79,7 +79,7 @@ export default async function SubcategoryPage({
   const skillsRes = await fetch(
     `${baseUrl}/api/subcategories/${subcategorySlug}/skills`,
     {
-      cache: "no-store",
+      next: { revalidate: 3600 },
     }
   );
   if (!skillsRes.ok) return notFound();
