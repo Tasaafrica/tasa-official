@@ -58,45 +58,8 @@ interface Subcategory {
   categoryId?: string;
 }
 
-// Generate static params for common skills
-export async function generateStaticParams() {
-  // Fetch actual skills to pre-generate common pages
-  try {
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
-    const response = await fetch(`${baseUrl}/api/categories/structured/all`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!response.ok) {
-      console.warn("Failed to fetch skills for static generation");
-      return [];
-    }
-
-    const categories = await response.json();
-    const categoryList = Array.isArray(categories)
-      ? categories
-      : categories.data || [];
-
-    // Extract skills from all categories and subcategories
-    const skills = categoryList.flatMap((category: any) =>
-      (category.subcategories || []).flatMap((sub: any) =>
-        (sub.skills || []).map((skill: any) => ({
-          skillId: skill._id,
-        }))
-      )
-    );
-
-    // Return first 30 skills for static generation
-    return skills.slice(0, 30);
-  } catch (error) {
-    console.warn("Error fetching skills for static generation:", error);
-    return [];
-  }
-}
-
-// Allow both static and dynamic generation
-export const dynamicParams = true;
+// Force dynamic rendering to avoid build-time API calls
+export const dynamic = "force-dynamic";
 
 export default async function SkillPage({
   params,

@@ -35,39 +35,8 @@ interface Category {
   icon?: string;
 }
 
-// Generate static params for common categories
-export async function generateStaticParams() {
-  // Fetch actual categories to pre-generate common pages
-  try {
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
-    const response = await fetch(`${baseUrl}/api/categories/structured/all`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!response.ok) {
-      console.warn("Failed to fetch categories for static generation");
-      return [];
-    }
-
-    const categories = await response.json();
-    const categoryList = Array.isArray(categories)
-      ? categories
-      : categories.data || [];
-
-    // Return first 10 categories for static generation
-    return categoryList.slice(0, 10).map((category: any) => ({
-      categorySlug:
-        category.slug || category.name?.toLowerCase().replace(/\s+/g, "-"),
-    }));
-  } catch (error) {
-    console.warn("Error fetching categories for static generation:", error);
-    return [];
-  }
-}
-
-// Allow both static and dynamic generation
-export const dynamicParams = true;
+// Force dynamic rendering to avoid build-time API calls
+export const dynamic = "force-dynamic";
 
 export default async function CategoryPage({
   params,

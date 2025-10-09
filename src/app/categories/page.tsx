@@ -1,6 +1,9 @@
 import Link from "next/link";
 import Header from "@/app/component/parts/header";
 
+// Force dynamic rendering to avoid build-time API calls
+export const dynamic = "force-dynamic";
+
 interface Skill {
   _id: string;
   name: string;
@@ -25,7 +28,7 @@ async function getCategories(): Promise<Category[]> {
     const baseUrl =
       process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
     const response = await fetch(`${baseUrl}/api/categories/structured/all`, {
-      next: { revalidate: 3600 }, // Revalidate every hour (3600 seconds)
+      cache: "no-store", // Force dynamic rendering
     });
 
     if (!response.ok) {

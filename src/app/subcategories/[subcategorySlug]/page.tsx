@@ -56,44 +56,8 @@ interface Category {
   description?: string;
 }
 
-// Generate static params for common subcategories
-export async function generateStaticParams() {
-  // Fetch actual subcategories to pre-generate common pages
-  try {
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
-    const response = await fetch(`${baseUrl}/api/categories/structured/all`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!response.ok) {
-      console.warn("Failed to fetch subcategories for static generation");
-      return [];
-    }
-
-    const categories = await response.json();
-    const categoryList = Array.isArray(categories)
-      ? categories
-      : categories.data || [];
-
-    // Extract subcategories from all categories
-    const subcategories = categoryList.flatMap((category: any) =>
-      (category.subcategories || []).map((sub: any) => ({
-        subcategorySlug:
-          sub.slug || sub.name?.toLowerCase().replace(/\s+/g, "-"),
-      }))
-    );
-
-    // Return first 20 subcategories for static generation
-    return subcategories.slice(0, 20);
-  } catch (error) {
-    console.warn("Error fetching subcategories for static generation:", error);
-    return [];
-  }
-}
-
-// Allow both static and dynamic generation
-export const dynamicParams = true;
+// Force dynamic rendering to avoid build-time API calls
+export const dynamic = "force-dynamic";
 
 export default async function SubcategoryPage({
   params,
