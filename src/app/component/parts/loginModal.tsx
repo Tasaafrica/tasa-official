@@ -208,7 +208,10 @@ export default function LoginModal({
       );
       const data = await response.json();
       if (data.error === false && data.data) {
+        console.log("Fetched cities:", data.data);
         setCities(data.data);
+      } else {
+        console.log("No cities data received:", data);
       }
     } catch (error) {
       console.error("Error fetching cities:", error);
@@ -498,17 +501,31 @@ export default function LoginModal({
       setError(null);
       setSuccess(null);
 
+      // Only send the fields that the API expects
+      const signupData = {
+        firstName: data.firstName,
+        middleName: data.middleName,
+        surname: data.surname,
+        email: data.email,
+        password: data.password,
+        phone: data.phone,
+      };
+
+      console.log("Sending signup data:", signupData);
+
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(signupData),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
+        console.error("Signup error response:", result);
+        console.error("Response status:", response.status);
         setError(result.error || result.message || "Failed to create account");
         return;
       }
@@ -1111,12 +1128,6 @@ export default function LoginModal({
                           <button
                             type="button"
                             onClick={() => {
-                              console.log(
-                                "City dropdown clicked, selectedState:",
-                                selectedState,
-                                "cities:",
-                                cities.length
-                              );
                               selectedState &&
                                 setCityDropdownOpen(!cityDropdownOpen);
                             }}
@@ -1157,32 +1168,51 @@ export default function LoginModal({
                                   <div className="p-3 text-center text-gray-500">
                                     Loading cities...
                                   </div>
-                                ) : (
+                                ) : cities.length > 0 ? (
                                   (() => {
-                                    console.log("Rendering cities:", cities);
+                                    console.log(
+                                      "Rendering cities array:",
+                                      cities
+                                    );
+                                    console.log("First city:", cities[0]);
+                                    console.log(
+                                      "Cities length:",
+                                      cities.length
+                                    );
                                     return cities;
                                   })()
                                     .filter((city) => {
                                       if (!citySearch.trim()) return true;
-                                      return city?.name
+                                      const cityName =
+                                        typeof city === "string"
+                                          ? city
+                                          : city?.name;
+                                      return cityName
                                         ?.toLowerCase()
                                         ?.includes(citySearch.toLowerCase());
                                     })
-                                    .map(
-                                      (city, index) =>
-                                        city?.name && (
-                                          <button
-                                            key={index}
-                                            type="button"
-                                            onClick={() =>
-                                              handleCitySelect(city.name)
-                                            }
-                                            className="w-full px-3 py-2 text-left text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                          >
-                                            {city.name}
-                                          </button>
-                                        )
-                                    )
+                                    .map((city, index) => {
+                                      const cityName =
+                                        typeof city === "string"
+                                          ? city
+                                          : city?.name;
+                                      return cityName ? (
+                                        <button
+                                          key={index}
+                                          type="button"
+                                          onClick={() =>
+                                            handleCitySelect(cityName)
+                                          }
+                                          className="w-full px-3 py-2 text-left text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                        >
+                                          {cityName}
+                                        </button>
+                                      ) : null;
+                                    })
+                                ) : (
+                                  <div className="p-3 text-center text-gray-500">
+                                    No cities available for this state
+                                  </div>
                                 )}
                               </div>
                             </div>
