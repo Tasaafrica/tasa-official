@@ -75,15 +75,15 @@ const categories = [
   import { FaXTwitter, FaFacebook, FaLinkedin } from "react-icons/fa6";
   
   const FooterLinksSection = () => (
-    <div className="mx-auto text-center bg-gray-50 w-full py-4">
+    <div className="mx-auto text-center bg-[#334155] w-full py-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
         {columns.map((column) => (
           <div key={column.title}>
-            <h3 className="text-lg font-semibold mb-4 text-black">{column.title}</h3>
+            <h3 className="text-lg font-semibold mb-4 text-white">{column.title}</h3>
             <ul className="space-y-2">
               {column.links.map((item) => (
                 <li key={item}>
-                  <a href="#" className="text-gray-600 hover:text-teal-600">{item}</a>
+                  <a href="#" className="text-gray-300 hover:text-teal-600">{item}</a>
                 </li>
               ))}
             </ul>

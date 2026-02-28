@@ -107,7 +107,7 @@ const Header: React.FC<HeaderProps> = ({
               className={`lg:hidden p-2 rounded-md transition-colors duration-200 focus-visible ${
                 shouldUseWhiteText
                   ? "text-gray-800 hover:bg-gray-100"
-                  : "text-white hover:bg-white/10"
+                  : "text-[#0F766E] hover:text-[#0D5F59]"
               }`}
               aria-label="Toggle mobile menu"
             >
@@ -135,7 +135,7 @@ const Header: React.FC<HeaderProps> = ({
                   src={
                     shouldUseWhiteText
                       ? "/logo/text_teal.png"
-                      : "/logo/text_white.png"
+                      : "/logo/text_teal.png"
                   }
                   alt="TASA Logo"
                   className="h-7 w-auto sm:h-8 md:h-9 lg:h-10"
@@ -152,16 +152,16 @@ const Header: React.FC<HeaderProps> = ({
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible ${
                   shouldUseWhiteText
                     ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
-                    : "text-white hover:text-teal-400 hover:bg-white/10"
+                    : "text-[#0F766E] hover:text-[#0D5F59]"
                 }`}
               >
                 Home
               </a>
-              <ExploreDropdown
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible ${
+              <ExploreDropdown /* Hidden for now */
+                className={`hidden px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible ${
                   shouldUseWhiteText
                     ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
-                    : "text-white hover:text-teal-400 hover:bg-white/10"
+                    : "text-[#0F766E] hover:text-[#0D5F59]"
                 }`}
               />
               <a
@@ -169,7 +169,7 @@ const Header: React.FC<HeaderProps> = ({
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible ${
                   shouldUseWhiteText
                     ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
-                    : "text-white hover:text-teal-400 hover:bg-white/10"
+                    : "text-[#0F766E] hover:text-[#0D5F59]"
                 }`}
               >
                 About
@@ -179,19 +179,13 @@ const Header: React.FC<HeaderProps> = ({
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible flex items-center ${
                   shouldUseWhiteText
                     ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
-                    : "text-white hover:text-teal-400 hover:bg-white/10"
+                    : "text-[#0F766E] hover:text-[#0D5F59]"
                 }`}
               >
                 <Search className="w-4 h-4 mr-2" />
                 <span className="hidden xl:inline">Find a Service</span>
                 <span className="xl:hidden">Search</span>
               </button>
-              <a
-                href="/vendor"
-                className="px-3 py-2 rounded-md text-sm font-bold bg-gradient-to-r from-teal-500 via-black to-teal-600 bg-clip-text text-transparent hover:text-teal-600 transition-colors duration-200 focus-visible"
-              >
-                Become a Vendor
-              </a>
             </div>
           </nav>
 
@@ -210,7 +204,7 @@ const Header: React.FC<HeaderProps> = ({
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-200 focus-visible ${
                     shouldUseWhiteText
                       ? "text-gray-800 hover:bg-gray-50"
-                      : "text-white hover:bg-white/10"
+                      : "text-[#0F766E] hover:text-[#0D5F59]"
                   }`}
                 >
                   {user.image ? (
@@ -265,7 +259,7 @@ const Header: React.FC<HeaderProps> = ({
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible ${
                     shouldUseWhiteText
                       ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
-                      : "text-white hover:text-teal-400 hover:bg-white/10"
+                      : "text-[#0F766E] hover:text-[#0D5F59]"
                   }`}
                 >
                   Sign In
@@ -275,7 +269,7 @@ const Header: React.FC<HeaderProps> = ({
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 focus-visible ${
                     shouldUseWhiteText
                       ? "bg-teal-600 hover:bg-teal-700 text-white shadow-sm"
-                      : "bg-teal-500 hover:bg-teal-600 text-white shadow-sm"
+                      : "bg-[#0F766E] hover:bg-[#0D5F59] text-white shadow-sm"
                   }`}
                 >
                   Join
@@ -308,7 +302,7 @@ const Header: React.FC<HeaderProps> = ({
               className={`lg:hidden px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 focus-visible ${
                 shouldUseWhiteText
                   ? "bg-teal-600 hover:bg-teal-700 text-white shadow-sm"
-                  : "bg-teal-500 hover:bg-teal-600 text-white shadow-sm"
+                  : "bg-[#0F766E] hover:bg-[#0D5F59] text-white shadow-sm"
               }`}
             >
               Join
@@ -372,7 +366,7 @@ const Header: React.FC<HeaderProps> = ({
     );
   }
 
-  // Default "auto" behavior - transparent header that slides to white with shadow
+  // Default "auto" behavior - transparent header only
   return (
     <>
       {/* Transparent Header - Scrolls with page */}
@@ -382,15 +376,6 @@ const Header: React.FC<HeaderProps> = ({
         }`}
       >
         <HeaderContent />
-      </header>
-
-      {/* White Background Header - Slides down when scrolled */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 bg-white shadow-lg transition-transform duration-300 ease-in-out ${
-          isScrolled ? "translate-y-0" : "-translate-y-full"
-        }`}
-      >
-        <HeaderContent isWhite={true} />
       </header>
 
       {/* Sidebar */}
