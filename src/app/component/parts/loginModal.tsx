@@ -8,7 +8,8 @@ import {
   FiSearch,
 } from "react-icons/fi";
 import Image from "next/image";
-import { signIn, signOut, getSession } from "next-auth/react";
+import { signIn, signOut, getSession, getProviders } from "next-auth/react";
+import type { ClientSafeProvider } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -99,6 +100,14 @@ export default function LoginModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const [providers, setProviders] = useState<
+    Record<string, ClientSafeProvider> | null
+  >(null);
+  const hasGoogle = !!providers?.google;
+  const hasApple = !!providers?.apple;
+  const hasFacebook = !!providers?.facebook;
+  const hasAltProviders = hasApple || hasFacebook;
+  const socialButtonWidth = hasApple && hasFacebook ? "w-1/2" : "w-full";
 
   // Location state
   const [countries, setCountries] = useState<Country[]>([]);
@@ -238,6 +247,22 @@ export default function LoginModal({
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    getProviders()
+      .then((result) => {
+        if (active) setProviders(result);
+      })
+      .catch((err) => {
+        console.error("Failed to load auth providers:", err);
+        if (active) setProviders(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [open]);
+
   // Handle country selection
   const handleCountrySelect = (country: string) => {
     setSelectedCountry(country);
@@ -320,6 +345,10 @@ export default function LoginModal({
   // Handle Google Sign In
   const handleGoogleSignIn = async () => {
     try {
+      if (!providers?.google) {
+        setError("Google sign-in is not configured.");
+        return;
+      }
       setIsLoading(true);
       setError(null);
 
@@ -345,6 +374,9 @@ export default function LoginModal({
         setTimeout(async () => {
           const session = await getSession();
           if (session) {
+            if (session.authToken) {
+              localStorage.setItem("auth_token", session.authToken);
+            }
             onSuccess?.();
             onClose();
             // Force a page reload to ensure fresh session data in all components
@@ -368,6 +400,10 @@ export default function LoginModal({
   // Handle Facebook Sign In
   const handleFacebookSignIn = async () => {
     try {
+      if (!providers?.facebook) {
+        setError("Facebook sign-in is not configured.");
+        return;
+      }
       setIsLoading(true);
       setError(null);
 
@@ -393,6 +429,9 @@ export default function LoginModal({
         setTimeout(async () => {
           const session = await getSession();
           if (session) {
+            if (session.authToken) {
+              localStorage.setItem("auth_token", session.authToken);
+            }
             onSuccess?.();
             onClose();
             // Stay on current page instead of redirecting to dashboard
@@ -416,6 +455,10 @@ export default function LoginModal({
   // Handle Apple Sign In
   const handleAppleSignIn = async () => {
     try {
+      if (!providers?.apple) {
+        setError("Apple sign-in is not configured.");
+        return;
+      }
       setIsLoading(true);
       setError(null);
 
@@ -441,6 +484,9 @@ export default function LoginModal({
         setTimeout(async () => {
           const session = await getSession();
           if (session) {
+            if (session.authToken) {
+              localStorage.setItem("auth_token", session.authToken);
+            }
             onSuccess?.();
             onClose();
             // Stay on current page instead of redirecting to dashboard
@@ -479,7 +525,11 @@ export default function LoginModal({
         setError("Invalid email or password");
       } else if (result?.ok) {
         setSuccess("Successfully signed in!");
-        setTimeout(() => {
+        setTimeout(async () => {
+          const session = await getSession();
+          if (session?.authToken) {
+            localStorage.setItem("auth_token", session.authToken);
+          }
           onSuccess?.();
           onClose();
         }, 1000);
@@ -541,6 +591,10 @@ export default function LoginModal({
         });
 
         if (signInResult?.ok) {
+          const session = await getSession();
+          if (session?.authToken) {
+            localStorage.setItem("auth_token", session.authToken);
+          }
           onSuccess?.();
           onClose();
         } else {
@@ -659,19 +713,21 @@ export default function LoginModal({
                 </p>
 
                 {/* Social Login Buttons */}
-                <button
-                  className="w-full flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={handleGoogleSignIn}
-                  disabled={isLoading}
-                >
-                  <Image
-                    src="/icons/google-icon.svg"
-                    alt="Google"
-                    width={24}
-                    height={24}
-                  />
-                  <span className="text-gray-700">Continue with Google</span>
-                </button>
+                {hasGoogle && (
+                  <button
+                    className="w-full flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading}
+                  >
+                    <Image
+                      src="/icons/google-icon.svg"
+                      alt="Google"
+                      width={24}
+                      height={24}
+                    />
+                    <span className="text-gray-700">Continue with Google</span>
+                  </button>
+                )}
 
                 <button
                   className="w-full flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -682,30 +738,38 @@ export default function LoginModal({
                   <span className="text-gray-700">Continue with email</span>
                 </button>
 
-                <div className="flex items-center justify-between my-4">
-                  <div className="border-t border-gray-200 w-full"></div>
-                  <span className="px-4 text-gray-500 text-sm">OR</span>
-                  <div className="border-t border-gray-200 w-full"></div>
-                </div>
+                {hasAltProviders && (
+                  <>
+                    <div className="flex items-center justify-between my-4">
+                      <div className="border-t border-gray-200 w-full"></div>
+                      <span className="px-4 text-gray-500 text-sm">OR</span>
+                      <div className="border-t border-gray-200 w-full"></div>
+                    </div>
 
-                <div className="flex gap-4">
-                  <button
-                    className="w-1/2 flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleAppleSignIn}
-                    disabled={isLoading}
-                  >
-                    <FaApple className="w-5 h-5 text-gray-800" />
-                    <span className="text-gray-700">Apple</span>
-                  </button>
-                  <button
-                    className="w-1/2 flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleFacebookSignIn}
-                    disabled={isLoading}
-                  >
-                    <FaFacebook className="w-5 h-5 text-[#1877f3]" />
-                    <span className="text-gray-700">Facebook</span>
-                  </button>
-                </div>
+                    <div className="flex gap-4">
+                      {hasApple && (
+                        <button
+                          className={`${socialButtonWidth} flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                          onClick={handleAppleSignIn}
+                          disabled={isLoading}
+                        >
+                          <FaApple className="w-5 h-5 text-gray-800" />
+                          <span className="text-gray-700">Apple</span>
+                        </button>
+                      )}
+                      {hasFacebook && (
+                        <button
+                          className={`${socialButtonWidth} flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                          onClick={handleFacebookSignIn}
+                          disabled={isLoading}
+                        >
+                          <FaFacebook className="w-5 h-5 text-[#1877f3]" />
+                          <span className="text-gray-700">Facebook</span>
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
               </>
             ) : (
               /* Email Form */

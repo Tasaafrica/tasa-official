@@ -1,28 +1,69 @@
 "use client";
 
 import { Search, MessageSquare, Lightbulb, Send } from "lucide-react";
+import { motion } from "framer-motion";
+import type { Variants } from "framer-motion";
+
+const stepVariants: Variants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+  },
+};
+
+const stepTransition = (index: number) => ({
+  duration: 0.6,
+  delay: index * 0.15,
+});
 
 export default function HowItWorksSection() {
   return (
     <section className="py-18 bg-gradient-to-b from-white to-slate-50">
       <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16">
         <div className="text-center mb-12">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-2">
+          <motion.p
+            className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-2"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
             How it works
-          </p>
-          <h2 className="text-3xl md:text-4xl font-semibold text-slate-900">
+          </motion.p>
+          <motion.h2
+            className="text-3xl md:text-4xl font-semibold text-slate-900"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
             Simple steps to get started
-          </h2>
-          <p className="text-slate-600 mt-3 max-w-2xl mx-auto">
+          </motion.h2>
+          <motion.p
+            className="text-slate-600 mt-3 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             Discover, connect, and deliver faster with a workflow designed to
             keep projects moving.
-          </p>
+          </motion.p>
         </div>
 
         <div className="relative">
           <div className="grid gap-6 md:grid-cols-3 lg:hidden">
             {/* Step 01 - Illustrative Search */}
-            <div className="relative rounded-2xl border-2 border-dashed border-slate-300 bg-transparent hover:bg-white p-6 transition-all duration-300">
+            <motion.div
+              className="relative rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.25 }}
+              variants={stepVariants}
+              transition={stepTransition(0)}
+            >
               <div className="text-sm font-semibold text-slate-400 mb-2">
                 01
               </div>
@@ -47,10 +88,17 @@ export default function HowItWorksSection() {
                 Find the skills you need or list the services you offer with
                 clear descriptions.
               </p>
-            </div>
+            </motion.div>
 
             {/* Step 02 - Illustrative Chat */}
-            <div className="relative rounded-2xl border-2 border-dashed border-slate-300 bg-transparent hover:bg-white p-6 transition-all duration-300">
+            <motion.div
+              className="relative rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.25 }}
+              variants={stepVariants}
+              transition={stepTransition(1)}
+            >
               <div className="text-sm font-semibold text-slate-400 mb-2">
                 02
               </div>
@@ -83,11 +131,20 @@ export default function HowItWorksSection() {
                 Chat with professionals or clients to align on scope, budget,
                 and timelines.
               </p>
-            </div>
+            </motion.div>
 
             {/* Step 03 - Illustrative Progress */}
-            <div className="relative rounded-2xl border-2 border-dashed border-slate-300 bg-transparent hover:bg-white p-6 transition-all duration-300">
-              <div className="text-sm font-semibold text-slate-400 mb-2">03</div>
+            <motion.div
+              className="relative rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.25 }}
+              variants={stepVariants}
+              transition={stepTransition(2)}
+            >
+              <div className="text-sm font-semibold text-slate-400 mb-2">
+                03
+              </div>
               <div className="mb-4">
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -123,7 +180,7 @@ export default function HowItWorksSection() {
               <p className="text-sm text-slate-600 leading-relaxed">
                 Collaborate smoothly and deliver results with confidence.
               </p>
-            </div>
+            </motion.div>
           </div>
 
           {/* Large-screen illustrative layout */}
@@ -166,8 +223,17 @@ export default function HowItWorksSection() {
             </svg>
 
             {/* Step 01 */}
-            <div className="absolute left-6 top-8 w-[360px] -rotate-2 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent hover:bg-white p-6 transition-colors">
-              <div className="text-sm font-semibold text-slate-400 mb-2">01</div>
+            <motion.div
+              className="absolute left-6 top-8 w-[360px] -rotate-2 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={stepVariants}
+              transition={stepTransition(0)}
+            >
+              <div className="text-sm font-semibold text-slate-400 mb-2">
+                01
+              </div>
               <div className="mb-4 -rotate-1">
                 <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
                   <Search className="h-4 w-4 text-slate-400" />
@@ -189,11 +255,20 @@ export default function HowItWorksSection() {
                 Find the skills you need or list the services you offer with
                 clear descriptions.
               </p>
-            </div>
+            </motion.div>
 
             {/* Step 02 */}
-            <div className="absolute left-[420px] top-[150px] w-[340px] rotate-2 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent hover:bg-white p-6 transition-colors">
-              <div className="text-sm font-semibold text-slate-400 mb-2">02</div>
+            <motion.div
+              className="absolute left-[420px] top-[150px] w-[340px] rotate-2 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={stepVariants}
+              transition={stepTransition(1)}
+            >
+              <div className="text-sm font-semibold text-slate-400 mb-2">
+                02
+              </div>
               <div className="mb-4">
                 <div className="flex flex-col gap-2">
                   <div className="self-start rounded-2xl rounded-tl-sm bg-slate-100 px-3 py-2 text-xs text-slate-700">
@@ -223,11 +298,20 @@ export default function HowItWorksSection() {
                 Chat with professionals or clients to align on scope, budget,
                 and timelines.
               </p>
-            </div>
+            </motion.div>
 
             {/* Step 03 */}
-            <div className="absolute right-8 top-10 w-[360px] -rotate-3 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent hover:bg-white p-6 transition-colors">
-              <div className="text-sm font-semibold text-slate-400 mb-2">03</div>
+            <motion.div
+              className="absolute right-8 top-10 w-[360px] -rotate-3 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={stepVariants}
+              transition={stepTransition(2)}
+            >
+              <div className="text-sm font-semibold text-slate-400 mb-2">
+                03
+              </div>
               <div className="mb-4">
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -263,10 +347,10 @@ export default function HowItWorksSection() {
               <p className="text-sm text-slate-600 leading-relaxed">
                 Collaborate smoothly and deliver results with confidence.
               </p>
-            </div>
+            </motion.div>
           </div>
         </div>
-        </div>
+      </div>
     </section>
   );
 }

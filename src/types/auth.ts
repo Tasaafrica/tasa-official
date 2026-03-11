@@ -13,6 +13,7 @@ declare module "next-auth" {
       };
     } & DefaultSession["user"];
     accessToken?: string;
+    authToken?: string;
   }
 
   interface User extends DefaultUser {
@@ -22,6 +23,7 @@ declare module "next-auth" {
       emailVerifiedAt: string | null;
       requiresVerification: boolean;
     };
+    authToken?: string;
   }
 }
 
@@ -29,6 +31,7 @@ declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     role: string;
     accessToken?: string;
+    authToken?: string;
     emailVerificationStatus?: {
       isEmailVerified: boolean;
       emailVerifiedAt: string | null;

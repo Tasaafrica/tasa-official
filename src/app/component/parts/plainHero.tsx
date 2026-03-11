@@ -1,15 +1,17 @@
 import Link from "next/link";
-import { Home, ChevronDown } from "lucide-react";
+import { Home, ChevronDown, Search } from "lucide-react";
 
 interface PlainHeroProps {
   title: string;
-  description: string;
+  description?: string;
   breadcrumbs: Array<{
     label: string;
     href?: string;
   }>;
   showExpandable?: boolean;
   onExpand?: () => void;
+  showSearch?: boolean;
+  onSearch?: (query: string) => void;
 }
 
 export default function PlainHero({
@@ -18,6 +20,8 @@ export default function PlainHero({
   breadcrumbs,
   showExpandable = false,
   onExpand,
+  showSearch = false,
+  onSearch,
 }: PlainHeroProps) {
   return (
     <section className="py-8 bg-white">
@@ -49,25 +53,41 @@ export default function PlainHero({
 
         {/* Hero Content */}
         <div className="max-w-4xl">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 text-left">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-left">
             {title}
           </h1>
 
-          <div className="flex items-start justify-between">
-            <p className="text-md text-gray-600 leading-relaxed pr-8 text-left">
-              {description}
-            </p>
+          {showSearch ? (
+            <div className="mb-6 max-w-xl">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search skills..."
+                  onChange={(e) => onSearch?.(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-lg border border-slate-300 text-gray-900 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-200"
+                />
+              </div>
+            </div>
+          ) : (
+            description && (
+              <div className="flex items-start justify-between">
+                <p className="text-md text-gray-600 leading-relaxed pr-8 text-left">
+                  {description}
+                </p>
 
-            {showExpandable && (
-              <button
-                onClick={onExpand}
-                className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                aria-label="Expand description"
-              >
-                <ChevronDown className="h-5 w-5" />
-              </button>
-            )}
-          </div>
+                {showExpandable && (
+                  <button
+                    onClick={onExpand}
+                    className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                    aria-label="Expand description"
+                  >
+                    <ChevronDown className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+            )
+          )}
         </div>
       </div>
     </section>

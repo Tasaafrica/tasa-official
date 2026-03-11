@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ShieldCheck, Zap } from "lucide-react";
 
 const WHY_TASA_ITEMS = [
@@ -51,28 +52,44 @@ export default function WhyChooseTasa() {
               const isPrimary = index === 0;
 
               return (
-                <button
+                <motion.button
                   key={item.title}
                   type="button"
                   onClick={() => setActiveIndex(index)}
-                  className={`text-left rounded-2xl border px-5 py-4 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E]/30 ${
+                  className={`text-left rounded-2xl border px-5 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E]/30 ${
                     isActive
                       ? "border-[#0F766E] bg-teal-50 shadow-[0_10px_24px_rgba(15,118,110,0.18)]"
-                      : "border-slate-200 bg-white hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(15,23,42,0.12)]"
+                      : "border-slate-200 bg-white"
                   }`}
+                  whileHover={
+                    !isActive
+                      ? { y: -4, boxShadow: "0 14px 28px rgba(15,23,42,0.12)" }
+                      : undefined
+                  }
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  animate={{
+                    scale: isActive ? 1 : 1,
+                    transition: { duration: 0.3 },
+                  }}
                 >
                   <div className="flex items-start gap-4">
-                    <div
+                    <motion.div
                       className={`h-10 w-10 rounded-full flex items-center justify-center ${
                         isActive ? "bg-[#0F766E]" : "bg-slate-100"
                       }`}
+                      animate={{
+                        backgroundColor: isActive ? "#0F766E" : "#f1f5f9",
+                        scale: isActive ? 1.1 : 1,
+                      }}
+                      transition={{ duration: 0.3 }}
                     >
                       <Icon
                         className={`h-5 w-5 ${
                           isActive ? "text-white" : "text-slate-600"
                         }`}
                       />
-                    </div>
+                    </motion.div>
                     <div>
                       <h3 className="text-sm font-semibold text-slate-900">
                         {item.title}
@@ -82,22 +99,41 @@ export default function WhyChooseTasa() {
                       </p>
                     </div>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
 
           <div className="w-full lg:flex-1 flex lg:justify-start">
-            <div className="w-full max-w-[680px] rounded-3xl border border-slate-200 bg-slate-50 shadow-[0_18px_40px_rgba(15,23,42,0.12)] overflow-hidden">
-              <div className="relative aspect-[15/9] bg-slate-200">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={active.imageUrl}
-                  alt={active.title}
-                  className="h-full w-full object-cover"
-                />
+            <motion.div
+              className="w-full max-w-[680px] rounded-3xl border border-slate-200 bg-slate-50 shadow-[0_18px_40px_rgba(15,23,42,0.12)] overflow-hidden"
+              whileHover={{
+                boxShadow: "0 24px 48px rgba(15,23,42,0.16)",
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="relative aspect-[15/9] bg-slate-200 overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={active.imageUrl}
+                    src={active.imageUrl}
+                    alt={active.title}
+                    className="h-full w-full object-cover"
+                    initial={{ opacity: 0, scale: 1.05, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, scale: 0.95, filter: "blur(8px)" }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  />
+                </AnimatePresence>
               </div>
-              <div className="px-6 py-6">
+              <motion.div
+                className="px-6 py-6"
+                key={`detail-${activeIndex}`}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              >
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-2">
                   Why Choose TASA
                 </p>
@@ -107,8 +143,8 @@ export default function WhyChooseTasa() {
                 <p className="text-sm text-slate-600 leading-relaxed">
                   {active.detail}
                 </p>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </div>

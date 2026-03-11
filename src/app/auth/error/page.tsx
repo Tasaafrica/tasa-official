@@ -9,6 +9,10 @@ const errorMessages: Record<string, string> = {
   Configuration: "There is a problem with the server configuration.",
   AccessDenied: "Access denied. You do not have permission to sign in.",
   Verification: "The verification token has expired or has already been used.",
+  OAuthSignin:
+    "The OAuth provider is not configured correctly. Please try another sign-in method.",
+  OAuthCallback:
+    "The OAuth callback failed. Please try again or use another sign-in method.",
   Default: "An error occurred during authentication.",
 };
 

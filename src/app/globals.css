@@ -5,6 +5,9 @@
   --foreground: #ffffff;
   --container-padding: 1rem;
   --container-max-width: 1280px;
+  --color-1:#0F766E;
+  --indigo:#334155;
+  --color-light:#CCFBF1;
 }
 
 
@@ -32,6 +35,9 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+    --color-1:#0F766E;
+  --indigo:#334155;
+  --color-light:#CCFBF1;
 }
 
 /* Responsive container utilities */

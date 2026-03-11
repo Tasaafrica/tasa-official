@@ -3,8 +3,9 @@
 // This is a client component that should not be statically generated
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
-import { signIn, getSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { signIn, getProviders, getSession } from "next-auth/react";
+import type { ClientSafeProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +24,30 @@ type SigninFormData = z.infer<typeof signinSchema>;
 export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [providers, setProviders] = useState<
+    Record<string, ClientSafeProvider> | null
+  >(null);
   const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+    getProviders()
+      .then((result) => {
+        if (active) setProviders(result);
+      })
+      .catch((err) => {
+        console.error("Failed to load auth providers:", err);
+        if (active) setProviders(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const hasGoogle = !!providers?.google;
+  const hasApple = !!providers?.apple;
+  const hasOAuthProviders = hasGoogle || hasApple;
+  const oauthColumns = hasGoogle && hasApple ? "grid-cols-2" : "grid-cols-1";
 
   const {
     register,
@@ -35,6 +59,10 @@ export default function SignInPage() {
 
   const handleGoogleSignIn = async () => {
     try {
+      if (!hasGoogle) {
+        setError("Google sign-in is not configured.");
+        return;
+      }
       setIsLoading(true);
       setError(null);
       await signIn("google", { callbackUrl: "/" });
@@ -47,6 +75,10 @@ export default function SignInPage() {
 
   const handleAppleSignIn = async () => {
     try {
+      if (!hasApple) {
+        setError("Apple sign-in is not configured.");
+        return;
+      }
       setIsLoading(true);
       setError(null);
       await signIn("apple", { callbackUrl: "/" });
@@ -78,6 +110,10 @@ export default function SignInPage() {
         setError("Invalid email or password");
       } else if (result?.ok) {
         console.log("Sign in successful, redirecting...");
+        const session = await getSession();
+        if (session?.authToken) {
+          localStorage.setItem("auth_token", session.authToken);
+        }
         router.push("/");
       } else {
         setError("Sign in failed. Please try again.");
@@ -168,40 +204,46 @@ export default function SignInPage() {
             </button>
           </div>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+          {hasOAuthProviders && (
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-gray-50 text-gray-500">
+                    Or continue with
+                  </span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-50 text-gray-500">
-                  Or continue with
-                </span>
+
+              <div className={`mt-6 grid ${oauthColumns} gap-3`}>
+                {hasGoogle && (
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading}
+                    className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaGoogle className="w-5 h-5" />
+                    <span className="ml-2">Google</span>
+                  </button>
+                )}
+
+                {hasApple && (
+                  <button
+                    type="button"
+                    onClick={handleAppleSignIn}
+                    disabled={isLoading}
+                    className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaApple className="w-5 h-5" />
+                    <span className="ml-2">Apple</span>
+                  </button>
+                )}
               </div>
             </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FaGoogle className="w-5 h-5" />
-                <span className="ml-2">Google</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleAppleSignIn}
-                disabled={isLoading}
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FaApple className="w-5 h-5" />
-                <span className="ml-2">Apple</span>
-              </button>
-            </div>
-          </div>
+          )}
         </form>
       </div>
     </div>

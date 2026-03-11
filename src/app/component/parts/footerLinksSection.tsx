@@ -91,25 +91,25 @@ const categories = [
         ))}
       </div>
       {/* Footer - A simple copyright, main footer likely in layout.tsx */}
-      <footer className="py-8 text-sm text-slate-500 dark:text-slate-400 bg-gray-100">
+      <footer className="py-8 text-sm text-slate-500 dark:text-slate-400">
     <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4 px-4">
       {/* Logo left */}
       <div className="flex items-center justify-center md:justify-start w-full md:w-auto mb-2 md:mb-0">
-        <img src="/logo/text_black.png" alt="TASA Logo" className="h-8" />
+        <img src="/logo/text_white.png" alt="TASA Logo" className="h-8" />
       </div>
       {/* Copyright center */}
-      <div className="flex-1 text-center">
+      <div className="flex-1 text-center text-gray-300">
         <p>&copy; {new Date().getFullYear()} TASA - Skill and Service Hub. All rights reserved.</p>
       </div>
       {/* Social icons right */}
-      <div className="flex items-center justify-center md:justify-end w-full md:w-auto gap-4 px-2">
-    <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="hover:text-teal-600 transition-colors p-2">
+      <div className="flex items-center justify-center md:justify-end w-full md:w-auto gap-4 px-2 text-gray-300">
+    <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="hover:text-[#CCFBF1] transition-colors p-2">
       <FaXTwitter className="h-5 w-5" />
     </a>
-    <a href="https://facebook.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-teal-600 transition-colors p-2">
+    <a href="https://facebook.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-[#CCFBF1] transition-colors p-2">
       <FaFacebook className="h-5 w-5" />
     </a>
-    <a href="https://linkedin.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-teal-600 transition-colors p-2">
+    <a href="https://linkedin.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-[#CCFBF1] transition-colors p-2">
       <FaLinkedin className="h-5 w-5" />
     </a>
   </div>
