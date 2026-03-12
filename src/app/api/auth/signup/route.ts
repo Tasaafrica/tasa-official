@@ -14,8 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call your backend API for user registration
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const registrationData = {
       name: `${firstName} ${
         middleName ? middleName + " " : ""

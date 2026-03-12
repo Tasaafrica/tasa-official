@@ -105,7 +105,7 @@ export default function HomeHeroSection({
               </div>
             </motion.div>
           </div>
-          <motion.div className="relative" variants={imageVariants}>
+          <motion.div className="relative -mt-10 md:mt-0" variants={imageVariants}>
             <div className="relative overflow-hidden rounded-2xl  aspect-[4/3]">
               <div className="absolute inset-0 flex items-center justify-center  text-sm">
                 <img

@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion, type MotionProps } from "framer-motion";
 
-const BRANDS = ["Northstar", "BluePeak", "NovaWorks", "CloudMint"];
+const BRANDS = ["High Factory", "Upgraders Community"];
 
 export default function TrustedBySection() {
   const prefersReducedMotion = useReducedMotion();

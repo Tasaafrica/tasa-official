@@ -2,25 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
+    const { email } = body;
 
-    if (!email || !password) {
+    if (!email) {
       return NextResponse.json(
-        { success: false, error: "Email and password are required" },
+        { success: false, error: "Email is required" },
         { status: 400 }
       );
     }
 
-    // Call your backend API for authentication
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+    // Call your backend API (unified endpoint)
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
     const response = await fetch(`${baseUrl}/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();

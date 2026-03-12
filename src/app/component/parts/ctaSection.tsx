@@ -29,7 +29,7 @@ export default function CtaSection() {
   return (
     <section className="py-16 md:py-24 bg-white text-black">
       <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16">
-        <div className="relative overflow-hidden rounded-2xl shadow-[0_20px_40px_rgba(15,23,42,0.18)] bg-[#0F766E]">
+        <div className="relative overflow-hidden rounded-2xl shadow-[0_20px_40px_rgba(15,23,42,0.18)] bg-[#334155]">
           <div className="grid md:grid-cols-2 items-stretch">
             <div className="p-8 md:p-12 lg:p-14 flex flex-col justify-center">
               <motion.h2
@@ -94,7 +94,7 @@ export default function CtaSection() {
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-[#0F766E]/90 via-[#0F766E]/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#334155]/90 via-[#334155]/40 to-transparent" />
             </motion.div>
           </div>
         </div>

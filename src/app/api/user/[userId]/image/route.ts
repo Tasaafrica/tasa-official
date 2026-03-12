@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-const baseUrl =
-  process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export async function POST(
   request: NextRequest,
@@ -49,7 +48,7 @@ export async function POST(
         method: "POST",
         cache: "no-store",
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.authToken}`,
           "Cache-Control": "no-cache",
           Pragma: "no-cache",
         },
@@ -114,7 +113,7 @@ export async function DELETE(
         method: "DELETE",
         cache: "no-store",
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.authToken}`,
           "Content-Type": "application/json",
           "Cache-Control": "no-cache",
           Pragma: "no-cache",
@@ -177,7 +176,7 @@ export async function GET(
         method: "GET",
         cache: "no-store",
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.authToken}`,
           "Content-Type": "application/json",
           "Cache-Control": "no-cache",
           Pragma: "no-cache",

@@ -63,14 +63,14 @@ export default function NotFoundHero({ fontClassName }: HomeHeroSectionProps) {
               className="text-4xl md:text-5xl font-semibold leading-tight text-gray-900 mb-5"
               variants={itemVariants}
             >
-              Find the right skills and services for your business
+              Oops! We can't find that page
             </motion.h1>
             <motion.p
               className="text-gray-600 text-base md:text-lg mb-6 max-w-xl"
               variants={itemVariants}
             >
-              Work with talented people at the most affordable price to get the
-              best services and results.
+              The link you followed might be broken, or the page may have been
+              moved. Let's get you back to finding top talent.
             </motion.p>
             <motion.div className="max-w-xl" variants={itemVariants}>
               <div className="group flex flex-col sm:flex-row items-stretch gap-3 mb-4 bg-white border px-3 py-2 shadow-sm transition-all duration-200 focus-within:border-[#0F766E] focus-within:ring-2 focus-within:ring-[#0F766E]/20 hover:shadow-md">
@@ -118,14 +118,14 @@ export default function NotFoundHero({ fontClassName }: HomeHeroSectionProps) {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
               >
-                <div className="px-8 py-6 rounded-2xl backdrop-blur-md bg-white/20 border border-white/30 shadow-xl">
-                  <h2 className="text-5xl md:text-6xl font-bold text-white text-center drop-shadow-lg">
+                <div className="px-4 py-3 md:px-8 md:py-6 rounded-2xl backdrop-blur-md bg-white/20 border border-white/30 shadow-xl max-w-[90%]">
+                  <h2 className="text-3xl sm:text-4xl md:text-4xl font-bold text-white text-center drop-shadow-lg leading-tight">
                     Page NOT found
                   </h2>
                 </div>
               </motion.div>
             </div>
-            <div className="absolute -left-6 bottom-6 bg-[#334155] rounded-xl shadow-md px-4 py-3 border border-[#334155]">
+            <div className="relative sm:absolute sm:-left-6 sm:bottom-6 w-fit sm:w-auto mx-auto sm:mx-0 mt-0 sm:mt-0 bg-[#334155] rounded-xl shadow-md px-4 py-3 border border-[#334155]">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-white/15 flex items-center justify-center">
                   <CheckCircle className="h-5 w-5 text-white" />

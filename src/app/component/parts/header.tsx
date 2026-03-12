@@ -211,14 +211,14 @@ const Header: React.FC<HeaderProps> = ({
                     <img
                       src={user.image}
                       alt={user.name || "User"}
-                      className="w-8 h-8 rounded-full object-cover"
+                      className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-medium">
+                    <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white text-base font-medium">
                       {getUserInitials(user.name || "User")}
                     </div>
                   )}
-                  <span className="text-sm font-medium">{user.name}</span>
+
                 </button>
 
                 {/* User Dropdown Menu */}
@@ -280,21 +280,21 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* Mobile Auth Button or User Profile */}
           {isAuthenticated && user ? (
-            <div className="lg:hidden flex items-center space-x-2 px-3 py-2">
+            <div className="lg:hidden flex items-center px-3 py-2">
               {user.image ? (
                 <img
                   src={user.image}
                   alt={user.name || "User"}
-                  className="w-8 h-8 rounded-full object-cover"
+                  className="w-9 h-9 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-medium">
+                <div className="w-9 h-9 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-medium">
                   {getUserInitials(user.name || "User")}
                 </div>
               )}
-              <span className="text-sm font-medium text-white">
-                {user.name}
-              </span>
+
+
+
             </div>
           ) : (
             <button

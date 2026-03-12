@@ -74,7 +74,7 @@ export default function ExploreDropdown({ className }: ExploreDropdownProps) {
         }
 
         // Fetch fresh data from API
-        const baseUrl = process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
         const response = await fetch(
           `${baseUrl}/api/categories/structured/all`,
           { cache: "no-store" }

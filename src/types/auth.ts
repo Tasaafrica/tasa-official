@@ -6,11 +6,7 @@ declare module "next-auth" {
     user: {
       id: string;
       role: string;
-      emailVerificationStatus?: {
-        isEmailVerified: boolean;
-        emailVerifiedAt: string | null;
-        requiresVerification: boolean;
-      };
+      isEmailVerified?: boolean;
     } & DefaultSession["user"];
     accessToken?: string;
     authToken?: string;
@@ -18,11 +14,7 @@ declare module "next-auth" {
 
   interface User extends DefaultUser {
     role: string;
-    emailVerificationStatus?: {
-      isEmailVerified: boolean;
-      emailVerifiedAt: string | null;
-      requiresVerification: boolean;
-    };
+    isEmailVerified?: boolean;
     authToken?: string;
   }
 }
@@ -32,11 +24,7 @@ declare module "next-auth/jwt" {
     role: string;
     accessToken?: string;
     authToken?: string;
-    emailVerificationStatus?: {
-      isEmailVerified: boolean;
-      emailVerifiedAt: string | null;
-      requiresVerification: boolean;
-    };
+    isEmailVerified?: boolean;
   }
 }
 
@@ -57,19 +45,17 @@ export interface SignupCredentials {
 
 export interface AuthResponse {
   success: boolean;
+  message?: string;
   data?: {
     user: {
       _id: string;
       name: string;
       email: string;
       role: string;
-      isActive: boolean;
-      createdAt: string;
-      updatedAt: string;
       profileImage?: string;
+      isEmailVerified: boolean;
     };
     token: string;
   };
   error?: string;
-  message?: string;
 }

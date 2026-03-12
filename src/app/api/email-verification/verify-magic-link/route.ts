@@ -23,15 +23,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Call your backend API to verify magic link
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const response = await fetch(
       `${baseUrl}/api/email-verification/verify-magic-link`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.authToken}`,
         },
         body: JSON.stringify({ token }),
       }

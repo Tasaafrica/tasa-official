@@ -26,13 +26,12 @@ export async function GET(
     }
 
     // Call your backend API to get user profile
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const response = await fetch(`${baseUrl}/api/user-profile/${userId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.authToken}`,
       },
     });
 
@@ -84,13 +83,12 @@ export async function PUT(
     const body = await request.json();
 
     // Call your backend API to update user profile
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const response = await fetch(`${baseUrl}/api/user-profile/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.authToken}`,
       },
       body: JSON.stringify(body),
     });

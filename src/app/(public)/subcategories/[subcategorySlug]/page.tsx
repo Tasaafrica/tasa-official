@@ -33,8 +33,7 @@ interface SkillsData {
   allSkills: Skill[];
 }
 
-const baseUrl =
-  process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 // Force dynamic rendering for this route
 export const dynamic = "force-dynamic";

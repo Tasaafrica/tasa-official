@@ -26,15 +26,14 @@ export async function GET(
     }
 
     // Call your backend API to check verification status
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const response = await fetch(
       `${baseUrl}/api/auth/verify-status/${userId}`,
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.authToken}`,
         },
       }
     );

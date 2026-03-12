@@ -15,6 +15,7 @@ type ScrollRevealTextProps = {
   variant?: "default" | "lifted" | "blur";
   as?: "h1" | "h2" | "h3" | "h4" | "p" | "div";
   duration?: number;
+  delay?: number;
 };
 
 /**
@@ -28,6 +29,7 @@ export default function ScrollRevealText({
   variant = "default",
   as = "div",
   duration = 0.6,
+  delay = 0,
 }: ScrollRevealTextProps) {
   const prefersReducedMotion = useReducedMotion();
 
@@ -52,6 +54,7 @@ export default function ScrollRevealText({
           ...selectedVariant.visible,
           transition: {
             duration,
+            delay,
             ease: [0.22, 1, 0.36, 1],
           },
         },

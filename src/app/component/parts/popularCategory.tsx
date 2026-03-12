@@ -96,14 +96,13 @@ export default function PopularCategory({
   return (
     <section className="w-full py-8 bg-transparent">
       <div className="mx-auto px-2 lg:px-8">
-        {!isVertical && (
-          <motion.h2
-            {...inViewProps(0.08)}
-            className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 text-center"
-          >
-            Popular on TASA...
-          </motion.h2>
-        )}
+        <motion.h2
+          {...inViewProps(0.08)}
+          className="text-lg sm:text-xl font-semibold text-gray-800 mb-6 text-center"
+        >
+          Popular on TASA...
+        </motion.h2>
+
         <div
           className={
             isVertical
@@ -117,6 +116,7 @@ export default function PopularCategory({
             return (
               <motion.div
                 key={category.slug}
+                className={isVertical ? "w-full" : ""}
                 {...(prefersReducedMotion
                   ? {}
                   : {
@@ -140,20 +140,21 @@ export default function PopularCategory({
                     flex flex-col items-center justify-center 
                     ${
                       isVertical
-                        ? "w-full bg-white rounded-xl border border-slate-100 px-3 py-4"
-                        : "w-[130px] bg-white rounded-xl border border-slate-100 px-3 py-4"
+                        ? "w-full min-h-[140px]"
+                        : "w-[130px] min-h-[140px]"
                     }
+                    bg-white rounded-xl border border-slate-100 px-3 py-4
                     cursor-pointer transition-all duration-300 ease-out
                     shadow-[0_6px_18px_rgba(15,23,42,0.08)]
                     hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(15,23,42,0.14)]
                   `}
                 >
                   <div
-                    className={`flex items-center justify-center w-12 h-12 rounded-full mb-3 mx-auto ${category.iconBg}`}
+                    className={`flex items-center justify-center w-12 h-12 rounded-full mb-3 mx-auto ${category.iconBg} flex-shrink-0`}
                   >
                     <Icon className={`h-6 w-6 ${category.iconText}`} />
                   </div>
-                  <span className="text-xs font-medium text-slate-700 text-center whitespace-pre-line">
+                  <span className="text-xs font-medium text-slate-700 text-center whitespace-pre-line overflow-hidden line-clamp-2">
                     {category.name}
                   </span>
                 </Link>

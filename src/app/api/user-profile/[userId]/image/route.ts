@@ -57,8 +57,7 @@ export async function POST(
     }
 
     // Call your backend API to upload the image
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const backendFormData = new FormData();
     backendFormData.append("image", image);
 
@@ -67,7 +66,7 @@ export async function POST(
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.authToken}`,
         },
         body: backendFormData,
       }
@@ -119,15 +118,14 @@ export async function DELETE(
     }
 
     // Call your backend API to delete the image
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const response = await fetch(
       `${baseUrl}/api/user-profile/${userId}/image`,
       {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.authToken}`,
         },
       }
     );
@@ -178,15 +176,14 @@ export async function GET(
     }
 
     // Call your backend API to get image info
-    const baseUrl =
-      process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const response = await fetch(
       `${baseUrl}/api/user-profile/${userId}/image`,
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.authToken}`,
         },
       }
     );

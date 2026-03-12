@@ -11,6 +11,7 @@ interface ImpressedServiceCardProps {
   rating: number;
   reviews: number;
   startingPrice: number;
+  currency?: string;
 }
 
 export default function ImpressedServiceCard({
@@ -22,6 +23,7 @@ export default function ImpressedServiceCard({
   rating,
   reviews,
   startingPrice,
+  currency = "$",
 }: ImpressedServiceCardProps) {
   return (
     <motion.div
@@ -87,7 +89,7 @@ export default function ImpressedServiceCard({
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span className="uppercase tracking-wide">Starting at</span>
           <span className="text-sm font-semibold text-slate-900">
-            ${startingPrice}
+            {currency}{startingPrice}
           </span>
         </div>
       </div>

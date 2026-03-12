@@ -126,8 +126,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       const searchResults: SearchResult[] = [];
 
       try {
-        const baseUrl =
-          process.env.PRODUCTION_URL || "https://tasa-server.onrender.com";
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
         // Search skills
         const skillsResponse = await fetch(
