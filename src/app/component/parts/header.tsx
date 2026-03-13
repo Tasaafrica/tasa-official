@@ -230,7 +230,9 @@ const Header: React.FC<HeaderProps> = ({
                         <p className="text-sm font-medium text-gray-900">
                           {user.name}
                         </p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
+                        <p className="text-sm text-gray-500 truncate" title={user.email || ""}>
+                          {user.email}
+                        </p>
                       </div>
 
                       <a
@@ -369,13 +371,21 @@ const Header: React.FC<HeaderProps> = ({
   // Default "auto" behavior - transparent header only
   return (
     <>
-      {/* Transparent Header - Scrolls with page */}
       <header
-        className={`absolute top-0 left-0 right-0 z-40 bg-transparent ${
-          isScrolled ? "pointer-events-none" : ""
+        className={`absolute top-0 left-0 right-0 z-40 bg-transparent transition-opacity duration-300 ${
+          isScrolled ? "opacity-0 pointer-events-none" : "opacity-100"
         }`}
       >
         <HeaderContent />
+      </header>
+
+      {/* Sticky White Header - Appears on scroll */}
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300 transform ${
+          isScrolled ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+        }`}
+      >
+        <HeaderContent isWhite={true} />
       </header>
 
       {/* Sidebar */}

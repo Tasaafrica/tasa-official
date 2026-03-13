@@ -4,10 +4,12 @@ import {
   SessionProvider as NextAuthSessionProvider,
   useSession,
 } from "next-auth/react";
+import type { Session } from "next-auth";
 import { ReactNode, useEffect } from "react";
 
 interface SessionProviderProps {
   children: ReactNode;
+  session?: Session | null;
 }
 
 function SessionSync({ children }: SessionProviderProps) {
@@ -22,9 +24,9 @@ function SessionSync({ children }: SessionProviderProps) {
   return <>{children}</>;
 }
 
-export function SessionProvider({ children }: SessionProviderProps) {
+export function SessionProvider({ children, session }: SessionProviderProps) {
   return (
-    <NextAuthSessionProvider>
+    <NextAuthSessionProvider session={session}>
       <SessionSync>{children}</SessionSync>
     </NextAuthSessionProvider>
   );

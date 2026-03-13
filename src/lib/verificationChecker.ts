@@ -18,6 +18,11 @@ interface VerificationCheckResult {
   error?: string;
 }
 
+// Track in-flight requests and last check time
+let inFlightRequest: Promise<VerificationCheckResult> | null = null;
+let lastCheckTime = 0;
+const CHECK_COOLDOWN = 30000; // 30 seconds cooldown for fresh API checks
+
 /**
  * Check email verification status for a user
  * Uses cache first, then fetches from API if needed
@@ -25,10 +30,18 @@ interface VerificationCheckResult {
 export async function checkEmailVerification(
   userId: string
 ): Promise<VerificationCheckResult> {
+  // 1. Return in-flight request if exists
+  if (inFlightRequest) return inFlightRequest;
+
+  const now = Date.now();
+
   try {
-    // Check cache first
+    // 2. Check cache first
     const cachedStatus = getCachedVerificationStatus(userId);
-    if (cachedStatus) {
+    
+    // If we have cached data and it's not too old, return it
+    // Note: getCachedVerificationStatus already handles TTL, but we add an extra layer here
+    if (cachedStatus && (now - lastCheckTime < CHECK_COOLDOWN)) {
       return {
         success: true,
         data: {
@@ -39,29 +52,43 @@ export async function checkEmailVerification(
       };
     }
 
-    // Fetch from API
-    const response = await fetch(`/api/auth/verify-status/${userId}`);
-    const result = await response.json();
+    // 3. Create a new request and track it
+    inFlightRequest = (async () => {
+      try {
+        const response = await fetch(`/api/auth/verify-status/${userId}`);
+        const result = await response.json();
 
-    if (result.success && result.data) {
-      // Cache the result
-      setCachedVerificationStatus(userId, result.data);
+        if (result.success && result.data) {
+          setCachedVerificationStatus(userId, result.data);
+          lastCheckTime = Date.now();
+          return {
+            success: true,
+            data: result.data,
+          };
+        } else {
+          return {
+            success: false,
+            error: result.error || "Failed to check verification status",
+          };
+        }
+      } catch (error) {
+        console.error("Error checking verification status:", error);
+        return {
+          success: false,
+          error: "Network error while checking verification status",
+        };
+      } finally {
+        // Clear in-flight tracker
+        inFlightRequest = null;
+      }
+    })();
 
-      return {
-        success: true,
-        data: result.data,
-      };
-    } else {
-      return {
-        success: false,
-        error: result.error || "Failed to check verification status",
-      };
-    }
+    return inFlightRequest;
   } catch (error) {
-    console.error("Error checking verification status:", error);
+    inFlightRequest = null;
     return {
       success: false,
-      error: "Network error while checking verification status",
+      error: "Unexpected error during verification check",
     };
   }
 }

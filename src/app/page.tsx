@@ -5,7 +5,6 @@ import ImpressedServiceSection from "@/app/component/parts/impressedServiceSecti
 import WhyChooseTasa from "@/app/component/parts/whyChooseTasa";
 import HowItWorksSection from "@/app/component/parts/howItWorksSection";
 import FooterLinksSection from "@/app/component/parts/footerLinksSection";
-import EmailVerificationWrapper from "@/components/layout/EmailVerificationWrapper";
 import HomeHeroSection from "@/app/component/parts/homeHeroSection";
 import TrustedBySection from "@/app/component/parts/trustedBySection";
 import CtaSection from "@/app/component/parts/ctaSection";
@@ -22,8 +21,7 @@ export default function HomePage() {
   // No client state needed - search modal is handled in Header component
 
   return (
-    <EmailVerificationWrapper>
-      <div>
+    <div>
         {/*header*/}
         <Header />
         {/*hero section*/}
@@ -61,6 +59,5 @@ export default function HomePage() {
 
         {/* Search functionality is now handled in the Header component */}
       </div>
-    </EmailVerificationWrapper>
   );
 }

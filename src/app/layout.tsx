@@ -2,6 +2,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import EmailVerificationWrapper from "@/components/layout/EmailVerificationWrapper";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,15 +34,19 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getServerSession(authOptions);
+
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider session={session}>
+          <EmailVerificationWrapper>{children}</EmailVerificationWrapper>
+        </SessionProvider>
       </body>
     </html>
   );

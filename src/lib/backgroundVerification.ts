@@ -7,6 +7,9 @@ import { startBackgroundVerificationCheck } from "./verificationChecker";
  * This should be called after user signs in
  */
 export function initializeBackgroundVerification(userId: string): void {
+  // Clean up any existing interval first to prevent duplicates
+  cleanupBackgroundVerification();
+
   // Start the background check
   startBackgroundVerificationCheck(userId);
 

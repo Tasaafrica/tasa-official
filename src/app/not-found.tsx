@@ -1,7 +1,6 @@
 import Header from "@/app/component/parts/header";
 import NotFoundHero from "@/app/component/parts/NotFoundHero";
 import FooterLinksSection from "@/app/component/parts/footerLinksSection";
-import EmailVerificationWrapper from "@/components/layout/EmailVerificationWrapper";
 
 export const metadata = {
   title: "Page Not Found - TASA",
@@ -11,12 +10,10 @@ export const metadata = {
 
 export default function NotFound() {
   return (
-    <EmailVerificationWrapper>
-      <div>
+    <div>
         <Header />
         <NotFoundHero />
         <FooterLinksSection />
-      </div>
-    </EmailVerificationWrapper>
+    </div>
   );
 }

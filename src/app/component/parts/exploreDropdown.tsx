@@ -39,6 +39,10 @@ interface ExploreDropdownProps {
   className?: string;
 }
 
+// Shared in-memory cache to avoid duplicate network calls across mounts/strict mode
+let categoriesCache: Category[] | null = null;
+let categoriesCachePromise: Promise<Category[]> | null = null;
+
 export default function ExploreDropdown({ className }: ExploreDropdownProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +54,7 @@ export default function ExploreDropdown({ className }: ExploreDropdownProps) {
         setLoading(true);
         setError(null);
 
-        // Check cache first for optimized data
+        // Check cache first for optimized data (localStorage)
         const cacheKey = "categories_structured_all";
         const cacheOptions = {
           ttl: 15 * 60 * 1000, // 15 minutes cache
@@ -73,25 +77,46 @@ export default function ExploreDropdown({ className }: ExploreDropdownProps) {
           return;
         }
 
+        // Check shared in-memory cache to prevent duplicate requests (strict mode / double header)
+        if (categoriesCache && Array.isArray(categoriesCache)) {
+          setCategories(categoriesCache);
+          setLoading(false);
+          return;
+        }
+
+        if (categoriesCachePromise) {
+          const sharedData = await categoriesCachePromise;
+          setCategories(sharedData);
+          setLoading(false);
+          return;
+        }
+
         // Fetch fresh data from API
         const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-        const response = await fetch(
-          `${baseUrl}/api/categories/structured/all`,
-          { cache: "no-store" }
-        );
-        const result = await response.json();
+        categoriesCachePromise = (async () => {
+          const response = await fetch(
+            `${baseUrl}/api/categories/structured/all`,
+            { cache: "no-store" }
+          );
+          const result = await response.json();
 
-        let categoriesData: Category[] = [];
+          let categoriesData: Category[] = [];
 
-        // Handle different response formats
-        if (Array.isArray(result)) {
-          categoriesData = result;
-        } else if (result.success && result.data) {
-          categoriesData = result.data;
-        }
+          // Handle different response formats
+          if (Array.isArray(result)) {
+            categoriesData = result;
+          } else if (result.success && result.data) {
+            categoriesData = result.data;
+          }
+
+          return categoriesData;
+        })();
+
+        const categoriesData = await categoriesCachePromise;
 
         if (categoriesData.length > 0) {
           setCategories(categoriesData);
+          categoriesCache = categoriesData;
 
           // Cache the optimized data
           setOptimizedSecureCacheData(
@@ -104,6 +129,7 @@ export default function ExploreDropdown({ className }: ExploreDropdownProps) {
       } catch (err) {
         setError("Failed to load categories");
       } finally {
+        categoriesCachePromise = null;
         setLoading(false);
       }
     };
