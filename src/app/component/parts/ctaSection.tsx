@@ -28,7 +28,7 @@ export default function CtaSection() {
 
   return (
     <section className="py-16 md:py-24 bg-white text-black">
-      <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16">
+      <div className="container-responsive">
         <div className="relative overflow-hidden rounded-2xl shadow-[0_20px_40px_rgba(15,23,42,0.18)] bg-[#334155]">
           <div className="grid md:grid-cols-2 items-stretch">
             <div className="p-8 md:p-12 lg:p-14 flex flex-col justify-center">

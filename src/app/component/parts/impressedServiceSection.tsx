@@ -11,40 +11,37 @@ export default function ImpressedServiceSection() {
     {
       imageAlt: "Modern website design",
       imageUrl:
-        "https://images.unsplash.com/photo-1754379657900-962db3a86873?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=1200",
-      sellerName: "Wanda Runa",
+        "https://res.cloudinary.com/duo4b1nit/image/upload/v1773857079/ui-ux.jpg",
+      sellerAvatar: "male-ui-ux.png",
+      sellerName: "Mikel Ali",
       sellerLevel: "Top Rated",
       title: "UI/UX Designer creating high-converting digital experiences",
       rating: 4.9,
-      reviews: 1200,
-      startingPrice: 120,
-      currency: "$",
+      reviews: 1200,      
+      startingPrice: 3500,
+      currency: "GH₵",
     },
     {
       imageAlt: "Social media marketing manager",
       imageUrl:
-        "https://images.unsplash.com/photo-1759215524500-8834e4935603?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=1200",
+        "digital-marketing.png",
+      sellerAvatar: "female-digital-marketing.png",
       sellerName: "Sara Lanti",
       sellerLevel: "Level 2",
       title: "Digital Strategist scaling brands through social media marketing",
       rating: 5.0,
       reviews: 850,
-      startingPrice: 3500,
-      currency: "GH₵",
+      startingPrice: 120,
+      currency: "$",
     },
   ];
 
   return (
     <section className="py-16 bg-slate-50">
-      <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16">
+      <div className="container-responsive">
         <div className="flex items-center justify-between mb-8">
-          <ScrollRevealText as="h2" className="text-3xl md:text-3xl font-semibold text-slate-900">
+          <ScrollRevealText as="h2" className="md:ml-20 text-3xl md:text-3xl font-semibold text-slate-900">
             On TASA...
-          </ScrollRevealText>
-          <ScrollRevealText variant="lifted" className="text-sm font-medium text-[#0F766E] hover:text-[#0D5F59] transition-colors">
-            <Link href="/services">
-              View All
-            </Link>
           </ScrollRevealText>
         </div>
         <div className="flex flex-col lg:flex-row gap-8 items-center lg:justify-center">

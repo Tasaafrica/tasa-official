@@ -94,11 +94,22 @@ export default function SignInPage() {
       setIsLoading(true);
       setError(null);
 
-      console.log("Attempting sign in with:", {
-        email: data.email,
-        password: "[REDACTED]",
+      // 1. Call our internal API first to set the cross-subdomain 'token' cookie
+      // This allows dash.tasa.com.ng to access the token via credentials: include
+      const loginResponse = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
 
+      const loginData = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+        setError(loginData.error || "Login failed");
+        return;
+      }
+
+      // 2. Complete the NextAuth session for the current app
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
@@ -106,10 +117,8 @@ export default function SignInPage() {
       });
 
       if (result?.error) {
-        console.error("Sign in error:", result.error);
         setError("Invalid email or password");
       } else if (result?.ok) {
-        console.log("Sign in successful, redirecting...");
         const session = await getSession();
         if (session?.authToken) {
           localStorage.setItem("auth_token", session.authToken);

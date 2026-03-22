@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call your backend API (unified endpoint)
+    // Call the external backend API
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
     const response = await fetch(`${baseUrl}/api/auth/login`, {
@@ -35,7 +35,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(data);
+    // Prepare the response
+    const nextResponse = NextResponse.json(data);
+    
+    // Extract the token from the backend response
+    const token = data.data?.token || data.token;
+    
+    if (token) {
+      // Set the token cookie exactly as requested:
+      // domain=.tasa.com.ng, path=/, HttpOnly, Secure, SameSite=none
+      nextResponse.cookies.set("token", token, {
+        domain: process.env.NODE_ENV === "production" ? ".tasa.com.ng" : undefined,
+        path: "/",
+        httpOnly: true,
+        secure: true, // Required for SameSite: "none"
+        sameSite: "none",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+    }
+
+    return nextResponse;
   } catch (error) {
     console.error("Login API error:", error);
     return NextResponse.json(

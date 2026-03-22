@@ -29,7 +29,7 @@ export default function HomePage() {
         {/* Trusted By Section */}
         <TrustedBySection />
         <section className="hidden md:block py-8 bg-white">
-          <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16">
+          <div className="container-responsive">
             <PopularCategory />
           </div>
         </section>

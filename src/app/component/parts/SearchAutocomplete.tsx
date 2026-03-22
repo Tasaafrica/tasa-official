@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search, X, Loader2, ArrowRight, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { skillApi } from "@/lib/api";
 
 interface SearchAutocompleteProps {
   placeholder?: string;
@@ -31,25 +32,11 @@ export default function SearchAutocomplete({
 
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-      const response = await fetch(
-        `${baseUrl.replace(/\/$/, "")}/api/skills/search/${encodeURIComponent(
-          searchTerm
-        )}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        const items = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.data)
-            ? data.data
-            : [];
-
-        // Take first 4 results as requested
-        setResults(items.slice(0, 4));
-      }
+      const items = await skillApi.search(searchTerm);
+      // Take first 4 results as requested
+      setResults(items.slice(0, 4));
     } catch (error) {
-      console.error("Search error:", error);
+      console.error("Search error in SearchAutocomplete:", error);
     } finally {
       setLoading(false);
     }
@@ -93,7 +80,7 @@ export default function SearchAutocomplete({
         ? `/categories/${item.slug || item._id}`
         : itemType === "subcategory"
           ? `/subcategories/${item.slug || item._id}`
-          : `/skills/${item._id || item.slug}`;
+          : `/skills/${item.slug || item._id}`;
 
     router.push(destination);
   };
@@ -159,7 +146,7 @@ export default function SearchAutocomplete({
       </form>
 
       <AnimatePresence>
-        {isOpen && results.length > 0 && (
+        {isOpen && query.trim().length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -167,37 +154,54 @@ export default function SearchAutocomplete({
             className="absolute z-50 top-[calc(100%-2px)] left-0 right-0 bg-white border-2 border-teal-600/10 rounded-b-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden"
           >
             <div className="flex flex-col py-1">
-              {results.map((item) => (
-                <button
-                  key={item._id}
-                  onClick={() => handleSelect(item)}
-                  className="flex items-center gap-4 px-5 py-3 text-left hover:bg-teal-50/50 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-teal-600">
-                    <Search className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 truncate text-sm">{item.name}</p>
-                    <p className="text-[10px] text-slate-400 truncate uppercase tracking-wider font-bold">
-                      {item.category?.name} {item.subcategory?.name && `• ${item.subcategory.name}`}
-                    </p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-slate-200" />
-                </button>
-              ))}
-              
-              <button
-                onClick={handleViewAll}
-                className="flex items-center justify-between px-5 py-3.5 bg-slate-50/80 hover:bg-teal-600 hover:text-white transition-all text-slate-600 group mt-1"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-1.5 rounded-full bg-white shadow-sm group-hover:bg-white/20">
-                    <ExternalLink className="w-3.5 h-3.5 group-hover:text-white" />
-                  </div>
-                  <span className="text-xs font-black uppercase tracking-[0.1em]">View all results for "{query}"</span>
+              {loading ? (
+                <div className="px-5 py-8 text-center">
+                  <Loader2 className="h-6 w-6 text-teal-600 animate-spin mx-auto mb-2" />
+                  <p className="text-sm text-slate-500">Searching for services...</p>
                 </div>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              ) : results.length > 0 ? (
+                <>
+                  {results.slice(0, 4).map((item) => (
+                    <button
+                      key={item._id}
+                      onClick={() => handleSelect(item)}
+                      className="flex items-center gap-4 px-5 py-3 text-left hover:bg-teal-50/50 transition-colors"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-teal-600">
+                        <Search className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-slate-900 truncate text-sm">{item.name}</p>
+                        <p className="text-[10px] text-slate-400 truncate uppercase tracking-wider font-bold">
+                          {item.category?.name} {item.subcategory?.name && `• ${item.subcategory.name}`}
+                        </p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-slate-200" />
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={handleViewAll}
+                    className="flex items-center justify-between px-5 py-3.5 bg-slate-50/80 hover:bg-teal-600 hover:text-white transition-all text-slate-600 group mt-1"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded-full bg-white shadow-sm group-hover:bg-white/20">
+                        <ExternalLink className="w-3.5 h-3.5 group-hover:text-white" />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-[0.1em]">View all results for "{query}"</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <div className="px-5 py-8 text-center">
+                  <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Search className="h-6 w-6 text-slate-300" />
+                  </div>
+                  <p className="font-semibold text-slate-900 text-sm mb-1">No results found</p>
+                  <p className="text-xs text-slate-500">We couldn't find any services matching "{query}"</p>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

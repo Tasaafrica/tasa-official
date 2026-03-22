@@ -67,7 +67,7 @@ const categories = [
   
   const FooterLinksSection = () => (
     <div className="mx-auto bg-[#334155] w-full border-t border-slate-700">
-      <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16 py-12">
+      <div className="container-responsive py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 text-center md:text-left">
           {columns.map((column) => (
             <div key={column.title} className="flex flex-col items-center md:items-start">
@@ -88,7 +88,7 @@ const categories = [
     <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4 px-4">
       {/* Logo left */}
       <div className="flex items-center justify-center md:justify-start w-full md:w-auto mb-2 md:mb-0">
-        <img src="/logo/text_white.png" alt="TASA Logo" className="h-8" />
+        <img src="/logo/white_logo.png" alt="TASA Logo" className="h-7" />
       </div>
       {/* Copyright center */}
       <div className="flex-1 text-center text-gray-300">

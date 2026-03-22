@@ -22,17 +22,10 @@ export const metadata: Metadata = {
     "Connect with qualified professionals. Find expert services in programming, design, marketing, and more. Trusted platform for hiring skilled professionals.",
   keywords:
     "professional services, freelancers, experts, TASA, hiring, skilled professionals, young talents, skills, services",
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/logo/favicon.ico", sizes: "16x16", type: "image/x-icon" },
-    ],
-    apple: [
-      { url: "/logo/logo_bg_teal.png", sizes: "180x180", type: "image/png" },
-    ],
-  },
-  manifest: "/manifest.json",
+  
 };
+
+
 
 export default async function RootLayout({
   children,
@@ -43,6 +36,17 @@ export default async function RootLayout({
 
   return (
     <html lang="en" data-scroll-behavior="smooth">
+       <head>
+        <title>TASA | Skill and Service Hub | Young Talent Marketplace</title>
+
+        {/* Favicon */}
+       <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Tasa | Dashboard" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+      </head>
       <body>
         <SessionProvider session={session}>
           <EmailVerificationWrapper>{children}</EmailVerificationWrapper>

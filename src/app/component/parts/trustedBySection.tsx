@@ -27,8 +27,8 @@ export default function TrustedBySection() {
         };
 
   return (
-    <section className="py-8 bg-white border-b border-slate-200 md:mx-20 lg:mx-32">
-      <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16">
+    <section className="py-8 bg-white border-b border-slate-200">
+      <div className="container-responsive">
         <div className="flex flex-col items-center gap-4">
           <motion.div {...inViewProps(0.12)}>
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">

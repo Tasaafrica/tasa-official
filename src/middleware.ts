@@ -3,24 +3,36 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    // Add any additional middleware logic here
-    return NextResponse.next();
+    const res = NextResponse.next();
+    const token = req.nextauth.token;
+
+    // Synchronize the domain-wide 'token' cookie if NextAuth session exists
+    // This handles both credentials and Google login perfectly
+    if (token?.authToken && !req.cookies.has("token")) {
+      res.cookies.set("token", token.authToken as string, {
+        domain: process.env.NODE_ENV === "production" ? ".tasa.com.ng" : undefined,
+        path: "/",
+        httpOnly: true,
+        secure: true, 
+        sameSite: "none", // As requested for cross-domain fetch
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+    }
+
+    return res;
   },
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        // Allow access to public routes
-        if (req.nextUrl.pathname.startsWith("/auth/")) {
-          return true;
-        }
+        // Allow public access to auth routes
+        if (req.nextUrl.pathname.startsWith("/auth/")) return true;
 
-        // Require authentication for protected routes
-        if (
+        // Requirement for protected routes
+        const isProtectedRoute = 
           req.nextUrl.pathname.startsWith("/dashboard") ||
-          req.nextUrl.pathname.startsWith("/profile")
-        ) {
-          return !!token;
-        }
+          req.nextUrl.pathname.startsWith("/profile");
+
+        if (isProtectedRoute) return !!token;
 
         return true;
       },
@@ -29,5 +41,10 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*", "/api/protected/:path*"],
+  matcher: [
+    "/", // Running on root ensures the cookie is set after redirect from login
+    "/dashboard/:path*",
+    "/profile/:path*",
+    "/api/protected/:path*",
+  ],
 };

@@ -98,10 +98,25 @@ providers.push(
   })
 );
 
+const isProduction = process.env.NODE_ENV === "production";
+const cookieDomain = isProduction ? ".tasa.com.ng" : undefined;
+
 export const authOptions: NextAuthOptions = {
   providers,
   session: {
     strategy: "jwt",
+  },
+  cookies: {
+    sessionToken: {
+      name: isProduction ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: isProduction,
+        domain: cookieDomain,
+      },
+    },
   },
   callbacks: {
     async signIn({ user, account }) {

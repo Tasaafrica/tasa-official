@@ -45,8 +45,8 @@ export default function HomeHeroSection({
   };
 
   const popularTags = [
-    { name: "Website Design", slug: "website-design", type: "subcategory" },
-    { name: "Logo Design", slug: "logo-design", type: "subcategory" },
+    { name: "Plumbing", slug: "plumbing", type: "subcategory" },
+    { name: "Logo Design", slug: "logo-design", type: "skill" },
     { name: "Web Development", slug: "web-development", type: "subcategory" },
     { name: "AI Art", slug: "ai-art", type: "skill" },
   ];
@@ -84,7 +84,7 @@ export default function HomeHeroSection({
             <motion.div className="max-w-xl" variants={itemVariants}>
               <SearchAutocomplete />
               
-              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mt-6">
+              <div className="flex flex-wrap items-center gap-1 text-xs text-gray-500 mt-3 text-red-500 ">
                 <span className="font-semibold text-[#334155]">Popular:</span>
                 {popularTags.map((tag) => (
                   <Link

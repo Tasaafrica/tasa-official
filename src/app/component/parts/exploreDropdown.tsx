@@ -49,92 +49,9 @@ export default function ExploreDropdown({ className }: ExploreDropdownProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Check cache first for optimized data (localStorage)
-        const cacheKey = "categories_structured_all";
-        const cacheOptions = {
-          ttl: 15 * 60 * 1000, // 15 minutes cache
-          version: "1.0.1", // Bumped version to clear corrupted cache
-          storage: "localStorage" as const,
-          encrypt: true,
-          verifyIntegrity: true,
-          encryptionKey: "TASA_CATEGORIES_ENCRYPTION_KEY_2025",
-        };
-
-        const cachedData = getOptimizedSecureCacheData(
-          cacheKey,
-          "categories",
-          cacheOptions
-        );
-
-        if (cachedData && Array.isArray(cachedData)) {
-          setCategories(cachedData);
-          setLoading(false);
-          return;
-        }
-
-        // Check shared in-memory cache to prevent duplicate requests (strict mode / double header)
-        if (categoriesCache && Array.isArray(categoriesCache)) {
-          setCategories(categoriesCache);
-          setLoading(false);
-          return;
-        }
-
-        if (categoriesCachePromise) {
-          const sharedData = await categoriesCachePromise;
-          setCategories(sharedData);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch fresh data from API
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-        categoriesCachePromise = (async () => {
-          const response = await fetch(
-            `${baseUrl}/api/categories/structured/all`,
-            { cache: "no-store" }
-          );
-          const result = await response.json();
-
-          let categoriesData: Category[] = [];
-
-          // Handle different response formats
-          if (Array.isArray(result)) {
-            categoriesData = result;
-          } else if (result.success && result.data) {
-            categoriesData = result.data;
-          }
-
-          return categoriesData;
-        })();
-
-        const categoriesData = await categoriesCachePromise;
-
-        if (categoriesData.length > 0) {
-          setCategories(categoriesData);
-          categoriesCache = categoriesData;
-
-          // Cache the optimized data
-          setOptimizedSecureCacheData(
-            cacheKey,
-            categoriesData,
-            "categories",
-            cacheOptions
-          );
-        }
-      } catch (err) {
-        setError("Failed to load categories");
-      } finally {
-        categoriesCachePromise = null;
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
+    // Timed call to structured/all removed as requested
+    setLoading(false);
+    setCategories([]);
   }, []);
 
   // Helper function to create slug from name (fallback)
@@ -217,7 +134,7 @@ export default function ExploreDropdown({ className }: ExploreDropdownProps) {
                                               skill._id ||
                                               `${categoryIndex}-${subCategoryIndex}-${skillIndex}`
                                             }`}
-                                            href={`/skills/${skill._id}`}
+                                            href={`/skills/${skill.slug}`}
                                             className="block text-sm text-gray-600 hover:text-teal-500 hover:bg-gray-50 px-2 py-1 rounded"
                                           >
                                             {skill.name}

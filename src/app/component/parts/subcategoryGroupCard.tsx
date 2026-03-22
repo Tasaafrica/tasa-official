@@ -133,7 +133,7 @@ export default function SubcategoryGroupCard({
                     return (
                       <Link
                         key={skill._id}
-                        href={`/skills/${skill._id}`}
+                        href={`/skills/${skill.slug}`}
                         className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-teal-50 transition-colors duration-300 group/skill"
                       >
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0">

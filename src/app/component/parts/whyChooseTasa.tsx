@@ -8,11 +8,11 @@ const WHY_TASA_ITEMS = [
   {
     title: "Diverse Skill Pool",
     summary:
-      "Access a wide range of skills and services from talented individuals and businesses across various industries.",
+      "Access a wide range of skills and services from talented individuals.",
     detail:
-      "Discover specialists across design, development, marketing, and more—ready to take your project from idea to execution.",
+      "Discover specialists across design, development, marketing, and more, ready to take your project from idea to execution.",
     imageUrl:
-      "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=1200",
+      "diverse-skill-pool.png",
     icon: Sparkles,
   },
   {
@@ -43,7 +43,7 @@ export default function WhyChooseTasa() {
 
   return (
     <section className="py-16 bg-white text-black">
-      <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16">
+      <div className="container-responsive">
         <div className="flex flex-col lg:flex-row gap-10 items-center">
           <div className="w-full lg:w-[360px] flex flex-col gap-4">
             {WHY_TASA_ITEMS.map((item, index) => {

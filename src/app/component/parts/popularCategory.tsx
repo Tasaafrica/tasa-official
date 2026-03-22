@@ -21,15 +21,17 @@ interface CategoryItem {
   icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
   iconText: string;
+  type: string;
 }
 
 const POPULAR_CATEGORIES: CategoryItem[] = [
   {
     name: "Graphic &\nDesign",
-    slug: "graphics-design",
+    slug: "graphic-design",
     icon: Brush,
     iconBg: "bg-purple-50",
     iconText: "text-purple-600",
+    type: "subcategory"
   },
   {
     name: "Programming",
@@ -37,6 +39,7 @@ const POPULAR_CATEGORIES: CategoryItem[] = [
     icon: Code2,
     iconBg: "bg-blue-50",
     iconText: "text-blue-600",
+    type: "subcategory"
   },
   {
     name: "Digital\nMarketing",
@@ -44,20 +47,23 @@ const POPULAR_CATEGORIES: CategoryItem[] = [
     icon: Megaphone,
     iconBg: "bg-green-50",
     iconText: "text-green-600",
+    type: "skill"
   },
   {
-    name: "Video &\nAnimation",
-    slug: "video-animation",
+    name: "Video Production",
+    slug: "video-production",
     icon: Video,
     iconBg: "bg-red-50",
     iconText: "text-red-600",
+    type: "subcategory"
   },
   {
-    name: "Writing &\nTranslation",
-    slug: "writing-translation",
+    name: "Copywriting",
+    slug: "copywriting",
     icon: PenLine,
     iconBg: "bg-amber-50",
     iconText: "text-amber-600",
+    type: "subcategory"
   },
   {
     name: "Business",
@@ -65,6 +71,7 @@ const POPULAR_CATEGORIES: CategoryItem[] = [
     icon: Briefcase,
     iconBg: "bg-emerald-50",
     iconText: "text-emerald-600",
+    type: "category"
   },
 ];
 
@@ -95,7 +102,7 @@ export default function PopularCategory({
 
   return (
     <section className="w-full py-8 bg-transparent">
-      <div className="mx-auto px-2 lg:px-8">
+      <div className="mx-auto px-10 lg:px-8">
         <motion.h2
           {...inViewProps(0.08)}
           className="text-lg sm:text-xl font-semibold text-gray-800 mb-6 text-center"
@@ -135,7 +142,13 @@ export default function PopularCategory({
                     })}
               >
                 <Link
-                  href={`/subcategories/${category.slug}`}
+                  href={
+                    category.type === "category"
+                      ? `/categories/${category.slug}`
+                      : category.type === "subcategory"
+                      ? `/subcategories/${category.slug}`
+                      : `/skills/${category.slug}`
+                  }
                   className={`
                     flex flex-col items-center justify-center 
                     ${

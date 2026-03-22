@@ -21,7 +21,7 @@ const stepTransition = (index: number) => ({
 export default function HowItWorksSection() {
   return (
     <section className="py-18 bg-gradient-to-b from-white to-slate-50">
-      <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16">
+      <div className="container-responsive">
         <div className="text-center mb-12">
           <motion.p
             className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-2"
@@ -54,7 +54,7 @@ export default function HowItWorksSection() {
         </div>
 
         <div className="relative">
-          <div className="grid gap-6 md:grid-cols-3 lg:hidden">
+          <div className="grid gap-6 md:grid-cols-3 xl:hidden">
             {/* Step 01 - Illustrative Search */}
             <motion.div
               className="relative rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
@@ -183,8 +183,8 @@ export default function HowItWorksSection() {
             </motion.div>
           </div>
 
-          {/* Large-screen illustrative layout */}
-          <div className="relative hidden lg:block h-[520px]">
+          {/* Large-screen illustrative layout (xl and above) */}
+          <div className="relative hidden xl:block h-[520px]">
             {/* connectors */}
             <svg
               className="absolute inset-0 h-full w-full"
@@ -224,7 +224,7 @@ export default function HowItWorksSection() {
 
             {/* Step 01 */}
             <motion.div
-              className="absolute left-6 top-8 w-[360px] -rotate-2 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
+              className="absolute left-0 top-8 w-[320px] 2xl:left-6 2xl:w-[360px] -rotate-2 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.3 }}
@@ -259,7 +259,7 @@ export default function HowItWorksSection() {
 
             {/* Step 02 */}
             <motion.div
-              className="absolute left-[420px] top-[150px] w-[340px] rotate-2 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
+              className="absolute left-[33%] top-[150px] w-[320px] 2xl:left-[420px] 2xl:w-[340px] rotate-2 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.3 }}
@@ -302,7 +302,7 @@ export default function HowItWorksSection() {
 
             {/* Step 03 */}
             <motion.div
-              className="absolute right-8 top-10 w-[360px] -rotate-3 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
+              className="absolute right-0 top-10 w-[320px] 2xl:right-8 2xl:w-[360px] -rotate-3 rounded-2xl border-2 border-dashed border-slate-300 bg-transparent p-6"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.3 }}

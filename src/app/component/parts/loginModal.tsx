@@ -1,18 +1,20 @@
-import React, { useState, useRef, useEffect } from "react";
-import { FaFacebook, FaApple, FaEye, FaEyeSlash } from "react-icons/fa";
-import { IoMdMail, IoIosClose } from "react-icons/io";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
+import type { ClientSafeProvider } from "next-auth/react";
+import { getProviders, getSession, signIn } from "next-auth/react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
+import { type SubmitErrorHandler, useForm } from "react-hook-form";
+import { FaApple, FaEye, FaEyeSlash, FaFacebook } from "react-icons/fa";
 import {
-  FiCheckCircle,
   FiAlertCircle,
+  FiCheckCircle,
   FiChevronDown,
   FiSearch,
 } from "react-icons/fi";
-import Image from "next/image";
-import { signIn, signOut, getSession, getProviders } from "next-auth/react";
-import type { ClientSafeProvider } from "next-auth/react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { IoIosClose, IoMdMail } from "react-icons/io";
 import { z } from "zod";
+import OtpInput from "@/components/auth/OtpInput";
 
 // Validation schemas
 const signinSchema = z.object({
@@ -40,17 +42,17 @@ const signupSchema = z
       .min(8, "Password must be at least 8 characters")
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
       ),
     confirmPassword: z.string(),
     phone: z
       .string()
       .min(1, "Mobile number is required")
-      .regex(/^[\+]?[1-9][\d]{0,15}$/, "Invalid mobile number format"),
+      .regex(/^\+?[1-9]\d{0,15}$/, "Invalid mobile number format"),
     whatsapp: z
       .string()
       .min(1, "WhatsApp number is required")
-      .regex(/^[\+]?[1-9][\d]{0,15}$/, "Invalid WhatsApp number format"),
+      .regex(/^\+?[1-9]\d{0,15}$/, "Invalid WhatsApp number format"),
     country: z.string().min(1, "Country is required"),
     state: z.string().min(1, "State is required"),
     city: z.string().min(1, "City is required"),
@@ -62,6 +64,18 @@ const signupSchema = z
 
 type SigninFormData = z.infer<typeof signinSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
+
+const signupEmailSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+});
+
+type SignupEmailFormData = z.infer<typeof signupEmailSchema>;
+
+type ApiMessageResponse = {
+  success?: boolean;
+  error?: string;
+  message?: string;
+};
 
 interface LoginModalProps {
   open: boolean;
@@ -100,9 +114,19 @@ export default function LoginModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
-  const [providers, setProviders] = useState<
-    Record<string, ClientSafeProvider> | null
-  >(null);
+
+  // Sign up (email OTP) stepper state
+  const [signupStep, setSignupStep] = useState<
+    "credentials" | "personal" | "contact" | "otp"
+  >("credentials");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [providers, setProviders] = useState<Record<
+    string,
+    ClientSafeProvider
+  > | null>(null);
   const hasGoogle = !!providers?.google;
   const hasApple = !!providers?.apple;
   const hasFacebook = !!providers?.facebook;
@@ -141,6 +165,13 @@ export default function LoginModal({
     },
   });
 
+  const signupEmailForm = useForm<SignupEmailFormData>({
+    resolver: zodResolver(signupEmailSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -164,7 +195,7 @@ export default function LoginModal({
 
     try {
       const response = await fetch(
-        "https://countriesnow.space/api/v0.1/countries"
+        "https://countriesnow.space/api/v0.1/countries",
       );
       const data = await response.json();
       if (data.error === false && data.data) {
@@ -189,7 +220,7 @@ export default function LoginModal({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ country }),
-        }
+        },
       );
       const data = await response.json();
       if (data.error === false && data.data && data.data.states) {
@@ -213,7 +244,7 @@ export default function LoginModal({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ country, state }),
-        }
+        },
       );
       const data = await response.json();
       if (data.error === false && data.data) {
@@ -314,7 +345,13 @@ export default function LoginModal({
       setError(null);
       setSuccess(null);
       signinForm.reset();
+      signupEmailForm.reset();
       signupForm.reset();
+      setSignupStep("credentials");
+      setSignupEmail("");
+      setOtp("");
+      setOtpVerified(false);
+      setResendCooldown(0);
 
       // Reset location selections
       setSelectedCountry("");
@@ -323,7 +360,15 @@ export default function LoginModal({
       setStates([]);
       setCities([]);
     }
-  }, [open, mode, signinForm, signupForm]);
+  }, [open, mode, signinForm, signupEmailForm, signupForm]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = window.setInterval(() => {
+      setResendCooldown((s) => (s <= 1 ? 0 : s - 1));
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [resendCooldown]);
 
   // Close on Escape key
   useEffect(() => {
@@ -364,7 +409,7 @@ export default function LoginModal({
       if (result?.error) {
         if (result.error === "OAuthAccountNotLinked") {
           setError(
-            "An account with this email already exists. Please sign in with your original method."
+            "An account with this email already exists. Please sign in with your original method.",
           );
         } else {
           setError("Failed to sign in with Google. Please try again.");
@@ -384,7 +429,7 @@ export default function LoginModal({
           } else {
             setSuccess(null);
             setError(
-              "Sign in successful but session not established. Please try again."
+              "Sign in successful but session not established. Please try again.",
             );
           }
         }, 1000);
@@ -419,7 +464,7 @@ export default function LoginModal({
       if (result?.error) {
         if (result.error === "OAuthAccountNotLinked") {
           setError(
-            "An account with this email already exists. Please sign in with your original method."
+            "An account with this email already exists. Please sign in with your original method.",
           );
         } else {
           setError("Failed to sign in with Facebook. Please try again.");
@@ -439,7 +484,7 @@ export default function LoginModal({
           } else {
             setSuccess(null);
             setError(
-              "Sign in successful but session not established. Please try again."
+              "Sign in successful but session not established. Please try again.",
             );
           }
         }, 1500);
@@ -474,7 +519,7 @@ export default function LoginModal({
       if (result?.error) {
         if (result.error === "OAuthAccountNotLinked") {
           setError(
-            "An account with this email already exists. Please sign in with your original method."
+            "An account with this email already exists. Please sign in with your original method.",
           );
         } else {
           setError("Failed to sign in with Apple. Please try again.");
@@ -494,7 +539,7 @@ export default function LoginModal({
           } else {
             setSuccess(null);
             setError(
-              "Sign in successful but session not established. Please try again."
+              "Sign in successful but session not established. Please try again.",
             );
           }
         }, 1500);
@@ -544,31 +589,43 @@ export default function LoginModal({
     }
   };
 
-  // Handle Email/Password Sign Up
   const handleSignUp = async (data: SignupFormData) => {
     try {
       setIsLoading(true);
       setError(null);
       setSuccess(null);
 
-      // Only send the fields that the API expects
-      const signupData = {
-        firstName: data.firstName,
-        middleName: data.middleName,
-        surname: data.surname,
-        email: data.email,
+      // if (!otpVerified) {
+      //   setError("Please verify your email before creating an account.");
+      //   setSignupStep("otp");
+      //   return;
+      // }
+
+
+      const normalizedEmail = data.email.trim().toLowerCase();
+      const name =
+        `${data.firstName} ${data.middleName ? `${data.middleName} ` : ""}${data.surname}`.trim();
+
+      const registrationData = {
+        name,
+        email: normalizedEmail,
         password: data.password,
-        phone: data.phone,
+        role: "client",
+        provider: "email",
+        token: "",
+        mobile: data.phone,
+        whatsapp: data.whatsapp,
+        country: data.country,
+        state: data.state,
+        city: data.city,
       };
 
-      console.log("Sending signup data:", signupData);
-
-      const response = await fetch("/api/auth/signup", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(signupData),
+        body: JSON.stringify(registrationData),
       });
 
       const result = await response.json();
@@ -580,35 +637,274 @@ export default function LoginModal({
         return;
       }
 
-      // Account created successfully, now sign in
-      setSuccess("Account created successfully! Signing you in...");
+      // Account created successfully, now send OTP and go to verify step
+      setSuccess("Account created successfully! Just one more thing....");
 
-      setTimeout(async () => {
-        const signInResult = await signIn("credentials", {
-          email: data.email,
-          password: data.password,
-          redirect: false,
+      // Automatically send OTP
+      try {
+        const otpResponse = await fetch("/api/otp/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: normalizedEmail }),
         });
-
-        if (signInResult?.ok) {
-          const session = await getSession();
-          if (session?.authToken) {
-            localStorage.setItem("auth_token", session.authToken);
-          }
-          onSuccess?.();
-          onClose();
-        } else {
-          setSuccess(null);
-          setError(
-            "Account created but failed to sign in. Please try signing in manually."
-          );
+        if (otpResponse.ok) {
+          setResendCooldown(30);
         }
-      }, 1000);
+      } catch (otpErr) {
+        console.error("Failed to auto-send OTP:", otpErr);
+      }
+
+      setSignupStep("otp");
     } catch (error) {
       console.error("Login modal signup error:", error);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSendOtp = async ({ email }: SignupEmailFormData) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      const normalizedEmail = email.trim().toLowerCase();
+
+      const response = await fetch("/api/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+
+      const result = (await response
+        .json()
+        .catch(() => ({}))) as ApiMessageResponse;
+
+      if (!response.ok || result.success === false) {
+        const rawMessage = result.error || result.message || "";
+        if (
+          /email is already verified/i.test(rawMessage) ||
+          /already verified/i.test(rawMessage)
+        ) {
+          setError(null);
+          setSuccess(
+            "An account with this email already exists. Please sign in.",
+          );
+          setActiveMode("login");
+          setShowEmailForm(true);
+          signinForm.setValue("email", normalizedEmail, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          signinForm.setValue("password", "", {
+            shouldDirty: false,
+            shouldValidate: false,
+          });
+          setSignupStep("credentials");
+          setSignupEmail("");
+          setOtp("");
+          setOtpVerified(false);
+          return;
+        }
+        if (
+          /user not found/i.test(rawMessage) ||
+          /does not exist/i.test(rawMessage)
+        ) {
+          setSignupEmail(normalizedEmail);
+          signupForm.setValue("email", normalizedEmail, {
+            shouldDirty: true,
+            shouldValidate: false,
+          });
+          setOtp("");
+          setOtpVerified(false);
+          setSignupStep("otp");
+          setResendCooldown(30);
+          setSuccess("OTP sent. Check your email.");
+          return;
+        }
+        setError(result.error || result.message || "Failed to send OTP");
+        return;
+      }
+
+      setSignupEmail(normalizedEmail);
+      signupForm.setValue("email", normalizedEmail, {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
+      setOtp("");
+      setOtpVerified(false);
+      setSignupStep("otp");
+      setResendCooldown(30);
+      setSuccess(result.message || "OTP sent. Check your email.");
+    } catch (error) {
+      console.error("Send OTP error:", error);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!signupEmail || resendCooldown > 0) return;
+    await handleSendOtp({ email: signupEmail });
+  };
+
+  const handleVerifyOtp = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      if (!signupEmail) {
+        setError("Please enter your email first.");
+        setSignupStep("credentials");
+        return;
+      }
+
+      const normalizedOtp = otp.replace(/\D/g, "").slice(0, 6);
+      if (normalizedOtp.length !== 6) {
+        setError("Enter the 6-digit code.");
+        return;
+      }
+
+
+      const response = await fetch("/api/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: signupEmail, code: normalizedOtp }),
+      });
+
+      const result = (await response
+        .json()
+        .catch(() => ({}))) as ApiMessageResponse;
+
+      if (!response.ok || result.success === false) {
+        setError(result.error || result.message || "Failed to verify OTP");
+        return;
+      }
+
+      setOtpVerified(true);
+      setSuccess("Email verified! Signing you in...");
+
+      // Final sign in after OTP verification
+      const data = signupForm.getValues();
+      const signInResult = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+
+      if (signInResult?.ok) {
+        const session = await getSession();
+        if (session?.authToken) {
+          localStorage.setItem("auth_token", session.authToken);
+        }
+        setTimeout(() => {
+          onSuccess?.();
+          onClose();
+        }, 1000);
+      } else {
+        setError(
+          "Verification successful, but failed to sign in automatically. Please try signing in manually.",
+        );
+      }
+    } catch (error) {
+      console.error("Verify OTP error:", error);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignupBackToEmail = () => {
+    setError(null);
+    setSuccess(null);
+    setOtp("");
+    setOtpVerified(false);
+    setSignupStep("credentials");
+  };
+
+  const handleSignupNextFromCredentials = async () => {
+    setError(null);
+    setSuccess(null);
+
+    const isValid = await signupForm.trigger([
+      "email",
+      "password",
+      "confirmPassword",
+    ]);
+
+    if (isValid) {
+      setSignupEmail(signupForm.getValues("email").trim().toLowerCase());
+      setSignupStep("personal");
+    }
+  };
+
+  const handleSignupNextFromPersonal = async () => {
+    setError(null);
+    setSuccess(null);
+
+    const isValid = await signupForm.trigger([
+      "firstName",
+      "middleName",
+      "surname",
+    ]);
+
+    if (isValid) setSignupStep("contact");
+  };
+
+
+  const handleSignUpInvalid: SubmitErrorHandler<SignupFormData> = (
+    formErrors,
+  ) => {
+    if (
+      formErrors.email ||
+      formErrors.password ||
+      formErrors.confirmPassword
+    ) {
+      setSignupStep("credentials");
+      return;
+    }
+
+    if (formErrors.firstName || formErrors.surname || formErrors.middleName) {
+      setSignupStep("personal");
+      return;
+    }
+
+    if (
+      formErrors.phone ||
+      formErrors.whatsapp ||
+      formErrors.country ||
+      formErrors.state ||
+      formErrors.city
+    ) {
+      setSignupStep("contact");
+      return;
+    }
+  };
+
+  const handleSignupStepperSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (signupStep === "credentials") {
+      void handleSignupNextFromCredentials();
+      return;
+    }
+
+    if (signupStep === "personal") {
+      void handleSignupNextFromPersonal();
+      return;
+    }
+
+    if (signupStep === "contact") {
+      signupForm.handleSubmit(handleSignUp, handleSignUpInvalid)(e);
+      return;
+    }
+
+    if (signupStep === "otp") {
+      void handleVerifyOtp();
+      return;
     }
   };
 
@@ -618,7 +914,13 @@ export default function LoginModal({
     setError(null);
     setSuccess(null);
     signinForm.reset();
+    signupEmailForm.reset();
     signupForm.reset();
+    setSignupStep("credentials");
+    setSignupEmail("");
+    setOtp("");
+    setOtpVerified(false);
+    setResendCooldown(0);
   };
 
   if (!open) return null;
@@ -627,12 +929,14 @@ export default function LoginModal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       ref={modalRef}
+      role="presentation"
       onMouseDown={handleBackdropClick}
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex overflow-hidden h-5/6 relative animate-in fade-in-0 zoom-in-95">
         {/* Left Side - Motivation & Image */}
         <div className="hidden md:flex w-1/2 h-full p-0 text-white bg-gradient-to-b from-teal-600 via-teal-700 to-teal-800 flex-col justify-between relative">
           <div className="p-8 pb-0 z-10">
+
             <h2 className="text-3xl text-left font-bold mb-6 text-white">
               It all starts here <i className="text-2xl block">- Gain access</i>
             </h2>
@@ -704,6 +1008,7 @@ export default function LoginModal({
                     ? "Don't have an account? "
                     : "Already have an account? "}
                   <button
+                    type="button"
                     className="text-teal-600 hover:underline font-medium"
                     onClick={toggleMode}
                     disabled={isLoading}
@@ -715,6 +1020,7 @@ export default function LoginModal({
                 {/* Social Login Buttons */}
                 {hasGoogle && (
                   <button
+                    type="button"
                     className="w-full flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleGoogleSignIn}
                     disabled={isLoading}
@@ -730,6 +1036,7 @@ export default function LoginModal({
                 )}
 
                 <button
+                  type="button"
                   className="w-full flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => setShowEmailForm(true)}
                   disabled={isLoading}
@@ -749,6 +1056,7 @@ export default function LoginModal({
                     <div className="flex gap-4">
                       {hasApple && (
                         <button
+                          type="button"
                           className={`${socialButtonWidth} flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed`}
                           onClick={handleAppleSignIn}
                           disabled={isLoading}
@@ -759,6 +1067,7 @@ export default function LoginModal({
                       )}
                       {hasFacebook && (
                         <button
+                          type="button"
                           className={`${socialButtonWidth} flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed`}
                           onClick={handleFacebookSignIn}
                           disabled={isLoading}
@@ -776,11 +1085,12 @@ export default function LoginModal({
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                   <button
+                    type="button"
                     onClick={() => setShowEmailForm(false)}
                     className="text-teal-600 hover:text-teal-700"
                     disabled={isLoading}
                   >
-                    ← Back
+                    Back
                   </button>
                   <span className="text-gray-600">
                     {activeMode === "login"
@@ -860,509 +1170,611 @@ export default function LoginModal({
                 ) : (
                   /* Sign Up Form */
                   <form
-                    onSubmit={signupForm.handleSubmit(handleSignUp)}
+                    onSubmit={handleSignupStepperSubmit} /* STEPPER */
                     className="space-y-4"
                   >
-                    {/* Hidden inputs for form validation */}
+                    {/* Hidden inputs for submission/validation */}
+                    <input type="hidden" {...signupForm.register("email")} />
                     <input type="hidden" {...signupForm.register("country")} />
                     <input type="hidden" {...signupForm.register("state")} />
                     <input type="hidden" {...signupForm.register("city")} />
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label
-                          htmlFor="firstName"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          First Name *
-                        </label>
-                        <input
-                          type="text"
-                          id="firstName"
-                          {...signupForm.register("firstName")}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                          placeholder="First name"
-                          disabled={isLoading}
-                        />
-                        {signupForm.formState.errors.firstName && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {signupForm.formState.errors.firstName.message}
-                          </p>
-                        )}
-                      </div>
 
-                      <div>
-                        <label
-                          htmlFor="surname"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          Surname *
-                        </label>
-                        <input
-                          type="text"
-                          id="surname"
-                          {...signupForm.register("surname")}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                          placeholder="Surname"
-                          disabled={isLoading}
-                        />
-                        {signupForm.formState.errors.surname && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {signupForm.formState.errors.surname.message}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="middleName"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Middle Name (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        id="middleName"
-                        {...signupForm.register("middleName")}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                        placeholder="Middle name"
-                        disabled={isLoading}
-                      />
-                      {signupForm.formState.errors.middleName && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {signupForm.formState.errors.middleName.message}
-                        </p>
+                    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                      <span>
+                        Step{" "}
+                        {signupStep === "credentials"
+                          ? 1
+                          : signupStep === "personal"
+                            ? 2
+                            : signupStep === "contact"
+                              ? 3
+                              : 4}{" "}
+                        of 4
+                      </span>
+                      {otpVerified && (
+                        <span className="text-teal-700">Email verified</span>
                       )}
                     </div>
 
-                    <div>
-                      <label
-                        htmlFor="signupEmail"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Email Address *
-                      </label>
-                      <input
-                        type="email"
-                        id="signupEmail"
-                        {...signupForm.register("email")}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                        placeholder="Enter your email"
-                        disabled={isLoading}
-                      />
-                      {signupForm.formState.errors.email && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {signupForm.formState.errors.email.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="phone"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Mobile Number *
-                      </label>
-                      <input
-                        type="tel"
-                        id="phone"
-                        {...signupForm.register("phone")}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                        placeholder="+1 (555) 123-4567"
-                        disabled={isLoading}
-                      />
-                      {signupForm.formState.errors.phone && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {signupForm.formState.errors.phone.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="whatsapp"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        WhatsApp Number *
-                      </label>
-                      <input
-                        type="tel"
-                        id="whatsapp"
-                        {...signupForm.register("whatsapp")}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                        placeholder="+1 (555) 123-4567"
-                        disabled={isLoading}
-                      />
-                      {signupForm.formState.errors.whatsapp && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {signupForm.formState.errors.whatsapp.message}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Location Fields */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium text-gray-900">
-                        Location Information
-                      </h3>
-
-                      {/* Country Dropdown */}
-                      <div className="relative dropdown-container">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Country *
-                        </label>
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (
-                                !countryDropdownOpen &&
-                                countries.length === 0
-                              ) {
-                                fetchCountries();
-                              }
-                              setCountryDropdownOpen(!countryDropdownOpen);
-                            }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-teal-500 focus:border-teal-500 flex items-center justify-between"
-                          >
-                            <span
-                              className={
-                                selectedCountry
-                                  ? "text-gray-900"
-                                  : "text-gray-500"
-                              }
-                            >
-                              {selectedCountry || "Select Country"}
-                            </span>
-                            <FiChevronDown className="w-4 h-4 text-gray-400" />
-                          </button>
-
-                          {countryDropdownOpen && (
-                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                              <div className="p-2 border-b border-gray-200">
-                                <div className="relative">
-                                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                  <input
-                                    type="text"
-                                    placeholder="Search countries..."
-                                    value={countrySearch}
-                                    onChange={(e) =>
-                                      setCountrySearch(e.target.value)
-                                    }
-                                    className="w-full pl-10 pr-3 py-2 border text-gray-500 border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-                                  />
-                                </div>
-                              </div>
-                              <div className="h-48 overflow-y-auto">
-                                {loadingCountries ? (
-                                  <div className="p-3 text-center text-gray-500">
-                                    Loading countries...
-                                  </div>
-                                ) : countries.length === 0 ? (
-                                  <div className="p-3 text-center text-gray-500">
-                                    No countries loaded
-                                  </div>
-                                ) : (
-                                  countries
-                                    .filter((country) => {
-                                      if (!countrySearch.trim()) return true;
-                                      return country.country
-                                        .toLowerCase()
-                                        .includes(countrySearch.toLowerCase());
-                                    })
-                                    .map((country, index) => (
-                                      <button
-                                        key={index}
-                                        type="button"
-                                        onClick={() =>
-                                          handleCountrySelect(
-                                            String(country.country)
-                                          )
-                                        }
-                                        className="w-full px-3 py-2 text-left text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                      >
-                                        {country.country}
-                                      </button>
-                                    ))
-                                )}
-                              </div>
-                            </div>
+                    {signupStep === "credentials" && (
+                      <div className="space-y-4">
+                        <div>
+                          <label htmlFor="signupEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                            Email Address *
+                          </label>
+                          <input
+                            type="email"
+                            id="signupEmail"
+                            {...signupForm.register("email")}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
+                            placeholder="Enter your email"
+                            disabled={isLoading}
+                          />
+                          {signupForm.formState.errors.email && (
+                            <p className="text-red-500 text-sm mt-1">{signupForm.formState.errors.email.message}</p>
                           )}
                         </div>
-                        {signupForm.formState.errors.country && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {signupForm.formState.errors.country.message}
-                          </p>
-                        )}
-                      </div>
 
-                      {/* State Dropdown */}
-                      <div className="relative dropdown-container">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          State *
-                        </label>
-                        <div className="relative">
+                        <div>
+                          <label htmlFor="signupPassword" title="At least 8 characters with letters and numbers" className="block text-sm font-medium text-gray-700 mb-1">
+                            Password *
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showPassword ? "text" : "password"}
+                              id="signupPassword"
+                              {...signupForm.register("password")}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent pr-10 text-black"
+                              placeholder="Create a password"
+                              disabled={isLoading}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                              disabled={isLoading}
+                            >
+                              {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
+                          </div>
+                          {signupForm.formState.errors.password && (
+                            <p className="text-red-500 text-sm mt-1">{signupForm.formState.errors.password.message}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label htmlFor="confirmPassword" title="Must match password" className="block text-sm font-medium text-gray-700 mb-1">
+                            Confirm Password *
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showConfirmPassword ? "text" : "password"}
+                              id="confirmPassword"
+                              {...signupForm.register("confirmPassword")}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent pr-10 text-black"
+                              placeholder="Confirm your password"
+                              disabled={isLoading}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                              disabled={isLoading}
+                            >
+                              {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
+                          </div>
+                          {signupForm.formState.errors.confirmPassword && (
+                            <p className="text-red-500 text-sm mt-1">{signupForm.formState.errors.confirmPassword.message}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+
+                    {signupStep === "otp" && (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-teal-700 font-medium bg-teal-50 p-2 rounded-lg border border-teal-100">
+                          <FiCheckCircle className="h-5 w-5" />
+                          <span>Account created successfully!</span>
+                        </div>
+
+                        <p className="text-xl font-bold text-teal-800 animate-pulse text-center">
+                          Just one more thing....
+                        </p>
+
+                        <div className="text-sm text-gray-700">
+                          Enter the 6-digit code sent to{" "}
+                          <span className="font-medium">{signupEmail}</span>.
+                        </div>
+
+                        <OtpInput
+                          value={otp}
+                          onChange={setOtp}
+                          disabled={isLoading}
+                          autoFocus
+                        />
+
+                        <div className="flex items-center justify-between text-sm">
                           <button
                             type="button"
-                            onClick={() =>
-                              selectedCountry &&
-                              setStateDropdownOpen(!stateDropdownOpen)
-                            }
-                            disabled={!selectedCountry}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-teal-500 focus:border-teal-500 flex items-center justify-between disabled:bg-gray-50 disabled:cursor-not-allowed"
+                            className="text-gray-700 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={handleSignupBackToEmail}
+                            disabled={isLoading}
                           >
-                            <span
-                              className={
-                                selectedState
-                                  ? "text-gray-900"
-                                  : "text-gray-500"
-                              }
-                            >
-                              {selectedState ||
-                                (selectedCountry
-                                  ? "Select State"
-                                  : "Select Country First")}
-                            </span>
-                            <FiChevronDown className="w-4 h-4 text-gray-400" />
+                            Change email
                           </button>
 
-                          {stateDropdownOpen && selectedCountry && (
-                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                              <div className="p-2 border-b border-gray-200">
-                                <div className="relative">
-                                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                  <input
-                                    type="text"
-                                    placeholder="Search states..."
-                                    value={stateSearch}
-                                    onChange={(e) =>
-                                      setStateSearch(e.target.value)
-                                    }
-                                    className="w-full pl-10 pr-3 py-2 border text-gray-500 border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-                                  />
-                                </div>
-                              </div>
-                              <div className="h-48 overflow-y-auto">
-                                {loadingStates ? (
-                                  <div className="p-3 text-center text-gray-500">
-                                    Loading states...
+                          <button
+                            type="button"
+                            className="text-teal-700 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={handleResendOtp}
+                            disabled={
+                              isLoading || resendCooldown > 0 || !signupEmail
+                            }
+                          >
+                            {resendCooldown > 0
+                              ? `Resend in ${resendCooldown}s`
+                              : "Resend OTP"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {signupStep === "personal" && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label
+                              htmlFor="firstName"
+                              className="block text-sm font-medium text-gray-700 mb-1"
+                            >
+                              First Name *
+                            </label>
+                            <input
+                              type="text"
+                              id="firstName"
+                              {...signupForm.register("firstName")}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
+                              placeholder="First name"
+                              disabled={isLoading}
+                            />
+                            {signupForm.formState.errors.firstName && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {signupForm.formState.errors.firstName.message}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="surname"
+                              className="block text-sm font-medium text-gray-700 mb-1"
+                            >
+                              Surname *
+                            </label>
+                            <input
+                              type="text"
+                              id="surname"
+                              {...signupForm.register("surname")}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
+                              placeholder="Surname"
+                              disabled={isLoading}
+                            />
+                            {signupForm.formState.errors.surname && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {signupForm.formState.errors.surname.message}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="middleName"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Middle Name (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            id="middleName"
+                            {...signupForm.register("middleName")}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
+                            placeholder="Middle name"
+                            disabled={isLoading}
+                          />
+                          {signupForm.formState.errors.middleName && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {signupForm.formState.errors.middleName.message}
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    {signupStep === "contact" && (
+                      <>
+                        <div>
+                          <label
+                            htmlFor="phone"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Mobile Number *
+                          </label>
+                          <input
+                            type="tel"
+                            id="phone"
+                            {...signupForm.register("phone")}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
+                            placeholder="+1 (555) 123-4567"
+                            disabled={isLoading}
+                          />
+                          {signupForm.formState.errors.phone && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {signupForm.formState.errors.phone.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="whatsapp"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            WhatsApp Number *
+                          </label>
+                          <input
+                            type="tel"
+                            id="whatsapp"
+                            {...signupForm.register("whatsapp")}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
+                            placeholder="+1 (555) 123-4567"
+                            disabled={isLoading}
+                          />
+                          {signupForm.formState.errors.whatsapp && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {signupForm.formState.errors.whatsapp.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Location Fields */}
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-medium text-gray-900">
+                            Location Information
+                          </h3>
+
+                          {/* Country Dropdown */}
+                          <div className="relative dropdown-container">
+                            <span className="block text-sm font-medium text-gray-700 mb-1">
+                              Country *
+                            </span>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (
+                                    !countryDropdownOpen &&
+                                    countries.length === 0
+                                  ) {
+                                    fetchCountries();
+                                  }
+                                  setCountryDropdownOpen(!countryDropdownOpen);
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-teal-500 focus:border-teal-500 flex items-center justify-between"
+                              >
+                                <span
+                                  className={
+                                    selectedCountry
+                                      ? "text-gray-900"
+                                      : "text-gray-500"
+                                  }
+                                >
+                                  {selectedCountry || "Select Country"}
+                                </span>
+                                <FiChevronDown className="w-4 h-4 text-gray-400" />
+                              </button>
+
+                              {countryDropdownOpen && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                                  <div className="p-2 border-b border-gray-200">
+                                    <div className="relative">
+                                      <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                      <input
+                                        type="text"
+                                        placeholder="Search countries..."
+                                        value={countrySearch}
+                                        onChange={(e) =>
+                                          setCountrySearch(e.target.value)
+                                        }
+                                        className="w-full pl-10 pr-3 py-2 border text-gray-500 border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                                      />
+                                    </div>
                                   </div>
-                                ) : (
-                                  states
-                                    .filter((state) => {
-                                      if (!stateSearch.trim()) return true;
-                                      return state?.name
-                                        ?.toLowerCase()
-                                        ?.includes(stateSearch.toLowerCase());
-                                    })
-                                    .map(
-                                      (state) =>
-                                        state?.name && (
+                                  <div className="h-48 overflow-y-auto">
+                                    {loadingCountries ? (
+                                      <div className="p-3 text-center text-gray-500">
+                                        Loading countries...
+                                      </div>
+                                    ) : countries.length === 0 ? (
+                                      <div className="p-3 text-center text-gray-500">
+                                        No countries loaded
+                                      </div>
+                                    ) : (
+                                      countries
+                                        .filter((country) => {
+                                          if (!countrySearch.trim())
+                                            return true;
+                                          return country.country
+                                            .toLowerCase()
+                                            .includes(
+                                              countrySearch.toLowerCase(),
+                                            );
+                                        })
+                                        .map((country, index) => (
                                           <button
-                                            key={state.state_code}
+                                            key={index}
                                             type="button"
                                             onClick={() =>
-                                              handleStateSelect(state.name)
+                                              handleCountrySelect(
+                                                String(country.country),
+                                              )
                                             }
                                             className="w-full px-3 py-2 text-left text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                                           >
-                                            {state.name}
+                                            {country.country}
                                           </button>
-                                        )
-                                    )
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        {signupForm.formState.errors.state && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {signupForm.formState.errors.state.message}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* City Dropdown */}
-                      <div className="relative dropdown-container">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          City *
-                        </label>
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              selectedState &&
-                                setCityDropdownOpen(!cityDropdownOpen);
-                            }}
-                            disabled={!selectedState}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-teal-500 focus:border-teal-500 flex items-center justify-between disabled:bg-gray-50 disabled:cursor-not-allowed"
-                          >
-                            <span
-                              className={
-                                selectedCity ? "text-gray-900" : "text-gray-500"
-                              }
-                            >
-                              {selectedCity ||
-                                (selectedState
-                                  ? "Select City"
-                                  : "Select State First")}
-                            </span>
-                            <FiChevronDown className="w-4 h-4 text-gray-400" />
-                          </button>
-
-                          {cityDropdownOpen && selectedState && (
-                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                              <div className="p-2 border-b border-gray-200">
-                                <div className="relative">
-                                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                  <input
-                                    type="text"
-                                    placeholder="Search cities..."
-                                    value={citySearch}
-                                    onChange={(e) =>
-                                      setCitySearch(e.target.value)
-                                    }
-                                    className="w-full pl-10 pr-3 py-2 border text-gray-500 border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-                                  />
+                                        ))
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="h-48 overflow-y-auto">
-                                {loadingCities ? (
-                                  <div className="p-3 text-center text-gray-500">
-                                    Loading cities...
-                                  </div>
-                                ) : cities.length > 0 ? (
-                                  (() => {
-                                    console.log(
-                                      "Rendering cities array:",
-                                      cities
-                                    );
-                                    console.log("First city:", cities[0]);
-                                    console.log(
-                                      "Cities length:",
-                                      cities.length
-                                    );
-                                    return cities;
-                                  })()
-                                    .filter((city) => {
-                                      if (!citySearch.trim()) return true;
-                                      const cityName =
-                                        typeof city === "string"
-                                          ? city
-                                          : city?.name;
-                                      return cityName
-                                        ?.toLowerCase()
-                                        ?.includes(citySearch.toLowerCase());
-                                    })
-                                    .map((city, index) => {
-                                      const cityName =
-                                        typeof city === "string"
-                                          ? city
-                                          : city?.name;
-                                      return cityName ? (
-                                        <button
-                                          key={index}
-                                          type="button"
-                                          onClick={() =>
-                                            handleCitySelect(cityName)
-                                          }
-                                          className="w-full px-3 py-2 text-left text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                        >
-                                          {cityName}
-                                        </button>
-                                      ) : null;
-                                    })
-                                ) : (
-                                  <div className="p-3 text-center text-gray-500">
-                                    No cities available for this state
-                                  </div>
-                                )}
-                              </div>
+                              )}
                             </div>
-                          )}
+                            {signupForm.formState.errors.country && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {signupForm.formState.errors.country.message}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* State Dropdown */}
+                          <div className="relative dropdown-container">
+                            <span className="block text-sm font-medium text-gray-700 mb-1">
+                              State *
+                            </span>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  selectedCountry &&
+                                  setStateDropdownOpen(!stateDropdownOpen)
+                                }
+                                disabled={!selectedCountry}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-teal-500 focus:border-teal-500 flex items-center justify-between disabled:bg-gray-50 disabled:cursor-not-allowed"
+                              >
+                                <span
+                                  className={
+                                    selectedState
+                                      ? "text-gray-900"
+                                      : "text-gray-500"
+                                  }
+                                >
+                                  {selectedState ||
+                                    (selectedCountry
+                                      ? "Select State"
+                                      : "Select Country First")}
+                                </span>
+                                <FiChevronDown className="w-4 h-4 text-gray-400" />
+                              </button>
+
+                              {stateDropdownOpen && selectedCountry && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                                  <div className="p-2 border-b border-gray-200">
+                                    <div className="relative">
+                                      <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                      <input
+                                        type="text"
+                                        placeholder="Search states..."
+                                        value={stateSearch}
+                                        onChange={(e) =>
+                                          setStateSearch(e.target.value)
+                                        }
+                                        className="w-full pl-10 pr-3 py-2 border text-gray-500 border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="h-48 overflow-y-auto">
+                                    {loadingStates ? (
+                                      <div className="p-3 text-center text-gray-500">
+                                        Loading states...
+                                      </div>
+                                    ) : (
+                                      states
+                                        .filter((state) => {
+                                          if (!stateSearch.trim()) return true;
+                                          return state?.name
+                                            ?.toLowerCase()
+                                            ?.includes(
+                                              stateSearch.toLowerCase(),
+                                            );
+                                        })
+                                        .map(
+                                          (state) =>
+                                            state?.name && (
+                                              <button
+                                                key={state.state_code}
+                                                type="button"
+                                                onClick={() =>
+                                                  handleStateSelect(state.name)
+                                                }
+                                                className="w-full px-3 py-2 text-left text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                              >
+                                                {state.name}
+                                              </button>
+                                            ),
+                                        )
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            {signupForm.formState.errors.state && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {signupForm.formState.errors.state.message}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* City Dropdown */}
+                          <div className="relative dropdown-container">
+                            <span className="block text-sm font-medium text-gray-700 mb-1">
+                              City *
+                            </span>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  selectedState &&
+                                    setCityDropdownOpen(!cityDropdownOpen);
+                                }}
+                                disabled={!selectedState}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-teal-500 focus:border-teal-500 flex items-center justify-between disabled:bg-gray-50 disabled:cursor-not-allowed"
+                              >
+                                <span
+                                  className={
+                                    selectedCity
+                                      ? "text-gray-900"
+                                      : "text-gray-500"
+                                  }
+                                >
+                                  {selectedCity ||
+                                    (selectedState
+                                      ? "Select City"
+                                      : "Select State First")}
+                                </span>
+                                <FiChevronDown className="w-4 h-4 text-gray-400" />
+                              </button>
+
+                              {cityDropdownOpen && selectedState && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                                  <div className="p-2 border-b border-gray-200">
+                                    <div className="relative">
+                                      <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                      <input
+                                        type="text"
+                                        placeholder="Search cities..."
+                                        value={citySearch}
+                                        onChange={(e) =>
+                                          setCitySearch(e.target.value)
+                                        }
+                                        className="w-full pl-10 pr-3 py-2 border text-gray-500 border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="h-48 overflow-y-auto">
+                                    {loadingCities ? (
+                                      <div className="p-3 text-center text-gray-500">
+                                        Loading cities...
+                                      </div>
+                                    ) : cities.length > 0 ? (
+                                      (() => {
+                                        console.log(
+                                          "Rendering cities array:",
+                                          cities,
+                                        );
+                                        console.log("First city:", cities[0]);
+                                        console.log(
+                                          "Cities length:",
+                                          cities.length,
+                                        );
+                                        return cities;
+                                      })()
+                                        .filter((city) => {
+                                          if (!citySearch.trim()) return true;
+                                          const cityName =
+                                            typeof city === "string"
+                                              ? city
+                                              : city?.name;
+                                          return cityName
+                                            ?.toLowerCase()
+                                            ?.includes(
+                                              citySearch.toLowerCase(),
+                                            );
+                                        })
+                                        .map((city, index) => {
+                                          const cityName =
+                                            typeof city === "string"
+                                              ? city
+                                              : city?.name;
+                                          return cityName ? (
+                                            <button
+                                              key={index}
+                                              type="button"
+                                              onClick={() =>
+                                                handleCitySelect(cityName)
+                                              }
+                                              className="w-full px-3 py-2 text-left text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                            >
+                                              {cityName}
+                                            </button>
+                                          ) : null;
+                                        })
+                                    ) : (
+                                      <div className="p-3 text-center text-gray-500">
+                                        No cities available for this state
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            {signupForm.formState.errors.city && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {signupForm.formState.errors.city.message}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        {signupForm.formState.errors.city && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {signupForm.formState.errors.city.message}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                      </>
+                    )}
 
-                    <div>
-                      <label
-                        htmlFor="signupPassword"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Password *
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          id="signupPassword"
-                          {...signupForm.register("password")}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent pr-10 text-black"
-                          placeholder="Create a password"
-                          disabled={isLoading}
-                        />
+
+                    <div className="flex gap-3">
+                      {signupStep !== "credentials" && signupStep !== "otp" && (
                         <button
                           type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          className="w-1/3 border border-gray-300 text-gray-700 p-3 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => {
+                            if (signupStep === "personal") setSignupStep("credentials");
+                            else if (signupStep === "contact") setSignupStep("personal");
+                          }}
                           disabled={isLoading}
                         >
-                          {showPassword ? <FaEyeSlash /> : <FaEye />}
+                          Back
                         </button>
-                      </div>
-                      {signupForm.formState.errors.password && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {signupForm.formState.errors.password.message}
-                        </p>
                       )}
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="confirmPassword"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                      <button
+                        type="submit"
+                        className={`${
+                          signupStep === "credentials" ? "w-full" : "w-2/3"
+                        } bg-teal-600 text-white p-3 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                        disabled={
+                          isLoading ||
+                          (signupStep === "otp" &&
+                            otp.replace(/\D/g, "").length !== 6)
+                        }
                       >
-                        Confirm Password *
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showConfirmPassword ? "text" : "password"}
-                          id="confirmPassword"
-                          {...signupForm.register("confirmPassword")}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent pr-10 text-black"
-                          placeholder="Confirm your password"
-                          disabled={isLoading}
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                          disabled={isLoading}
-                        >
-                          {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                        </button>
-                      </div>
-                      {signupForm.formState.errors.confirmPassword && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {signupForm.formState.errors.confirmPassword.message}
-                        </p>
-                      )}
+                        {signupStep === "otp"
+                          ? isLoading
+                            ? "Verifying..."
+                            : "Verify OTP"
+                          : signupStep === "contact"
+                            ? isLoading
+                              ? "Creating Account..."
+                              : "Create Account"
+                            : "Next"}
+                      </button>
                     </div>
-
-                    <button
-                      type="submit"
-                      className="w-full bg-teal-600 text-white p-3 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Creating Account..." : "Create Account"}
-                    </button>
                   </form>
                 )}
               </div>

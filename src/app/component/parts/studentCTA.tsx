@@ -43,7 +43,7 @@ export default function StudentCTA() {
             >
               <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-6">
                 <div className="h-px w-8 bg-teal-500" />
-                <span className="text-teal-400 font-semibold tracking-wider text-sm uppercase">For the next gen</span>
+                <span className="text-teal-400 font-semibold tracking-wider text-sm uppercase">For the Gen Alpha</span>
               </motion.div>
 
               <motion.h2 

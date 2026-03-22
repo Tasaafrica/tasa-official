@@ -45,44 +45,44 @@ body {
   width: 100%;
   margin-left: auto;
   margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding-left: 1.5rem; /* px-6 */
+  padding-right: 1.5rem;
 }
 
 @media (min-width: 640px) {
   .container-responsive {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: 2rem; /* px-8 */
+    padding-right: 2rem;
   }
 }
 
 @media (min-width: 768px) {
   .container-responsive {
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding-left: 3rem; /* px-12 */
+    padding-right: 3rem;
   }
 }
 
 @media (min-width: 1024px) {
   .container-responsive {
-    padding-left: 2.5rem;
-    padding-right: 2.5rem;
+    padding-left: 4.5rem; /* px-18 - generous but not overwhelming */
+    padding-right: 4.5rem;
   }
 }
 
 @media (min-width: 1280px) {
   .container-responsive {
-    padding-left: 3rem;
-    padding-right: 3rem;
-    max-width: 1280px;
+    padding-left: 6rem; /* px-24 */
+    padding-right: 6rem;
+    max-width: 1320px;
   }
 }
 
 @media (min-width: 1536px) {
   .container-responsive {
-    padding-left: 4rem;
-    padding-right: 4rem;
-    max-width: 1400px;
+    padding-left: 8rem; /* px-32 */
+    padding-right: 8rem;
+    max-width: 1440px;
   }
 }
 
