@@ -157,7 +157,7 @@ const HeaderContent = ({
                     </div>
 
                     <Link
-                      href={`/user/profile`}
+                      href={`/profile`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
