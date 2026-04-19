@@ -601,7 +601,6 @@ export default function LoginModal({
       //   return;
       // }
 
-
       const normalizedEmail = data.email.trim().toLowerCase();
       const name =
         `${data.firstName} ${data.middleName ? `${data.middleName} ` : ""}${data.surname}`.trim();
@@ -768,7 +767,6 @@ export default function LoginModal({
         return;
       }
 
-
       const response = await fetch("/api/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -854,15 +852,10 @@ export default function LoginModal({
     if (isValid) setSignupStep("contact");
   };
 
-
   const handleSignUpInvalid: SubmitErrorHandler<SignupFormData> = (
     formErrors,
   ) => {
-    if (
-      formErrors.email ||
-      formErrors.password ||
-      formErrors.confirmPassword
-    ) {
+    if (formErrors.email || formErrors.password || formErrors.confirmPassword) {
       setSignupStep("credentials");
       return;
     }
@@ -936,7 +929,6 @@ export default function LoginModal({
         {/* Left Side - Motivation & Image */}
         <div className="hidden md:flex w-1/2 h-full p-0 text-white bg-gradient-to-b from-teal-600 via-teal-700 to-teal-800 flex-col justify-between relative">
           <div className="p-8 pb-0 z-10">
-
             <h2 className="text-3xl text-left font-bold mb-6 text-white">
               It all starts here <i className="text-2xl block">- Gain access</i>
             </h2>
@@ -1018,22 +1010,20 @@ export default function LoginModal({
                 </p>
 
                 {/* Social Login Buttons */}
-                {hasGoogle && (
-                  <button
-                    type="button"
-                    className="w-full flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading}
-                  >
-                    <Image
-                      src="/icons/google-icon.svg"
-                      alt="Google"
-                      width={24}
-                      height={24}
-                    />
-                    <span className="text-gray-700">Continue with Google</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading}
+                >
+                  <Image
+                    src="/icons/google-icon.svg"
+                    alt="Google"
+                    width={24}
+                    height={24}
+                  />
+                  <span className="text-gray-700">Continue with Google</span>
+                </button>
 
                 <button
                   type="button"
@@ -1199,7 +1189,10 @@ export default function LoginModal({
                     {signupStep === "credentials" && (
                       <div className="space-y-4">
                         <div>
-                          <label htmlFor="signupEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="signupEmail"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
                             Email Address *
                           </label>
                           <input
@@ -1211,12 +1204,18 @@ export default function LoginModal({
                             disabled={isLoading}
                           />
                           {signupForm.formState.errors.email && (
-                            <p className="text-red-500 text-sm mt-1">{signupForm.formState.errors.email.message}</p>
+                            <p className="text-red-500 text-sm mt-1">
+                              {signupForm.formState.errors.email.message}
+                            </p>
                           )}
                         </div>
 
                         <div>
-                          <label htmlFor="signupPassword" title="At least 8 characters with letters and numbers" className="block text-sm font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="signupPassword"
+                            title="At least 8 characters with letters and numbers"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
                             Password *
                           </label>
                           <div className="relative">
@@ -1238,12 +1237,18 @@ export default function LoginModal({
                             </button>
                           </div>
                           {signupForm.formState.errors.password && (
-                            <p className="text-red-500 text-sm mt-1">{signupForm.formState.errors.password.message}</p>
+                            <p className="text-red-500 text-sm mt-1">
+                              {signupForm.formState.errors.password.message}
+                            </p>
                           )}
                         </div>
 
                         <div>
-                          <label htmlFor="confirmPassword" title="Must match password" className="block text-sm font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="confirmPassword"
+                            title="Must match password"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
                             Confirm Password *
                           </label>
                           <div className="relative">
@@ -1257,7 +1262,9 @@ export default function LoginModal({
                             />
                             <button
                               type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                              }
                               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                               disabled={isLoading}
                             >
@@ -1265,12 +1272,16 @@ export default function LoginModal({
                             </button>
                           </div>
                           {signupForm.formState.errors.confirmPassword && (
-                            <p className="text-red-500 text-sm mt-1">{signupForm.formState.errors.confirmPassword.message}</p>
+                            <p className="text-red-500 text-sm mt-1">
+                              {
+                                signupForm.formState.errors.confirmPassword
+                                  .message
+                              }
+                            </p>
                           )}
                         </div>
                       </div>
                     )}
-
 
                     {signupStep === "otp" && (
                       <div className="space-y-4">
@@ -1738,15 +1749,16 @@ export default function LoginModal({
                       </>
                     )}
 
-
                     <div className="flex gap-3">
                       {signupStep !== "credentials" && signupStep !== "otp" && (
                         <button
                           type="button"
                           className="w-1/3 border border-gray-300 text-gray-700 p-3 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           onClick={() => {
-                            if (signupStep === "personal") setSignupStep("credentials");
-                            else if (signupStep === "contact") setSignupStep("personal");
+                            if (signupStep === "personal")
+                              setSignupStep("credentials");
+                            else if (signupStep === "contact")
+                              setSignupStep("personal");
                           }}
                           disabled={isLoading}
                         >

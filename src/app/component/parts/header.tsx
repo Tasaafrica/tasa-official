@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { LogOut, Search, Settings } from "lucide-react";
 import ExploreDropdown from "./exploreDropdown";
 import SearchModal from "./searchModal";
@@ -13,20 +14,20 @@ interface HeaderProps {
 }
 
 // Separated HeaderContent component to avoid recreation on every render and fix hydration
-const HeaderContent = ({ 
-  isWhite = false, 
-  invert, 
-  toggleMobileMenu, 
-  setIsSearchModalOpen, 
-  handleSignInClick, 
-  handleJoinClick, 
-  isAuthenticated, 
+const HeaderContent = ({
+  isWhite = false,
+  invert,
+  toggleMobileMenu,
+  setIsSearchModalOpen,
+  handleSignInClick,
+  handleJoinClick,
+  isAuthenticated,
   user,
   isUserMenuOpen,
   setIsUserMenuOpen,
   handleLogout,
   getUserInitials,
-  isScrolled
+  isScrolled,
 }: any) => {
   const shouldUseWhiteText = invert ? !isWhite : isWhite;
 
@@ -65,7 +66,7 @@ const HeaderContent = ({
               className="flex items-center transition-transform duration-200 hover:scale-105"
             >
               <img
-                src="/logo/teal_logo.png" 
+                src="/logo/teal_logo.png"
                 alt="TASA Logo"
                 className="h-5 w-auto sm:h-5 md:h-7 lg:h-7"
               />
@@ -130,7 +131,7 @@ const HeaderContent = ({
                 {user.image ? (
                   <img
                     src={user.image}
-                    alt={user.name || "User"}
+                    alt={user.name}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
@@ -144,19 +145,26 @@ const HeaderContent = ({
                 ((isWhite && isScrolled) || (!isWhite && !isScrolled)) && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                      <p className="text-sm text-gray-500 truncate" title={user.email || ""}>
+                      <p className="text-sm font-medium text-gray-900">
+                        {user.name}
+                      </p>
+                      <p
+                        className="text-sm text-gray-500 truncate"
+                        title={user.email || ""}
+                      >
                         {user.email}
                       </p>
                     </div>
 
-                    <a
-                      href="/profile"
+                    <Link
+                      href={`/user/profile`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       <Settings className="w-4 h-4 mr-2" />
-                      Profile Settings
-                    </a>
+                      Profile
+                    </Link>
 
                     <button
                       onClick={handleLogout}
@@ -235,7 +243,9 @@ const Header: React.FC<HeaderProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [loginModalMode, setLoginModalMode] = useState<"login" | "signup">("login");
+  const [loginModalMode, setLoginModalMode] = useState<"login" | "signup">(
+    "login",
+  );
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // Get authentication state
@@ -283,7 +293,12 @@ const Header: React.FC<HeaderProps> = ({
     setIsLoginModalOpen(true);
   };
   const getUserInitials = (name: string) => {
-    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
   const handleLogout = async () => {
     await logout();
@@ -303,7 +318,7 @@ const Header: React.FC<HeaderProps> = ({
     setIsUserMenuOpen,
     handleLogout,
     getUserInitials,
-    isScrolled
+    isScrolled,
   };
 
   return (
@@ -319,7 +334,9 @@ const Header: React.FC<HeaderProps> = ({
       {/* Sticky White Header */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300 transform ${
-          isScrolled ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+          isScrolled
+            ? "translate-y-0 opacity-100"
+            : "-translate-y-full opacity-0"
         }`}
       >
         <HeaderContent {...commonProps} isWhite={true} />

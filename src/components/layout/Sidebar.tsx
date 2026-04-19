@@ -175,7 +175,9 @@ export default function Sidebar({
             <div className="p-6 border-t border-gray-200">
               <div className="space-y-2">
                 <a
-                  href="/profile"
+                  href={process.env.NODE_ENV === "production" ? "https://dash.tasa.com.ng" : "http://localhost:5173"}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                   onClick={onClose}
                 >

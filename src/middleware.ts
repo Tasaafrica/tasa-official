@@ -1,19 +1,44 @@
 import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+function getCookieDomain(req: any): string | undefined {
+  if (process.env.NODE_ENV === "production") {
+    return ".tasa.com.ng";
+  }
+
+  // Development: get allowed domains from environment variable
+  const allowedDomains = process.env.AUTH_COOKIE_DOMAINS?.split(",") || [];
+  const hostHeader = req.headers.get("host");
+
+  // Check if current host is in allowed domains
+  if (hostHeader && allowedDomains.includes(hostHeader)) {
+    return undefined; // Let browser handle it for same-origin
+  }
+
+  return undefined;
+}
 
 export default withAuth(
   function middleware(req) {
-    const res = NextResponse.next();
     const token = req.nextauth.token;
+
+    // Redirect /profile to the dashboard
+    if (req.nextUrl.pathname === "/profile" && token?.sub) {
+      return NextResponse.redirect(
+        new URL(`https://dash.tasa.com.ng/user/${token.sub}/profile`),
+      );
+    }
+
+    const res = NextResponse.next();
 
     // Synchronize the domain-wide 'token' cookie if NextAuth session exists
     // This handles both credentials and Google login perfectly
     if (token?.authToken && !req.cookies.has("token")) {
       res.cookies.set("token", token.authToken as string, {
-        domain: process.env.NODE_ENV === "production" ? ".tasa.com.ng" : undefined,
+        domain: getCookieDomain(req),
         path: "/",
         httpOnly: true,
-        secure: true, 
+        secure: true,
         sameSite: "none", // As requested for cross-domain fetch
         maxAge: 60 * 60 * 24 * 7, // 7 days
       });
@@ -28,7 +53,7 @@ export default withAuth(
         if (req.nextUrl.pathname.startsWith("/auth/")) return true;
 
         // Requirement for protected routes
-        const isProtectedRoute = 
+        const isProtectedRoute =
           req.nextUrl.pathname.startsWith("/dashboard") ||
           req.nextUrl.pathname.startsWith("/profile");
 
@@ -37,14 +62,11 @@ export default withAuth(
         return true;
       },
     },
-  }
+  },
 );
 
 export const config = {
   matcher: [
     "/", // Running on root ensures the cookie is set after redirect from login
-    "/dashboard/:path*",
-    "/profile/:path*",
-    "/api/protected/:path*",
   ],
 };
