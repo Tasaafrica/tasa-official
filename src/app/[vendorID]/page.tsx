@@ -22,7 +22,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import PlainHero from "@/app/component/parts/plainHero";
-import Separator from "@/app/component/ui/separator";
+///import Separator from "@/app/component/ui/separator";
 import ErrorBoundary from "@/app/component/parts/ErrorBoundary";
 
 interface FormData {
@@ -215,7 +215,7 @@ function VendorSignupContent() {
           { label: "Become a Vendor" },
         ]}
       />
-      <Separator />
+      
 
       {/* Benefits Section */}
       <section className="py-12 bg-gradient-to-r from-teal-50 to-white">

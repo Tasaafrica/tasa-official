@@ -56,7 +56,9 @@ export function UserProfile() {
           </div>
 
           <a
-            href={process.env.NODE_ENV === "production" ? "https://dash.tasa.com.ng" : "http://192.168.20.16:5173"}
+            href={process.env.NODE_ENV === "production" ? "https://dash.tasa.com.ng" : "http://localhost:5173"}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
           >
             <FiSettings className="w-4 h-4 mr-2" />

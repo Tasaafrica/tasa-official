@@ -1,23 +1,26 @@
-import { Separator as SeparatorPrimitive } from "@/app/component/assest/separator";
+import * as React from "react"
+import { Separator as SeparatorPrimitive } from "radix-ui"
 
-interface SeparatorProps {
-  className?: string;
-  margin?: string;
-  width?: string;
-  color?: string;
-}
+import { cn } from "@/lib/utils"
 
-export default function Separator({
-  className = "",
-  margin = "my-1",
-  width = "w-full ",
-  color = "bg-gray-200",
-}: SeparatorProps) {
+function Separator({
+  className,
+  orientation = "horizontal",
+  decorative = true,
+  ...props
+}: React.ComponentProps<typeof SeparatorPrimitive.Root>) {
   return (
-    <div
-      className={`${width} container mx-auto px-6 sm:px-8 md:px-10 lg:px-16`}
-    >
-      <SeparatorPrimitive className={`${margin} ${color} ${className} w-50%`} />
-    </div>
-  );
+    <SeparatorPrimitive.Root
+      data-slot="separator"
+      decorative={decorative}
+      orientation={orientation}
+      className={cn(
+        "shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px",
+        className
+      )}
+      {...props}
+    />
+  )
 }
+
+export { Separator }
