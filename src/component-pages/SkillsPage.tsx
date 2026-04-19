@@ -5,10 +5,9 @@ import { useState, useMemo } from "react";
 import Header from "@/app/component/parts/header";
 import FooterLinksSection from "@/app/component/parts/footerLinksSection";
 import { Button } from "@/app/component/ui/button";
-import { Briefcase, Users, X } from "lucide-react";
+import {Users, X } from "lucide-react";
 import PlainHero from "@/app/component/parts/plainHero";
-import Separator from "@/app/component/ui/separator";
-import { getIcon } from "@/lib/icon";
+import {Separator} from "@/app/component/ui/separator";
 import ProfessionalCard from "@/app/component/parts/professionalCard";
 
 interface Professional {
