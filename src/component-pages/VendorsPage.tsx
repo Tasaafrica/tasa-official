@@ -3,7 +3,7 @@
 import Header from "@/app/component/parts/header";
 import FooterLinksSection from "@/app/component/parts/footerLinksSection";
 import PlainHero from "@/app/component/parts/plainHero";
-import Separator from "@/app/component/ui/separator";
+import {Separator} from "@/app/component/ui/separator";
 import { Button } from "@/app/component/ui/button";
 import { Star, MapPin, CheckCircle, Code, Award, Users } from "lucide-react";
 import Link from "next/link";
