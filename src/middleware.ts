@@ -22,13 +22,6 @@ export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
 
-    // Redirect /profile to the dashboard
-    if (req.nextUrl.pathname === "/profile" && token?.sub) {
-      return NextResponse.redirect(
-        new URL(`https://dash.tasa.com.ng/user/${token.sub}/profile`),
-      );
-    }
-
     const res = NextResponse.next();
 
     // Synchronize the domain-wide 'token' cookie if NextAuth session exists
