@@ -6,7 +6,7 @@ export async function GET() {
   const session = await getServerSession(authOptions);
 
   if (session?.user?.id) {
-    redirect(`https://dash.tasa.com.ng/user/${session.user.id}/profile`);
+    redirect(`https://dash.tasa.com.ng/users/${session.user.id}`);
   }
 
   // Redirect to signin if no session
