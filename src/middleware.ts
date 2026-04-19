@@ -24,10 +24,10 @@ export default withAuth(
 
     const res = NextResponse.next();
 
-    // Synchronize the domain-wide 'token' cookie if NextAuth session exists
+    // Synchronize the domain-wide '_secure_tasaxx' cookie if NextAuth session exists
     // This handles both credentials and Google login perfectly
-    if (token?.authToken && !req.cookies.has("token")) {
-      res.cookies.set("token", token.authToken as string, {
+    if (token?.authToken && !req.cookies.has("_secure_tasaxx")) {
+      res.cookies.set("_secure_tasaxx", token.authToken as string, {
         domain: getCookieDomain(req),
         path: "/",
         httpOnly: true,
