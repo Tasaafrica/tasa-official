@@ -1,47 +1,140 @@
 const categories = [
-    'Digital Marketing',
-    'Programming',
-    'Creative and Artistic',
-    'Vocational & Technical',
-    'Sport & Fitness',
-    'Education & Tutoring',
-    'Photography',
-    'Writing and Translation',
-    'AI Services',
-    'Music and Audio',
-    'Graphics & Design',
-    'Video and Animation',
+  {
+    title: 'Graphics & Design',
+    links: '/categories/graphics-design',
+  },
+  {
+    title: 'Digital Marketing',
+    links: '/categories/digital-marketing',
+  },
+  {
+    title: 'Writing & Translation',
+    links: '/categories/writing-translation',
+  },
+  {
+    title: 'Video & Animation',
+    links: '/categories/video-animation',
+  },
+  {
+    title: 'Music & Audio',
+    links: '/categories/music-audio',
+  },
+  {
+    title: 'Programming & Tech',
+    links: '/categories/programming-tech',
+  },
+  {
+    title: 'Data & AI',
+    links: '/categories/data-ai',
+  },
+  {
+    title: 'Business & Consulting',
+    links: '/categories/business-consulting',
+  },
+  {
+    title: 'Lifestyle & Wellness',
+    links: '/categories/lifestyle-wellness',
+  },
+  {
+    title: 'Personal & Errand Services',
+    links: '/categories/personal-errand-services',
+  },
+  {
+    title: 'Home & Maintenance',
+    links: '/categories/home-maintenance',
+  },
+  {
+    title: 'Events & Logistics',
+    links: '/categories/events-logistics',
+  },
   ];
   
   const clientsLinks = [
-    'How TASA Works',
-    'Customer Success Stories',
-    'Trust & Safety',
-    'Quality Guide',
+    {
+      name: 'How TASA Works',
+      links: 'how-tasa-works',
+    },
+    {
+      name: 'Customer Success Stories',
+      links: 'customer-success-stories',
+    },
+    {
+      name: 'Trust & Safety',
+      links: 'trust-safety',
+    },
+    {
+      name: 'Quality Guide',
+      links: 'quality-guide',
+    },
   ];
   
   const freelancersLinks = [
-    'Become a TASA Vendor',
-    'TASA for minors',
-    'Vendor Support',
-    'Vendor Resources',
-    'Events',
+    {
+      name: 'Become a TASA Vendor',
+      links: 'become-a-tasa-vendor',
+    },
+    {
+      name: 'TASA for minors',
+      links: 'tasa-for-minors',
+    },
+    {
+      name: 'Vendor Support',
+      links: 'vendor-support',
+    },
+    {
+      name: 'Vendor Resources',
+      links: 'vendor-resources',
+    },
+    {
+      name: 'Events',
+      links: 'events',
+    },
   ];
   
   const businessLinks = [
-    'TASA Pro',
-    'Project Management Service',
-    'ClearVoice - Content Marketing',
-    'Contact Sales',
+    {
+      name: 'TASA Pro',
+      links: 'tasa-pro',
+    },
+    {
+      name: 'Project Management Service',
+      links: 'project-management-service',
+    },
+    {
+      name: 'ClearVoice - Content Marketing',
+      links: 'clearvoice-content-marketing',
+    },
+    {
+      name: 'Contact Sales',
+      links: 'contact-sales',
+    },
   ];
   
   const companyLinks = [
-    'About TASA',
-    'Press & News',
-    'Partnerships',
-    'Privacy Policy',
-    'Terms of Service',
-    'Investor Relations',
+    {
+      name: 'About TASA',
+      links: 'about-tasa',
+    },
+    {
+      name: 'Press & News',
+      links: 'press-news',
+    },
+    {
+      name: 'Partnerships',
+      links: 'partnerships',
+    },
+    {
+      name: 'Privacy Policy',
+      links: 'privacy-policy',
+    },
+    {
+      name: 'Terms of Service',
+      links: 'terms-of-service',
+    }, 
+    {
+      name: 'Investor Relations',
+      links: 'investor-relations',
+    },
   ];
   
   const columns = [
@@ -69,13 +162,13 @@ const categories = [
     <div className="mx-auto bg-[#334155] w-full border-t border-slate-700">
       <div className="container-responsive py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 text-center md:text-left">
-          {columns.map((column) => (
+          {columns.map((column: any) => (
             <div key={column.title} className="flex flex-col items-center md:items-start">
               <h3 className="text-base font-bold mb-5 text-white uppercase tracking-wider">{column.title}</h3>
               <ul className="space-y-3">
-                {column.links.map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-sm text-gray-400 hover:text-teal-400 transition-colors duration-200">{item}</a>
+                {column.links.map((item: any,index: number) => (
+                  <li key={index}>
+                    <a href={`${item.links}`} className="text-sm text-gray-100 hover:text-teal-400 transition-colors duration-200">{item.title || item.name}</a>
                   </li>
                 ))}
               </ul>
