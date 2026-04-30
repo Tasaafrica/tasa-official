@@ -8,7 +8,7 @@ import { Button } from "@/app/component/ui/button";
 import {Users, X } from "lucide-react";
 import PlainHero from "@/app/component/parts/plainHero";
 import {Separator} from "@/app/component/ui/separator";
-import ProfessionalCard from "@/app/component/parts/professionalCard";
+import VendorCard from "@/app/component/parts/vendorCard";
 
 interface Professional {
   _id: string;
@@ -416,18 +416,15 @@ export default function SkillsPage({ skill }: SkillsPageProps) {
 
   return (
     <div>
-      <Header variant="transparent" invert={true} />
+      <Header />
       <PlainHero
         title={skill.name}
         description={`Professional ${skill.name.toLowerCase()} services`}
+        breadcrumbSeparator=">"
         breadcrumbs={[
           {
             label: category?.name || "Category",
             href: `/categories/${categorySlug}`,
-          },
-          {
-            label: subcategory?.name || "Subcategory",
-            href: `/subcategories/${subcategorySlug}`,
           },
           { label: skill.name },
         ]}
@@ -437,21 +434,21 @@ export default function SkillsPage({ skill }: SkillsPageProps) {
       </div>
 
       {/* Professionals Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Available Professionals
+      <section className="py-10 sm:py-16 bg-white">
+        <div className="container mx-auto px-4 sm:px-8 md:px-10 lg:px-16">
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+              50+ Vendors
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Connect with top professionals specializing in {skill.name}
+            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+              Pro tip: Click a vendor to view their profile.
             </p>
           </div>
 
           {/* Filter Section */}
-          <div className="max-w-7xl mx-auto mb-8 bg-gray-50 p-6 rounded-lg">
+          <div className="max-w-7xl mx-auto mb-8 bg-gray-50 p-4 sm:p-6 rounded-lg">
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-2">
                 <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
                 {(budgetFilter !== "all" ||
                   verifiedFilter !== "all" ||
@@ -464,7 +461,7 @@ export default function SkillsPage({ skill }: SkillsPageProps) {
                       setLocationFilter("all");
                       setReviewsFilter("all");
                     }}
-                    className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+                    className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1 self-start"
                   >
                     <X className="w-4 h-4" /> Clear Filters
                   </button>
@@ -559,11 +556,20 @@ export default function SkillsPage({ skill }: SkillsPageProps) {
 
           {/* Professionals Grid */}
           {filteredProfessionals.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
               {filteredProfessionals.map((professional) => (
-                <ProfessionalCard
+                <VendorCard
                   key={professional._id}
-                  professional={professional}
+                  imageAlt={`${professional.name} profile`}
+                  imageUrl={professional.profileImage}
+                  vendorAvatar={professional.profileImage}
+                  vendorName={professional.name}
+                  vendorLevel={professional.verified ? "Top Rated" : "Level 2"}
+                  title={`${professional.title} - ${professional.bio}`}
+                  rating={professional.rating}
+                  reviews={professional.reviewCount}
+                  startingPrice={professional.priceFrom}
+                  currency={professional.priceCurrency}
                 />
               ))}
             </div>
@@ -594,21 +600,21 @@ export default function SkillsPage({ skill }: SkillsPageProps) {
       </section>
 
       {/* Call to Action */}
-      <section className="py-16 bg-gradient-to-r from-teal-50 to-white">
-        <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-teal-50 to-white">
+        <div className="container mx-auto px-4 sm:px-8 md:px-10 lg:px-16 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
             Ready to Get Started?
           </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Connect with our qualified {skill.name.toLowerCase()} professionals
+          <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+            Connect with our qualified {skill.name.toLowerCase()} vendors
             and get your project started today.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href={`/subcategories/${subcategorySlug}`}>
+            <Link href={`/categories/${categorySlug}`}>
               <Button
                 size="lg"
                 variant="outline"
-                className="bg-teal-600 hover:bg-teal-700"
+                className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700"
               >
                 View All Skills
               </Button>

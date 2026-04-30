@@ -31,8 +31,8 @@ export default function ImpressedServiceSection() {
       title: "Digital Strategist scaling brands through social media marketing",
       rating: 5.0,
       reviews: 850,
-      startingPrice: 120,
-      currency: "$",
+      startingPrice: 120000,
+      currency: "₦",
     },
   ];
 
@@ -71,7 +71,7 @@ export default function ImpressedServiceSection() {
                       High Quality Work
                     </h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      Find the right freelancer to begin working on your
+                      Find the right vendor to begin working on your
                       project within minutes.
                     </p>
                   </div>

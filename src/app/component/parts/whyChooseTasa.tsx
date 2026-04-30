@@ -6,21 +6,21 @@ import { Sparkles, ShieldCheck, Zap } from "lucide-react";
 
 const WHY_TASA_ITEMS = [
   {
-    title: "Diverse Skill Pool",
+    title: "Become a Vendor",
     summary:
-      "Access a wide range of skills and services from talented individuals.",
+      "Sell your skill and talents here on TASA.",
     detail:
-      "Discover specialists across design, development, marketing, and more, ready to take your project from idea to execution.",
+      "Meet clients and organizations looking for your unique skills and talents. Join TASA to turn your expertise into income and connect with a global audience eager to hire you.",
     imageUrl:
       "diverse-skill-pool.png",
     icon: Sparkles,
   },
   {
-    title: "Trusted Professionals",
+    title: "Get the job done & fast",
     summary:
-      "Connect with verified and reviewed experts you can rely on to get the job done right.",
+      "Get the right hands for your projects.",
     detail:
-      "Work with top-rated professionals backed by profiles, reviews, and transparent portfolios you can trust.",
+      "Work with top-rated talented & skilled vendors backed by profiles, reviews, and transparent portfolios you can trust.",
     imageUrl:
       "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=1200",
     icon: ShieldCheck,

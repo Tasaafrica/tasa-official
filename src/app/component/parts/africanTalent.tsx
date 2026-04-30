@@ -45,7 +45,7 @@ export default function AfricanTalent() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-3xl md:text-3xl lg:text-3xl font-bold text-slate-900"
           >
-            Diverse Talents & Professionals
+            Diverse Talents & Services
           </motion.h2>
         </div>
 

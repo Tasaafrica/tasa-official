@@ -79,7 +79,7 @@ export default function HomeHeroSection({
               className="text-gray-600 text-base md:text-lg mb-6 max-w-xl"
               variants={itemVariants}
             >
-              Connect with talented professionals to get the best services and results.
+              Everything you need to get the results you deserve👍.
             </motion.p>
             <motion.div className="max-w-xl" variants={itemVariants}>
               <SearchAutocomplete />

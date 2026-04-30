@@ -7,7 +7,7 @@ TASA is a Next.js 15 front‑end that lets businesses discover and hire vetted A
 - Authentication with NextAuth (email/password + social providers) backed by MongoDB, including protected routes and session-aware layouts.
 - Motion-rich marketing experience: hero search with autocomplete, “Trusted by” carousel, category highlights, Why Choose TASA, African talent spotlight, how‑it‑works journey, and student-specific CTA.
 - Reusable UI building blocks (search modal, login modal, professional cards, category grids) ready to wire to the TASA API.
-- API contract and auth flow documented in `API_DOCUMENTATION.md` and `AUTHENTICATION_SETUP.md`.
+- API contract and auth flow documented in `API_DOCUMENTATION.md`, `AUTHENTICATION_SETUP.md`, and `GOOGLE_SOCIAL_AUTH_IMPLEMENTATION.md` (Google social auth deep dive + critical notes).
 
 ## Tech stack
 - Next.js 15 (App Router) + React 19
@@ -33,7 +33,7 @@ TASA is a Next.js 15 front‑end that lets businesses discover and hire vetted A
 - `src/app/page.tsx` – landing and search entry
 - `src/component-pages/` – category, subcategory, skills, and vendors screens
 - `src/lib/auth.ts` & `src/hooks/useAuth.ts` – auth wiring
-- `API_DOCUMENTATION.md`, `AUTHENTICATION_SETUP.md` – backend contract and setup guidance
+- `API_DOCUMENTATION.md`, `AUTHENTICATION_SETUP.md`, `GOOGLE_SOCIAL_AUTH_IMPLEMENTATION.md` – backend contract and auth setup/implementation guidance
 
 ## Deployment notes
 Deploy to Vercel or any Node environment. Be sure to copy `.env.local` values into your host, enable NextAuth callbacks, and point `PRODUCTION_URL` to the live TASA API before switching traffic to production.

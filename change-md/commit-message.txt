@@ -1,0 +1,10 @@
+fix: vendor registration form - remove unused fields, update API payload, add toast notifications
+
+- Remove unused form fields (personal info, business info, bio) from FormData interface and validation
+- Update peripheralSkills payload to array of skill IDs instead of objects
+- Prevent custom skills from being set as core skills (UI + backend validation)
+- Prevent adding skills that already exist in API list as custom skills
+- Add sonner toast notifications for registration success/error
+- Update redirect to external dashboard URL (dash.tasa.com.ng / localhost:5173)
+- Add debug logging for registration payload and auth token
+- Remove unused icon imports and state variables

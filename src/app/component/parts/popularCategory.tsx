@@ -27,19 +27,19 @@ interface CategoryItem {
 const POPULAR_CATEGORIES: CategoryItem[] = [
   {
     name: "Graphic &\nDesign",
-    slug: "graphic-design",
+    slug: "graphics-design",
     icon: Brush,
     iconBg: "bg-purple-50",
     iconText: "text-purple-600",
-    type: "subcategory"
+    type: "category"
   },
   {
-    name: "Programming",
-    slug: "programming",
+    name: "Programming &\nTech",
+    slug: "programming-tech",
     icon: Code2,
     iconBg: "bg-blue-50",
     iconText: "text-blue-600",
-    type: "subcategory"
+    type: "category"
   },
   {
     name: "Digital\nMarketing",
@@ -47,27 +47,27 @@ const POPULAR_CATEGORIES: CategoryItem[] = [
     icon: Megaphone,
     iconBg: "bg-green-50",
     iconText: "text-green-600",
-    type: "skill"
+    type: "category"
   },
   {
-    name: "Video Production",
-    slug: "video-production",
+    name: "Video &\nAnimation",
+    slug: "video-animation",
     icon: Video,
     iconBg: "bg-red-50",
     iconText: "text-red-600",
-    type: "subcategory"
+    type: "category"
   },
   {
-    name: "Copywriting",
-    slug: "copywriting",
+    name: "Writing &\nTranslation",
+    slug: "writing-translation",
     icon: PenLine,
     iconBg: "bg-amber-50",
     iconText: "text-amber-600",
-    type: "subcategory"
+    type: "category"
   },
   {
-    name: "Business",
-    slug: "business",
+    name: "Business &\nConsulting",
+    slug: "business-consulting",
     icon: Briefcase,
     iconBg: "bg-emerald-50",
     iconText: "text-emerald-600",
