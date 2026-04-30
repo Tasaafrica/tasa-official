@@ -11,7 +11,18 @@ export function useAuth() {
   const isAuthenticated = !!session?.user;
 
   const logout = async () => {
-    await signOut({ redirect: false });
+    // Clear NextAuth cookies and session
+    await signOut({
+      redirect: false,
+      callbackUrl: "/",
+    });
+
+    // Clear any additional app-specific data
+    if (typeof window !== "undefined") {
+      // Clear localStorage if you store any auth data there
+      localStorage.clear();
+    }
+
     router.push("/");
   };
 

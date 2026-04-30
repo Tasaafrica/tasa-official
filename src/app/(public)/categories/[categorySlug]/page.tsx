@@ -20,13 +20,6 @@ interface Subcategory {
   icon?: string;
 }
 
-interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-  description?: string;
-}
-
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 // Force dynamic rendering for this route
@@ -42,7 +35,7 @@ export async function generateMetadata({
 
   try {
     const response = await fetch(
-      `${baseUrl}/api/categories/${categorySlug}/subcategories`,
+      `${baseUrl}/api/categories/${categorySlug}/skills`,
       {
         next: { revalidate: 3600 },
       },
@@ -84,9 +77,9 @@ export default async function CategoryPageWrapper(props: {
 }) {
   const { categorySlug } = await props.params;
 
-  // Fetch subcategories for this category
+  // Fetch skills directly for this category (no subcategory grouping).
   const apiResponse = await fetch(
-    `${baseUrl}/api/categories/${categorySlug}/subcategories`,
+    `${baseUrl}/api/categories/${categorySlug}/skills`,
     {
       next: { revalidate: 3600 },
     },
@@ -97,67 +90,29 @@ export default async function CategoryPageWrapper(props: {
   }
 
   const responseJson = await apiResponse.json();
-  let subcategories: Subcategory[] = responseJson.data || [];
 
-  // Fetch skills for each subcategory in parallel
-  const subcategoriesWithSkills = await Promise.all(
-    subcategories.map(async (subcategory) => {
-      try {
-        const skillsRes = await fetch(
-          `${baseUrl}/api/subcategories/${subcategory.slug}/skills`,
-          {
-            next: { revalidate: 3600 },
-          },
-        );
+  // Support multiple response shapes from the API.
+  let skillsList: Skill[] = [];
+  if (responseJson.data?.allSkills) {
+    skillsList = responseJson.data.allSkills;
+  } else if (responseJson.allSkills) {
+    skillsList = responseJson.allSkills;
+  } else if (Array.isArray(responseJson.data)) {
+    skillsList = responseJson.data;
+  } else if (Array.isArray(responseJson)) {
+    skillsList = responseJson;
+  }
 
-        if (!skillsRes.ok) {
-          console.warn(
-            `Skills API returned status ${skillsRes.status} for ${subcategory.slug}`,
-          );
-          return subcategory;
-        }
-
-        const skillsData = await skillsRes.json();
-
-        // Debug: Log the full response structure
-        console.log(`[${subcategory.slug}] Raw response:`, {
-          hasData: !!skillsData.data,
-          hasAllSkills: !!skillsData.allSkills,
-          dataKeys: skillsData.data ? Object.keys(skillsData.data) : [],
-          topLevelKeys: Object.keys(skillsData),
-        });
-
-        // Handle both response formats
-        // Format 1: { data: { allSkills: [...], popularSkills: [...] } }
-        // Format 2: { allSkills: [...], popularSkills: [...] }
-        // Format 3: { data: [...] } (array directly)
-        let skillsList = [];
-
-        if (skillsData.data?.allSkills) {
-          skillsList = skillsData.data.allSkills;
-        } else if (skillsData.allSkills) {
-          skillsList = skillsData.allSkills;
-        } else if (Array.isArray(skillsData.data)) {
-          skillsList = skillsData.data;
-        } else if (Array.isArray(skillsData)) {
-          skillsList = skillsData;
-        }
-
-        console.log(
-          `[${subcategory.name}] Skills extracted:`,
-          skillsList.length,
-        );
-
-        return {
-          ...subcategory,
-          skills: skillsList,
-        };
-      } catch (error) {
-        console.error(`Error fetching skills for ${subcategory.slug}:`, error);
-        return subcategory;
-      }
-    }),
-  );
+  // Keep CategoriesPage contract by creating one flat skills group per category.
+  const subcategoriesWithSkills: Subcategory[] = [
+    {
+      _id: categorySlug,
+      name: "All Skills",
+      slug: categorySlug,
+      description: `All skills available in ${categorySlug}.`,
+      skills: skillsList,
+    },
+  ];
 
   return (
     <CategoriesPage

@@ -22,11 +22,11 @@ if (googleClientId && googleClientSecret) {
           role: "client", // Default role
         };
       },
-    })
+    }),
   );
 } else if (process.env.NODE_ENV === "development") {
   console.warn(
-    "Google OAuth is disabled: GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET not set."
+    "Google OAuth is disabled: GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET not set.",
   );
 }
 
@@ -95,7 +95,7 @@ providers.push(
         return null;
       }
     },
-  })
+  }),
 );
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -108,7 +108,9 @@ export const authOptions: NextAuthOptions = {
   },
   cookies: {
     sessionToken: {
-      name: isProduction ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
+      name: isProduction
+        ? `__Secure-next-tasa.auth-token`
+        : `next-tasa.auth-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -138,11 +140,20 @@ export const authOptions: NextAuthOptions = {
           const result = await response.json();
 
           if (result.success && result.data) {
+            // Preserve the Google image URL
+            const googleImage = user.image;
+
             // Update the user object with backend data
             user.id = result.data.user._id;
             (user as any).role = result.data.user.role;
             (user as any).isEmailVerified = result.data.user.isEmailVerified;
             (user as any).authToken = result.data.token;
+
+            // Restore the Google image if backend didn't provide one
+            if (googleImage && !result.data.user.profileImage) {
+              user.image = googleImage;
+            }
+
             return true;
           }
           console.error("Backend login failed:", result.message);

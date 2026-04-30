@@ -41,12 +41,12 @@ export default function Sidebar({
     <>
       {/* Backdrop */}
       <div
-        className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-50"
+        className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-50 animate-fade-in"
         onClick={onClose}
       />
 
       {/* Sidebar */}
-      <div className="lg:hidden fixed top-0 left-0 h-full w-72 sm:w-80 bg-white shadow-2xl transition-transform duration-300 ease-in-out z-60 overflow-y-auto">
+      <div className="lg:hidden fixed top-0 left-0 h-full w-3/5 max-w-xs bg-white shadow-2xl transition-transform duration-300 ease-in-out z-60 overflow-y-auto animate-slide-in-left">
         <div className="flex flex-col h-full">
           {/* User Profile Section */}
           {isAuthenticated && user ? (
@@ -60,8 +60,8 @@ export default function Sidebar({
               <div className="text-center">
                 {user.image ? (
                   <img
-                    src={user.image}
-                    alt={user.name || "User"}
+                    src={user?.image}
+                    alt={user?.name || "User"}
                     className="w-16 h-16 rounded-full object-cover mx-auto mb-3 border-2 border-teal-200"
                   />
                 ) : (
@@ -69,10 +69,10 @@ export default function Sidebar({
                     {getUserInitials(user.name || "User")}
                   </div>
                 )}
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                <h3 className="text-base font-semibold text-gray-900 mb-1">
                   {user.name}
                 </h3>
-                <p className="text-sm text-gray-600 mb-2">{user.email}</p>
+                <p className="text-xs text-gray-600 mb-2">{user.email}</p>
                 <div
                   className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                     user.role === "client"
@@ -96,7 +96,7 @@ export default function Sidebar({
                 <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xl font-bold mx-auto mb-3 border-2 border-gray-200">
                   <User className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-700 mb-1">
+                <h3 className="text-base font-semibold text-gray-700 mb-1">
                   Welcome Guest
                 </h3>
                 <p className="text-sm text-gray-500 mb-3">
@@ -158,15 +158,17 @@ export default function Sidebar({
                 Find a Service
               </button>
 
-              <a
-                href="/vendor"
-                className="flex items-center px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-                onClick={onClose}
-              >
-                <span className="bg-gradient-to-r from-teal-500 via-black to-teal-600 bg-clip-text text-transparent font-bold">
-                  Become a Vendor
-                </span>
-              </a>
+              {isAuthenticated && user?.role === "client" && (
+                <a
+                  href="/vendor"
+                  className="flex items-center px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                  onClick={onClose}
+                >
+                  <span className="bg-gradient-to-r from-teal-500 via-black to-teal-600 bg-clip-text text-transparent font-bold">
+                    Become a Vendor
+                  </span>
+                </a>
+              )}
             </div>
           </nav>
 
@@ -175,14 +177,18 @@ export default function Sidebar({
             <div className="p-6 border-t border-gray-200">
               <div className="space-y-2">
                 <a
-                  href={process.env.NODE_ENV === "production" ? "https://dash.tasa.com.ng" : "http://localhost:5173"}
+                  href={
+                    process.env.NODE_ENV === "production"
+                      ? "https://dash.tasa.com.ng"
+                      : "http://localhost:5173"
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                   onClick={onClose}
                 >
                   <Settings className="w-5 h-5 mr-3" />
-                  Profile Settings
+                  Profile
                 </a>
 
                 <button

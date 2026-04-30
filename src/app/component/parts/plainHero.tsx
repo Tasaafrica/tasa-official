@@ -8,6 +8,7 @@ interface PlainHeroProps {
     label: string;
     href?: string;
   }>;
+  breadcrumbSeparator?: string;
   showExpandable?: boolean;
   onExpand?: () => void;
   showSearch?: boolean;
@@ -18,6 +19,7 @@ export default function PlainHero({
   title,
   description,
   breadcrumbs,
+  breadcrumbSeparator = "/",
   showExpandable = false,
   onExpand,
   showSearch = false,
@@ -36,7 +38,7 @@ export default function PlainHero({
           </Link>
           {breadcrumbs.map((crumb, index) => (
             <div key={index} className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
+              <span className="mx-2 text-gray-400">{breadcrumbSeparator}</span>
               {crumb.href ? (
                 <Link
                   href={crumb.href}

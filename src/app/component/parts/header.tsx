@@ -109,6 +109,20 @@ const HeaderContent = ({
               <span className="hidden xl:inline">Find a Service</span>
               <span className="xl:hidden">Search</span>
             </button>
+            {isAuthenticated && user?.role === "client" && (
+              <a
+                href="/vendor"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible ${
+                  shouldUseWhiteText
+                    ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
+                    : "text-[#0F766E] hover:text-[#0D5F59]"
+                }`}
+              >
+                <span className="bg-gradient-to-r from-teal-500 via-black to-teal-600 bg-clip-text text-transparent font-bold">
+                  Become a Vendor
+                </span>
+              </a>
+            )}
           </div>
         </nav>
 

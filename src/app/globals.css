@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Climate+Crisis:YEAR@1979&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -5,12 +7,10 @@
   --foreground: #ffffff;
   --container-padding: 1rem;
   --container-max-width: 1280px;
-  --color-1:#0F766E;
-  --indigo:#334155;
-  --color-light:#CCFBF1;
+  --color-1: #0f766e;
+  --indigo: #334155;
+  --color-light: #ccfbf1;
 }
-
-
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -31,13 +31,17 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family:
+    var(--font-geist-sans),
+    system-ui,
+    -apple-system,
+    sans-serif;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-    --color-1:#0F766E;
-  --indigo:#334155;
-  --color-light:#CCFBF1;
+  --color-1: #0f766e;
+  --indigo: #334155;
+  --color-light: #ccfbf1;
 }
 
 /* Responsive container utilities */
@@ -124,4 +128,45 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Sidebar animations */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s ease-in-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.font-climate-crisis {
+  font-family: "Climate Crisis", cursive;
+  font-variation-settings: "YEAR" 1979;
+}
+
+.vendor-font-body {
+  font-family: "Source Sans 3", sans-serif;
+}
+
+.vendor-hero-h1 {
+  font-family: "Climate Crisis", cursive;
+  font-variation-settings: "YEAR" 1979;
 }
