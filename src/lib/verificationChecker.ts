@@ -21,7 +21,7 @@ interface VerificationCheckResult {
 // Track in-flight requests and last check time
 let inFlightRequest: Promise<VerificationCheckResult> | null = null;
 let lastCheckTime = 0;
-const CHECK_COOLDOWN = 30000; // 30 seconds cooldown for fresh API checks
+const CHECK_COOLDOWN = 5 * 60 * 1000; // 5 minutes cooldown to match cache TTL
 
 /**
  * Check email verification status for a user
@@ -39,9 +39,9 @@ export async function checkEmailVerification(
     // 2. Check cache first
     const cachedStatus = getCachedVerificationStatus(userId);
     
-    // If we have cached data and it's not too old, return it
-    // Note: getCachedVerificationStatus already handles TTL, but we add an extra layer here
-    if (cachedStatus && (now - lastCheckTime < CHECK_COOLDOWN)) {
+    // If we have cached data, return it
+    // getCachedVerificationStatus already handles the 5-minute TTL
+    if (cachedStatus) {
       return {
         success: true,
         data: {

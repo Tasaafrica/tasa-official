@@ -35,7 +35,7 @@ export async function generateMetadata({
 
   try {
     const response = await fetch(
-      `${baseUrl}/api/categories/${categorySlug}/skills`,
+      `${baseUrl}/api/categories/slug/${categorySlug}`,
       {
         next: { revalidate: 3600 },
       },
@@ -43,29 +43,26 @@ export async function generateMetadata({
 
     if (!response.ok) {
       return {
-        title: "Category - TASA",
+        title: "Category | TASA",
         description:
           "Explore our categories and find the perfect professional for your needs.",
       };
     }
 
-    const capitalizeFirstLetter = (slug: string) => {
-      return slug.charAt(0).toUpperCase() + slug.slice(1);
-    };
+    const responseJson = await response.json();
+    const categoryName = responseJson.data?.name || responseJson.name || categorySlug;
 
     return {
-      title: `${capitalizeFirstLetter(categorySlug)} - TASA`,
-      description: `Explore ${capitalizeFirstLetter(
-        categorySlug,
-      )} services and find the perfect professional for your needs.`,
+      title: `${categoryName} | TASA`,
+      description: `Explore ${categoryName} services and find the perfect professional for your needs.`,
       openGraph: {
-        title: `${capitalizeFirstLetter(categorySlug)} - TASA`,
-        description: `Explore top ${capitalizeFirstLetter(categorySlug)} services on TASA.`,
+        title: `${categoryName} | TASA`,
+        description: `Explore top ${categoryName} services on TASA.`,
       },
     };
   } catch (error) {
     return {
-      title: "Category - TASA",
+      title: "Category | TASA",
       description:
         "Explore our categories and find the perfect professional for your needs.",
     };
@@ -77,30 +74,43 @@ export default async function CategoryPageWrapper(props: {
 }) {
   const { categorySlug } = await props.params;
 
-  // Fetch skills directly for this category (no subcategory grouping).
-  const apiResponse = await fetch(
-    `${baseUrl}/api/categories/${categorySlug}/skills`,
-    {
+  // Run fetches in parallel for better performance
+  const [categoryResponse, skillsResponse] = await Promise.all([
+    fetch(`${baseUrl}/api/categories/slug/${categorySlug}`, {
       next: { revalidate: 3600 },
-    },
-  );
+    }),
+    fetch(`${baseUrl}/api/categories/${categorySlug}/skills`, {
+      next: { revalidate: 3600 },
+    })
+  ]);
 
-  if (!apiResponse.ok) {
-    return notFound();
+  let categoryName = categorySlug;
+  if (categoryResponse.ok) {
+    const categoryData = await categoryResponse.json();
+    categoryName = categoryData.data?.name || categoryData.name || categorySlug;
   }
 
-  const responseJson = await apiResponse.json();
+  if (!skillsResponse.ok) {
+    // If category exists but skills fail, we can still show the page with empty skills
+    // but if the category itself didn't load properly and skills failed, maybe notFound
+    if (!categoryResponse.ok) return notFound();
+  }
+
+  const skillsJson = skillsResponse.ok ? await skillsResponse.json() : { data: [] };
 
   // Support multiple response shapes from the API.
   let skillsList: Skill[] = [];
-  if (responseJson.data?.allSkills) {
-    skillsList = responseJson.data.allSkills;
-  } else if (responseJson.allSkills) {
-    skillsList = responseJson.allSkills;
-  } else if (Array.isArray(responseJson.data)) {
-    skillsList = responseJson.data;
-  } else if (Array.isArray(responseJson)) {
-    skillsList = responseJson;
+  const rawData = skillsJson.data || skillsJson;
+  
+  if (rawData.allSkills && Array.isArray(rawData.allSkills)) {
+    skillsList = rawData.allSkills;
+  } else if (rawData.skills && Array.isArray(rawData.skills)) {
+    skillsList = rawData.skills;
+  } else if (Array.isArray(rawData)) {
+    skillsList = rawData;
+  } else if (typeof rawData === 'object' && rawData !== null) {
+    const possibleArray = Object.values(rawData).find(val => Array.isArray(val));
+    if (possibleArray) skillsList = possibleArray as Skill[];
   }
 
   // Keep CategoriesPage contract by creating one flat skills group per category.
@@ -109,7 +119,7 @@ export default async function CategoryPageWrapper(props: {
       _id: categorySlug,
       name: "All Skills",
       slug: categorySlug,
-      description: `All skills available in ${categorySlug}.`,
+      description: `All skills available in ${categoryName}.`,
       skills: skillsList,
     },
   ];
@@ -117,6 +127,7 @@ export default async function CategoryPageWrapper(props: {
   return (
     <CategoriesPage
       categorySlug={categorySlug}
+      categoryName={categoryName}
       subcategories={subcategoriesWithSkills}
     />
   );

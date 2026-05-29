@@ -1,10 +1,79 @@
-fix: vendor registration form - remove unused fields, update API payload, add toast notifications
+feat: implement role-based routing structure with [role] dynamic route
 
-- Remove unused form fields (personal info, business info, bio) from FormData interface and validation
-- Update peripheralSkills payload to array of skill IDs instead of objects
-- Prevent custom skills from being set as core skills (UI + backend validation)
-- Prevent adding skills that already exist in API list as custom skills
-- Add sonner toast notifications for registration success/error
-- Update redirect to external dashboard URL (dash.tasa.com.ng / localhost:5173)
-- Add debug logging for registration payload and auth token
-- Remove unused icon imports and state variables
+- Create [role] dynamic route directory with layout and page
+- Implement role validation in layout.tsx (c=client, v=vendor)
+- Add explicit mapping between URL parameters and full user roles
+- Add authentication check and role matching in layout
+- Create client directory for client-specific pages
+- Create vendor directory for vendor-specific pages
+- Create components directory for shared components
+- Implement redirect logic in page.tsx to route to appropriate dashboard
+- Redirect unauthenticated users to signin
+- Redirect invalid role parameters to home page
+- Handle unrecognized user roles gracefully
+- Create basic client dashboard page with welcome header, quick stats, and quick actions
+- Create basic vendor dashboard page with welcome header, quick stats, and quick actions
+- Fix routing structure: move dashboards from /[role]/client/dashboard to /c/dashboard
+- Move dashboards from /[role]/vendor/dashboard to /v/dashboard
+- Create separate layout files for /c and /v directories with auth protection
+- Remove old [role]/client and [role]/vendor directories
+- Create VendorSidebar component with navigation (Dashboard, Portfolio, Settings)
+- Add profile image and name display to sidebar
+- Add logout button to sidebar with signOut functionality
+- Update vendor layout to client-side with sidebar integration
+- Update vendor dashboard to client-side for compatibility with new layout
+- Create vendor settings page with profile management, skills, and services
+- Add change name functionality in settings
+- Add profile picture upload UI in settings
+- Add skills management (add/remove) in settings
+- Add services management (add/remove) in settings
+- Update vendor UI to premium sleek design with reduced font sizes
+- Maintain consistent color scheme with main page (gray, blue, white)
+- Integrate GET /api/vendors/{id} endpoint to fetch vendor data
+- Integrate PUT /api/vendors/{id} endpoint to update vendor profile
+- Update button colors from blue to indigo (#334155) as per global.css
+- Display vendor data from API response (name, bio, mobile, whatsapp, location, category)
+- Separate core skills and peripheral skills with proper UI
+- Extract and display only skill names from API response
+- Add comprehensive form fields for all vendor profile data
+- Create vendor.ts API file with centralized vendor endpoints
+- Migrate vendor API calls from settings and dashboard pages to vendor.ts
+- Add TypeScript interfaces for vendor data and API responses
+- Implement vendor stats API endpoint for dashboard
+- Add proper error handling and authentication checks in API functions
+- Update settings page to use vendorApi.getById and vendorApi.updateById
+- Update dashboard page to use vendorApi.getStats for dynamic stats
+- Update VendorData interface to match actual API response structure
+- Fix field mapping in settings page to properly populate form fields
+- Add comprehensive logging for debugging API integration
+- Ensure all vendor data fields are correctly mapped from API response
+- Add console logging for session data and API responses
+- Change input text color from gray-900 to black for better visibility
+- Implement category selection with dropdown from API
+- Implement skills selection grid based on category
+- Add core/peripheral skill type selection for each skill
+- Replace manual skill input with API-driven selection UI
+- Add Category and Skill interfaces to vendor.ts
+- Add getCategories and getSkillsByCategory API functions
+- Auto-select current category when categories load
+- Display available skills as toggle buttons in grid
+- Show selected skills summary with core/peripheral separation
+- Update save functionality to handle new skills structure
+- Add skill limits validation: max 2 core skills and max 5 peripheral skills
+- Display existing vendor category and skills immediately on page load
+- Fix sidebar to fixed position (non-scrollable) with h-screen
+- Add ml-64 to main content to account for fixed sidebar
+- Replace default select dropdown with custom dropdown for skill type selection
+- Add ChevronDown and ChevronUp icons for skill type dropdown
+- Implement custom dropdown menu for Core/Peripheral selection
+- Add toast notifications for skill limit violations using sonner
+- Fix invalid HTML by replacing nested button with div and cursor-pointer
+- Add mobile menu toggle button (hamburger menu) for vendor layout
+- Implement mobile backdrop overlay for sidebar on mobile
+- Make sidebar hidden on mobile by default with slide-in animation
+- Add horizontal centering to vendor layout main content with max-w-7xl
+- Remove max-width constraints from settings and dashboard pages
+- Add top padding to settings and dashboard pages for mobile menu button
+- Add responsive padding (p-4 on mobile, p-6 on desktop) to layout
+- Auto-close mobile menu on navigation click
+- Add data-mobile-menu-toggle attribute for programmatic menu control

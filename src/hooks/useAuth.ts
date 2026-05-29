@@ -13,7 +13,7 @@ export function useAuth() {
   const logout = async () => {
     // Clear NextAuth cookies and session
     await signOut({
-      redirect: false,
+      redirect: true,
       callbackUrl: "/",
     });
 
@@ -22,8 +22,6 @@ export function useAuth() {
       // Clear localStorage if you store any auth data there
       localStorage.clear();
     }
-
-    router.push("/");
   };
 
   const requireAuth = () => {

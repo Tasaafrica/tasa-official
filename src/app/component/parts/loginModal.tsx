@@ -10,7 +10,9 @@ import {
   FiAlertCircle,
   FiCheckCircle,
   FiChevronDown,
+  FiLoader,
   FiSearch,
+  FiX,
 } from "react-icons/fi";
 import { IoIosClose, IoMdMail } from "react-icons/io";
 import { z } from "zod";
@@ -65,23 +67,43 @@ const signupSchema = z
 type SigninFormData = z.infer<typeof signinSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
 
-const signupEmailSchema = z.object({
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
-});
-
-type SignupEmailFormData = z.infer<typeof signupEmailSchema>;
-
 type ApiMessageResponse = {
   success?: boolean;
   error?: string;
   message?: string;
 };
 
+type CheckEmailResponse = ApiMessageResponse & {
+  data?: {
+    exists: boolean;
+    email: string;
+  };
+};
+
+type EmailAvailabilityStatus = "idle" | "checking" | "available" | "error";
+
+type EmailAvailabilityState = {
+  email: string;
+  status: EmailAvailabilityStatus;
+  message: string | null;
+};
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_CHECK_DEBOUNCE_MS = 450;
+
 interface LoginModalProps {
   open: boolean;
   onClose: () => void;
   mode?: "login" | "signup";
   onSuccess?: () => void;
+}
+
+// Password validation rules type
+interface PasswordRules {
+  minLength: boolean;
+  hasUppercase: boolean;
+  hasLowercase: boolean;
+  hasNumber: boolean;
 }
 
 // Location data types
@@ -100,6 +122,36 @@ interface City {
   name: string;
 }
 
+// Password Rules Display Component
+function PasswordRulesDisplay({ rules }: { rules: PasswordRules }) {
+  const rulesList = [
+    { label: "At least 8 characters", met: rules.minLength },
+    { label: "At least 1 uppercase letter", met: rules.hasUppercase },
+    { label: "At least 1 lowercase letter", met: rules.hasLowercase },
+    { label: "At least 1 number", met: rules.hasNumber },
+  ];
+
+  return (
+    <div className="space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+      {rulesList.map((rule) => (
+        <div
+          key={rule.label}
+          className={`flex items-center gap-2 text-sm transition-colors ${
+            rule.met ? "text-green-600" : "text-gray-500"
+          }`}
+        >
+          {rule.met ? (
+            <FiCheckCircle className="h-4 w-4 flex-shrink-0 text-green-500" />
+          ) : (
+            <FiX className="h-4 w-4 flex-shrink-0 text-gray-400" />
+          )}
+          <span>{rule.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function LoginModal({
   open,
   onClose,
@@ -115,23 +167,317 @@ export default function LoginModal({
   const [success, setSuccess] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // Password validation state
+  const [passwordRules, setPasswordRules] = useState<PasswordRules>({
+    minLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+  });
+  const [signupEmailAvailability, setSignupEmailAvailability] =
+    useState<EmailAvailabilityState>({
+      email: "",
+      status: "idle",
+      message: null,
+    });
+
   // Sign up (email OTP) stepper state
   const [signupStep, setSignupStep] = useState<
     "credentials" | "personal" | "contact" | "otp"
   >("credentials");
   const [signupEmail, setSignupEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [otpVerified, setOtpVerified] = useState(false);
+  const [, setOtpVerified] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [providers, setProviders] = useState<Record<
     string,
     ClientSafeProvider
   > | null>(null);
-  const hasGoogle = !!providers?.google;
   const hasApple = !!providers?.apple;
   const hasFacebook = !!providers?.facebook;
   const hasAltProviders = hasApple || hasFacebook;
   const socialButtonWidth = hasApple && hasFacebook ? "w-1/2" : "w-full";
+  const emailCheckCacheRef = useRef<Map<string, boolean>>(new Map());
+  const emailCheckRequestsRef = useRef<Map<string, Promise<boolean>>>(
+    new Map(),
+  );
+  const emailCheckDebounceRef = useRef<number | null>(null);
+  const emailCheckRequestIdRef = useRef(0);
+
+  // Form setup
+  const signinForm = useForm<SigninFormData>({
+    resolver: zodResolver(signinSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const signupForm = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      firstName: "",
+      middleName: "",
+      surname: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      phone: "",
+      whatsapp: "",
+      country: "",
+      state: "",
+      city: "",
+    },
+  });
+
+  const isCheckingEmail = signupEmailAvailability.status === "checking";
+
+  // Utility function to validate password rules
+  const validatePasswordRules = (password: string): PasswordRules => {
+    return {
+      minLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+    };
+  };
+
+  const normalizeEmail = (email: string) => email.trim().toLowerCase();
+  const isValidEmail = (email: string) => EMAIL_REGEX.test(email);
+
+  const clearPendingEmailCheck = () => {
+    if (emailCheckDebounceRef.current !== null) {
+      window.clearTimeout(emailCheckDebounceRef.current);
+      emailCheckDebounceRef.current = null;
+    }
+  };
+
+  const resetSignupOtpState = () => {
+    setSignupStep("credentials");
+    setSignupEmail("");
+    setOtp("");
+    setOtpVerified(false);
+    setResendCooldown(0);
+  };
+
+  const resetSignupEmailAvailability = (email = "") => {
+    setSignupEmailAvailability({
+      email,
+      status: "idle",
+      message: null,
+    });
+  };
+
+  const switchToSignInWithEmail = (
+    email: string,
+    message = "We found an existing account for this email. Sign in to continue.",
+  ) => {
+    const normalizedEmail = normalizeEmail(email);
+
+    clearPendingEmailCheck();
+    emailCheckRequestIdRef.current += 1;
+    resetSignupEmailAvailability();
+    setError(null);
+    setSuccess(message);
+    setActiveMode("login");
+    setShowEmailForm(true);
+    signinForm.reset({
+      email: normalizedEmail,
+      password: "",
+    });
+    resetSignupOtpState();
+  };
+
+  const checkEmailExists = async (email: string): Promise<boolean> => {
+    const normalizedEmail = normalizeEmail(email);
+    const cachedResult = emailCheckCacheRef.current.get(normalizedEmail);
+
+    if (typeof cachedResult === "boolean") {
+      return cachedResult;
+    }
+
+    const existingRequest = emailCheckRequestsRef.current.get(normalizedEmail);
+    if (existingRequest) {
+      return existingRequest;
+    }
+
+    const request = (async () => {
+      const response = await fetch(
+        `/api/auth/check-email?email=${encodeURIComponent(normalizedEmail)}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+        },
+      );
+
+      const data = (await response
+        .json()
+        .catch(() => null)) as CheckEmailResponse | null;
+
+      if (!response.ok || data?.success === false) {
+        throw new Error(
+          data?.error ||
+            data?.message ||
+            "Couldn't verify this email right now. Please try again.",
+        );
+      }
+
+      const exists = data?.data?.exists ?? false;
+      emailCheckCacheRef.current.set(normalizedEmail, exists);
+      return exists;
+    })();
+
+    emailCheckRequestsRef.current.set(normalizedEmail, request);
+
+    try {
+      return await request;
+    } finally {
+      emailCheckRequestsRef.current.delete(normalizedEmail);
+    }
+  };
+
+  const verifySignupEmailAvailability = async (
+    email: string,
+  ): Promise<"available" | "exists" | "error" | "invalid"> => {
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!isValidEmail(normalizedEmail)) {
+      resetSignupEmailAvailability(normalizedEmail);
+      return "invalid";
+    }
+
+    const cachedResult = emailCheckCacheRef.current.get(normalizedEmail);
+    if (typeof cachedResult === "boolean") {
+      if (cachedResult) {
+        switchToSignInWithEmail(normalizedEmail);
+        return "exists";
+      }
+
+      setSignupEmailAvailability({
+        email: normalizedEmail,
+        status: "available",
+        message: null,
+      });
+      return "available";
+    }
+
+    const requestId = ++emailCheckRequestIdRef.current;
+    setSignupEmailAvailability({
+      email: normalizedEmail,
+      status: "checking",
+      message: null,
+    });
+
+    try {
+      const exists = await checkEmailExists(normalizedEmail);
+      const latestEmail = normalizeEmail(signupForm.getValues("email"));
+
+      if (
+        requestId !== emailCheckRequestIdRef.current ||
+        latestEmail !== normalizedEmail
+      ) {
+        return exists ? "exists" : "available";
+      }
+
+      if (exists) {
+        switchToSignInWithEmail(normalizedEmail);
+        return "exists";
+      }
+
+      setSignupEmailAvailability({
+        email: normalizedEmail,
+        status: "available",
+        message: null,
+      });
+      return "available";
+    } catch (error) {
+      const latestEmail = normalizeEmail(signupForm.getValues("email"));
+
+      if (
+        requestId !== emailCheckRequestIdRef.current ||
+        latestEmail !== normalizedEmail
+      ) {
+        return "error";
+      }
+
+      console.error("Error checking email:", error);
+      setSignupEmailAvailability({
+        email: normalizedEmail,
+        status: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Couldn't verify this email right now. Please try again.",
+      });
+      return "error";
+    }
+  };
+
+  const scheduleSignupEmailCheck = (email: string) => {
+    const normalizedEmail = normalizeEmail(email);
+
+    clearPendingEmailCheck();
+    emailCheckRequestIdRef.current += 1;
+
+    if (!normalizedEmail) {
+      resetSignupEmailAvailability();
+      return;
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      resetSignupEmailAvailability(normalizedEmail);
+      return;
+    }
+
+    const cachedResult = emailCheckCacheRef.current.get(normalizedEmail);
+    if (typeof cachedResult === "boolean") {
+      if (cachedResult) {
+        switchToSignInWithEmail(normalizedEmail);
+        return;
+      }
+
+      setSignupEmailAvailability({
+        email: normalizedEmail,
+        status: "available",
+        message: null,
+      });
+      return;
+    }
+
+    setSignupEmailAvailability({
+      email: normalizedEmail,
+      status: "checking",
+      message: null,
+    });
+
+    emailCheckDebounceRef.current = window.setTimeout(() => {
+      void verifySignupEmailAvailability(normalizedEmail);
+    }, EMAIL_CHECK_DEBOUNCE_MS);
+  };
+
+  const handleSignupEmailChange = (email: string) => {
+    if (error) {
+      setError(null);
+    }
+
+    if (success) {
+      setSuccess(null);
+    }
+
+    scheduleSignupEmailCheck(email);
+  };
+
+  const handleSignupEmailBlur = async (email: string) => {
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
+      return;
+    }
+
+    clearPendingEmailCheck();
+    await verifySignupEmailAvailability(normalizedEmail);
+  };
 
   // Location state
   const [countries, setCountries] = useState<Country[]>([]);
@@ -155,39 +501,6 @@ export default function LoginModal({
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
-
-  // Form setup
-  const signinForm = useForm<SigninFormData>({
-    resolver: zodResolver(signinSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const signupEmailForm = useForm<SignupEmailFormData>({
-    resolver: zodResolver(signupEmailSchema),
-    defaultValues: {
-      email: "",
-    },
-  });
-
-  const signupForm = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      firstName: "",
-      middleName: "",
-      surname: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      phone: "",
-      whatsapp: "",
-      country: "",
-      state: "",
-      city: "",
-    },
-  });
 
   // API Functions
   const fetchCountries = async () => {
@@ -340,18 +653,35 @@ export default function LoginModal({
   // Reset form and state when modal opens/closes or mode changes
   useEffect(() => {
     if (open) {
+      if (emailCheckDebounceRef.current !== null) {
+        window.clearTimeout(emailCheckDebounceRef.current);
+        emailCheckDebounceRef.current = null;
+      }
+      emailCheckRequestIdRef.current += 1;
+      emailCheckCacheRef.current.clear();
+      emailCheckRequestsRef.current.clear();
       setActiveMode(mode);
       setShowEmailForm(false);
       setError(null);
       setSuccess(null);
       signinForm.reset();
-      signupEmailForm.reset();
       signupForm.reset();
       setSignupStep("credentials");
       setSignupEmail("");
       setOtp("");
       setOtpVerified(false);
       setResendCooldown(0);
+      setSignupEmailAvailability({
+        email: "",
+        status: "idle",
+        message: null,
+      });
+      setPasswordRules({
+        minLength: false,
+        hasUppercase: false,
+        hasLowercase: false,
+        hasNumber: false,
+      });
 
       // Reset location selections
       setSelectedCountry("");
@@ -360,7 +690,15 @@ export default function LoginModal({
       setStates([]);
       setCities([]);
     }
-  }, [open, mode, signinForm, signupEmailForm, signupForm]);
+  }, [open, mode, signinForm, signupForm]);
+
+  useEffect(() => {
+    return () => {
+      if (emailCheckDebounceRef.current !== null) {
+        window.clearTimeout(emailCheckDebounceRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -662,7 +1000,7 @@ export default function LoginModal({
     }
   };
 
-  const handleSendOtp = async ({ email }: SignupEmailFormData) => {
+  const handleSendOtp = async ({ email }: { email: string }) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -686,24 +1024,11 @@ export default function LoginModal({
           /email is already verified/i.test(rawMessage) ||
           /already verified/i.test(rawMessage)
         ) {
-          setError(null);
-          setSuccess(
+          emailCheckCacheRef.current.set(normalizedEmail, true);
+          switchToSignInWithEmail(
+            normalizedEmail,
             "An account with this email already exists. Please sign in.",
           );
-          setActiveMode("login");
-          setShowEmailForm(true);
-          signinForm.setValue("email", normalizedEmail, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-          signinForm.setValue("password", "", {
-            shouldDirty: false,
-            shouldValidate: false,
-          });
-          setSignupStep("credentials");
-          setSignupEmail("");
-          setOtp("");
-          setOtpVerified(false);
           return;
         }
         if (
@@ -833,10 +1158,17 @@ export default function LoginModal({
       "confirmPassword",
     ]);
 
-    if (isValid) {
-      setSignupEmail(signupForm.getValues("email").trim().toLowerCase());
-      setSignupStep("personal");
+    if (!isValid) return;
+
+    const normalizedEmail = normalizeEmail(signupForm.getValues("email"));
+    const availability = await verifySignupEmailAvailability(normalizedEmail);
+
+    if (availability !== "available") {
+      return;
     }
+
+    setSignupEmail(normalizedEmail);
+    setSignupStep("personal");
   };
 
   const handleSignupNextFromPersonal = async () => {
@@ -902,19 +1234,26 @@ export default function LoginModal({
   };
 
   const toggleMode = () => {
+    clearPendingEmailCheck();
+    emailCheckRequestIdRef.current += 1;
     setActiveMode(activeMode === "login" ? "signup" : "login");
     setShowEmailForm(false);
     setError(null);
     setSuccess(null);
     signinForm.reset();
-    signupEmailForm.reset();
     signupForm.reset();
-    setSignupStep("credentials");
-    setSignupEmail("");
-    setOtp("");
-    setOtpVerified(false);
-    setResendCooldown(0);
+    resetSignupOtpState();
+    resetSignupEmailAvailability();
   };
+
+  const signupEmailValue = signupForm.watch("email") ?? "";
+  const normalizedSignupEmail = normalizeEmail(signupEmailValue);
+  const signupEmailField = signupForm.register("email");
+  const showSignupEmailAvailability =
+    !signupForm.formState.errors.email &&
+    !!normalizedSignupEmail &&
+    isValidEmail(normalizedSignupEmail) &&
+    signupEmailAvailability.email === normalizedSignupEmail;
 
   if (!open) return null;
 
@@ -922,13 +1261,20 @@ export default function LoginModal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       ref={modalRef}
-      role="presentation"
+      role="button"
+      tabIndex={0}
+      aria-label="Close login modal"
       onMouseDown={handleBackdropClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          onClose();
+        }
+      }}
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex overflow-hidden h-5/6 relative animate-in fade-in-0 zoom-in-95">
         {/* Left Side - Motivation & Image */}
         <div className="hidden md:flex w-1/2 h-full p-0 text-white bg-gradient-to-b from-teal-600 via-teal-700 to-teal-800 flex-col justify-between relative">
-          <div className="p-8 pb-0 z-10">
+          <div className="p-8 pb-0 z-10 relative">
             <h2 className="text-3xl text-left font-bold mb-6 text-white">
               It all starts here <i className="text-2xl block">- Gain access</i>
             </h2>
@@ -947,7 +1293,7 @@ export default function LoginModal({
               </li>
             </ul>
           </div>
-          <div className="relative h-3/5 w-full">
+          <div className="absolute bottom-0 h-3/5 w-full">
             <Image
               src="/image/signUp_modal.png"
               alt="Work"
@@ -1169,23 +1515,6 @@ export default function LoginModal({
                     <input type="hidden" {...signupForm.register("state")} />
                     <input type="hidden" {...signupForm.register("city")} />
 
-                    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                      <span>
-                        Step{" "}
-                        {signupStep === "credentials"
-                          ? 1
-                          : signupStep === "personal"
-                            ? 2
-                            : signupStep === "contact"
-                              ? 3
-                              : 4}{" "}
-                        of 4
-                      </span>
-                      {otpVerified && (
-                        <span className="text-teal-700">Email verified</span>
-                      )}
-                    </div>
-
                     {signupStep === "credentials" && (
                       <div className="space-y-4">
                         <div>
@@ -1195,19 +1524,72 @@ export default function LoginModal({
                           >
                             Email Address *
                           </label>
-                          <input
-                            type="email"
-                            id="signupEmail"
-                            {...signupForm.register("email")}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                            placeholder="Enter your email"
-                            disabled={isLoading}
-                          />
+                          <div className="relative">
+                            <input
+                              type="email"
+                              id="signupEmail"
+                              {...signupEmailField}
+                              className={`w-full rounded-lg border p-3 pr-10 text-black focus:ring-2 focus:border-transparent ${
+                                showSignupEmailAvailability &&
+                                signupEmailAvailability.status === "available"
+                                  ? "border-green-400 focus:ring-green-500"
+                                  : showSignupEmailAvailability &&
+                                      signupEmailAvailability.status === "error"
+                                    ? "border-red-300 focus:ring-red-500"
+                                    : "border-gray-300 focus:ring-teal-500"
+                              }`}
+                              placeholder="Enter your email"
+                              disabled={isLoading}
+                              onChange={(e) => {
+                                signupEmailField.onChange(e);
+                                handleSignupEmailChange(e.target.value);
+                              }}
+                              onBlur={(e) => {
+                                signupEmailField.onBlur(e);
+                                void handleSignupEmailBlur(e.target.value);
+                              }}
+                            />
+                            {showSignupEmailAvailability &&
+                              signupEmailAvailability.status === "checking" && (
+                                <FiLoader className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-gray-400" />
+                              )}
+                            {showSignupEmailAvailability &&
+                              signupEmailAvailability.status ===
+                                "available" && (
+                                <FiCheckCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-green-500" />
+                              )}
+                            {showSignupEmailAvailability &&
+                              signupEmailAvailability.status === "error" && (
+                                <FiAlertCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-red-500" />
+                              )}
+                          </div>
                           {signupForm.formState.errors.email && (
                             <p className="text-red-500 text-sm mt-1">
                               {signupForm.formState.errors.email.message}
                             </p>
                           )}
+                          {!signupForm.formState.errors.email &&
+                            showSignupEmailAvailability &&
+                            signupEmailAvailability.status === "checking" && (
+                              <p className="mt-1 text-sm text-gray-500">
+                                Checking email...
+                              </p>
+                            )}
+                          {!signupForm.formState.errors.email &&
+                            showSignupEmailAvailability &&
+                            signupEmailAvailability.status === "available" && (
+                              <p className="mt-1 text-sm text-green-600">
+                                Email is available.
+                              </p>
+                            )}
+                          {!signupForm.formState.errors.email &&
+                            showSignupEmailAvailability &&
+                            signupEmailAvailability.status === "error" &&
+                            signupEmailAvailability.message && (
+                              <p className="mt-1 text-sm text-red-500">
+                                {signupEmailAvailability.message}
+                              </p>
+                            )}
                         </div>
 
                         <div>
@@ -1226,6 +1608,13 @@ export default function LoginModal({
                               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent pr-10 text-black"
                               placeholder="Create a password"
                               disabled={isLoading}
+                              onChange={(e) => {
+                                signupForm.setValue("password", e.target.value);
+                                const rules = validatePasswordRules(
+                                  e.target.value,
+                                );
+                                setPasswordRules(rules);
+                              }}
                             />
                             <button
                               type="button"
@@ -1241,6 +1630,11 @@ export default function LoginModal({
                               {signupForm.formState.errors.password.message}
                             </p>
                           )}
+
+                          {/* Password Rules Display */}
+                          <div className="mt-3 space-y-2">
+                            <PasswordRulesDisplay rules={passwordRules} />
+                          </div>
                         </div>
 
                         <div>
@@ -1522,9 +1916,9 @@ export default function LoginModal({
                                               countrySearch.toLowerCase(),
                                             );
                                         })
-                                        .map((country, index) => (
+                                        .map((country) => (
                                           <button
-                                            key={index}
+                                            key={`${country.iso2}-${country.country}`}
                                             type="button"
                                             onClick={() =>
                                               handleCountrySelect(
@@ -1712,14 +2106,14 @@ export default function LoginModal({
                                               citySearch.toLowerCase(),
                                             );
                                         })
-                                        .map((city, index) => {
+                                        .map((city) => {
                                           const cityName =
                                             typeof city === "string"
                                               ? city
                                               : city?.name;
                                           return cityName ? (
                                             <button
-                                              key={index}
+                                              key={cityName}
                                               type="button"
                                               onClick={() =>
                                                 handleCitySelect(cityName)
@@ -1772,6 +2166,7 @@ export default function LoginModal({
                         } bg-teal-600 text-white p-3 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                         disabled={
                           isLoading ||
+                          (signupStep === "credentials" && isCheckingEmail) ||
                           (signupStep === "otp" &&
                             otp.replace(/\D/g, "").length !== 6)
                         }
@@ -1784,7 +2179,9 @@ export default function LoginModal({
                             ? isLoading
                               ? "Creating Account..."
                               : "Create Account"
-                            : "Next"}
+                            : signupStep === "credentials" && isCheckingEmail
+                              ? "Checking..."
+                              : "Next"}
                       </button>
                     </div>
                   </form>
@@ -1795,11 +2192,11 @@ export default function LoginModal({
 
           <p className="text-xs text-slate-500 mt-8">
             By joining, you agree to the TASA{" "}
-            <a href="#" className="underline">
+            <a href="/terms-of-service" className="underline">
               Terms of Service
             </a>{" "}
             and to occasionally receive emails from us. Please read our{" "}
-            <a href="#" className="underline">
+            <a href="/privacy-policy" className="underline">
               Privacy Policy
             </a>{" "}
             to learn how we use your personal data.

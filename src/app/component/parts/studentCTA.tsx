@@ -3,8 +3,22 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
 export default function StudentCTA() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const { openSignup } = useAuthModal();
+
+  const handleCTAClick = () => {
+    if (isAuthenticated) {
+      router.push("/become-a-vendor");
+    } else {
+      openSignup();
+    }
+  };
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
     visible: {
@@ -59,7 +73,10 @@ export default function StudentCTA() {
               </motion.div>
 
               <motion.div variants={fadeInUp}>
-                <button className="group relative inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-teal-900/20">
+                <button 
+                  onClick={handleCTAClick}
+                  className="group relative inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-teal-900/20"
+                >
                   Join the trend
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   <Sparkles className="absolute -top-2 -right-2 w-5 h-5 text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity" />

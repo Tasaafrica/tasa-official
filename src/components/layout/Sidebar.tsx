@@ -1,8 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Home, User, Settings, LogOut, X, Search, LogIn } from "lucide-react";
+import { vendorApi } from "@/lib/vendor";
+import { userApi } from "@/lib/user";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -19,7 +21,35 @@ export default function Sidebar({
   onJoinClick,
   onSearchClick,
 }: SidebarProps) {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, session } = useAuth();
+  const [userData, setUserData] = useState<any>(null);
+
+  useEffect(() => {
+    if (isAuthenticated && session?.user?.id && (session as any).authToken) {
+      fetchData();
+    }
+  }, [isAuthenticated, session]);
+  const fetchData = async () => {
+    try {
+      const authToken = (session as any).authToken;
+      if (!session?.user?.id || !authToken) return;
+
+      const role = (session.user as any).role;
+      let result;
+
+      if (role === "vendor") {
+        result = await vendorApi.getById(session.user.id, authToken);
+      } else {
+        result = await userApi.getById(session.user.id, authToken);
+      }
+
+      if (result.success && result.data) {
+        setUserData(result.data);
+      }
+    } catch (error) {
+      console.error("Sidebar data fetch error:", error);
+    }
+  };
 
   const getUserInitials = (name: string) => {
     return name
@@ -35,18 +65,24 @@ export default function Sidebar({
     onClose();
   };
 
-  if (!isOpen) return null;
+  // We handle visibility via CSS classes to allow for exit animations
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-50 animate-fade-in"
+        className={`lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-50 transition-opacity duration-300 ease-in-out ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
         onClick={onClose}
       />
 
       {/* Sidebar */}
-      <div className="lg:hidden fixed top-0 left-0 h-full w-3/5 max-w-xs bg-white shadow-2xl transition-transform duration-300 ease-in-out z-60 overflow-y-auto animate-slide-in-left">
+      <div 
+        className={`lg:hidden fixed top-0 left-0 h-full w-4/5 max-w-xs bg-white shadow-2xl z-60 overflow-y-auto transition-transform duration-300 ease-in-out transform ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <div className="flex flex-col h-full">
           {/* User Profile Section */}
           {isAuthenticated && user ? (
@@ -58,9 +94,9 @@ export default function Sidebar({
                 <X className="w-5 h-5 text-black" />
               </button>
               <div className="text-center">
-                {user.image ? (
+                {userData?.profileImage || user.image || (user as any).profileImage ? (
                   <img
-                    src={user?.image}
+                    src={userData?.profileImage || user?.image || (user as any).profileImage}
                     alt={user?.name || "User"}
                     className="w-16 h-16 rounded-full object-cover mx-auto mb-3 border-2 border-teal-200"
                   />
@@ -70,9 +106,9 @@ export default function Sidebar({
                   </div>
                 )}
                 <h3 className="text-base font-semibold text-gray-900 mb-1">
-                  {user.name}
+                  {userData?.name || user.name}
                 </h3>
-                <p className="text-xs text-gray-600 mb-2">{user.email}</p>
+                <p className="text-xs text-gray-600 mb-2">{userData?.email || user.email}</p>
                 <div
                   className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                     user.role === "client"
@@ -177,18 +213,12 @@ export default function Sidebar({
             <div className="p-6 border-t border-gray-200">
               <div className="space-y-2">
                 <a
-                  href={
-                    process.env.NODE_ENV === "production"
-                      ? "https://dash.tasa.com.ng"
-                      : "http://localhost:5173"
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={user?.role === "vendor" ? "/v/dashboard" : "/c/dashboard"}
                   className="flex items-center px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                   onClick={onClose}
                 >
                   <Settings className="w-5 h-5 mr-3" />
-                  Profile
+                  Dashboard
                 </a>
 
                 <button

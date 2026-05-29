@@ -1,12 +1,16 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { LogOut, Search, Settings } from "lucide-react";
+import { LogOut, Search, User } from "lucide-react";
 import ExploreDropdown from "./exploreDropdown";
 import SearchModal from "./searchModal";
 import LoginModal from "./loginModal";
 import Sidebar from "@/components/layout/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { vendorApi } from "@/lib/vendor";
+import { userApi } from "@/lib/user";
+import { useAuthModal } from "@/components/providers/AuthModalProvider";
+import { useSearchModal } from "@/components/providers/SearchModalProvider";
 
 interface HeaderProps {
   variant?: "transparent" | "white" | "auto";
@@ -18,7 +22,7 @@ const HeaderContent = ({
   isWhite = false,
   invert,
   toggleMobileMenu,
-  setIsSearchModalOpen,
+  openSearch,
   handleSignInClick,
   handleJoinClick,
   isAuthenticated,
@@ -28,6 +32,7 @@ const HeaderContent = ({
   handleLogout,
   getUserInitials,
   isScrolled,
+  userData,
 }: any) => {
   const shouldUseWhiteText = invert ? !isWhite : isWhite;
 
@@ -98,7 +103,7 @@ const HeaderContent = ({
               About
             </a>
             <button
-              onClick={() => setIsSearchModalOpen(true)}
+              onClick={openSearch}
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible flex items-center ${
                 shouldUseWhiteText
                   ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
@@ -142,9 +147,9 @@ const HeaderContent = ({
                     : "text-[#0F766E] hover:text-[#0D5F59]"
                 }`}
               >
-                {user.image ? (
+                {userData?.profileImage || user.image ? (
                   <img
-                    src={user.image}
+                    src={userData?.profileImage || user.image}
                     alt={user.name}
                     className="w-10 h-10 rounded-full object-cover"
                   />
@@ -160,24 +165,22 @@ const HeaderContent = ({
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     <div className="px-4 py-2 border-b border-gray-100">
                       <p className="text-sm font-medium text-gray-900">
-                        {user.name}
+                        {userData?.name || user.name}
                       </p>
                       <p
                         className="text-sm text-gray-500 truncate"
-                        title={user.email || ""}
+                        title={userData?.email || user.email || ""}
                       >
-                        {user.email}
+                        {userData?.email || user.email}
                       </p>
                     </div>
 
                     <Link
-                      href={`/profile`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={user?.role === "vendor" ? "/v/dashboard" : "/c/dashboard"}
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Profile
+                      <User className="w-4 h-4 mr-2" />
+                      Dashboard
                     </Link>
 
                     <button
@@ -219,9 +222,9 @@ const HeaderContent = ({
         {/* Mobile User Profile */}
         {isAuthenticated && user ? (
           <div className="lg:hidden flex items-center px-3 py-2">
-            {user.image ? (
+            {userData?.profileImage || user.image ? (
               <img
-                src={user.image}
+                src={userData?.profileImage || user.image}
                 alt={user.name || "User"}
                 className="w-9 h-9 rounded-full object-cover"
               />
@@ -255,15 +258,41 @@ const Header: React.FC<HeaderProps> = ({
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [loginModalMode, setLoginModalMode] = useState<"login" | "signup">(
-    "login",
-  );
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { openLogin, openSignup } = useAuthModal();
+  const { openSearch } = useSearchModal();
 
   // Get authentication state
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, session } = useAuth();
+  const [userData, setUserData] = useState<any>(null);
+
+  useEffect(() => {
+    if (isAuthenticated && session?.user?.id && (session as any).authToken) {
+      fetchHeaderData();
+    }
+  }, [isAuthenticated, session]);
+
+  const fetchHeaderData = async () => {
+    try {
+      const authToken = (session as any).authToken;
+      if (!session?.user?.id || !authToken) return;
+      
+      const role = (session.user as any).role;
+      let result;
+      
+      if (role === "vendor") {
+        result = await vendorApi.getById(session.user.id, authToken);
+      } else {
+        result = await userApi.getById(session.user.id, authToken);
+      }
+
+      if (result.success && result.data) {
+        setUserData(result.data);
+      }
+    } catch (error) {
+      console.error("Header data fetch error:", error);
+    }
+  };
 
   // Fix hydration issues by only showing client stuff after mount
   useEffect(() => {
@@ -299,12 +328,10 @@ const Header: React.FC<HeaderProps> = ({
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
   const handleSignInClick = () => {
-    setLoginModalMode("login");
-    setIsLoginModalOpen(true);
+    openLogin();
   };
   const handleJoinClick = () => {
-    setLoginModalMode("signup");
-    setIsLoginModalOpen(true);
+    openSignup();
   };
   const getUserInitials = (name: string) => {
     return name
@@ -323,7 +350,7 @@ const Header: React.FC<HeaderProps> = ({
   const commonProps = {
     invert,
     toggleMobileMenu,
-    setIsSearchModalOpen,
+    openSearch,
     handleSignInClick,
     handleJoinClick,
     isAuthenticated: mounted ? isAuthenticated : false, // Prevent hydration mismatch
@@ -333,6 +360,7 @@ const Header: React.FC<HeaderProps> = ({
     handleLogout,
     getUserInitials,
     isScrolled,
+    userData,
   };
 
   return (
@@ -361,19 +389,7 @@ const Header: React.FC<HeaderProps> = ({
         onClose={closeMobileMenu}
         onSignInClick={handleSignInClick}
         onJoinClick={handleJoinClick}
-        onSearchClick={() => setIsSearchModalOpen(true)}
-      />
-
-      <SearchModal
-        isOpen={isSearchModalOpen}
-        onClose={() => setIsSearchModalOpen(false)}
-      />
-
-      <LoginModal
-        open={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        mode={loginModalMode}
-        onSuccess={() => window.location.reload()} // Force refresh on login success for clean header state
+        onSearchClick={openSearch}
       />
     </>
   );
