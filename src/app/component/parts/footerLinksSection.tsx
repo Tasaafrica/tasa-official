@@ -52,89 +52,89 @@ const categories = [
   const clientsLinks = [
     {
       name: 'How TASA Works',
-      links: 'how-tasa-works',
+      links: '/how-tasa-works',
     },
     {
       name: 'Customer Success Stories',
-      links: 'customer-success-stories',
+      links: '/customer-success-stories',
     },
     {
       name: 'Trust & Safety',
-      links: 'trust-safety',
+      links: '/trust-safety',
     },
     {
       name: 'Quality Guide',
-      links: 'quality-guide',
+      links: '/quality-guide',
     },
   ];
   
   const freelancersLinks = [
     {
       name: 'Become a TASA Vendor',
-      links: 'become-a-tasa-vendor',
+      links: '/become-a-vendor',
     },
     {
       name: 'TASA for minors',
-      links: 'tasa-for-minors',
+      links: '/tasa-for-minors',
     },
     {
       name: 'Vendor Support',
-      links: 'vendor-support',
+      links: '/vendor-support',
     },
     {
       name: 'Vendor Resources',
-      links: 'vendor-resources',
+      links: '/vendor-resources',
     },
     {
       name: 'Events',
-      links: 'events',
+      links: '/events',
     },
   ];
   
   const businessLinks = [
     {
       name: 'TASA Pro',
-      links: 'tasa-pro',
+      links: '/tasa-pro',
     },
     {
       name: 'Project Management Service',
-      links: 'project-management-service',
+      links: '/project-management-service',
     },
     {
       name: 'ClearVoice - Content Marketing',
-      links: 'clearvoice-content-marketing',
+      links: '/clearvoice-content-marketing',
     },
     {
       name: 'Contact Sales',
-      links: 'contact-sales',
+      links: '/contact-sales',
     },
   ];
   
   const companyLinks = [
     {
       name: 'About TASA',
-      links: 'about-tasa',
+      links: '/about',
     },
     {
-      name: 'Press & News',
-      links: 'press-news',
+      name: 'Blog',
+      links: '/blog',
+    },
+    {
+      name: 'FAQ',
+      links: '/faq',
     },
     {
       name: 'Partnerships',
-      links: 'partnerships',
+      links: '/partnerships',
     },
     {
       name: 'Privacy Policy',
-      links: 'privacy-policy',
+      links: '/privacy-policy',
     },
     {
       name: 'Terms of Service',
-      links: 'terms-of-service',
+      links: '/terms-of-service',
     }, 
-    {
-      name: 'Investor Relations',
-      links: 'investor-relations',
-    },
   ];
   
   const columns = [

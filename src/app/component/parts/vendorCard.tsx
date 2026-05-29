@@ -16,6 +16,12 @@ interface VendorCardProps {
   currency?: string;
 }
 
+const truncateWords = (text: string, maxWords: number) => {
+  const words = text.trim().split(/\s+/);
+  if (words.length <= maxWords) return text;
+  return words.slice(0, maxWords).join(" ") + "…";
+};
+
 export default function VendorCard({
   imageAlt,
   imageUrl,
@@ -32,107 +38,80 @@ export default function VendorCard({
 
   return (
     <motion.div
-      className="group bg-white rounded-2xl border border-slate-200 shadow-[0_4px_20px_rgba(0,0,0,0.04)] overflow-hidden hover:shadow-[0_12px_32px_rgba(15,118,110,0.12)] transition-shadow duration-500"
+      className="group bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-xl transition-all duration-500 h-full flex flex-col p-4"
       whileHover={{ y: -6 }}
-      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+      transition={{ duration: 0.4 }}
     >
-      {/* Image Container */}
-      <div className="relative overflow-hidden aspect-[1.33/1] bg-slate-100">
-        {imageUrl ? (
-          <motion.img
-            src={imageUrl}
-            alt={imageAlt}
-            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-            loading="lazy"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-400 font-medium">
-            Preview Unavailable
-          </div>
-        )}
+      {/* Circle Image Container */}
+      <div className="relative mx-auto mb-5">
+        <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full p-[3px] bg-gradient-to-tr from-teal-500 to-emerald-300 shadow-sm">
+            <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-slate-100 relative">
+                {imageUrl ? (
+                <motion.img
+                    src={imageUrl}
+                    alt={imageAlt}
+                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                    loading="lazy"
+                />
+                ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-[10px] text-slate-400 font-medium">
+                    No Avatar
+                </div>
+                )}
+            </div>
+        </div>
 
-        {/* Save Button */}
-        <motion.button
+        {/* Save Button - Positioned top-right of circle */}
+        <button
           type="button"
           onClick={(e) => {
             e.preventDefault();
             setIsSaved(!isSaved);
           }}
-          className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/95 backdrop-blur-sm shadow-md flex items-center justify-center z-10 border border-slate-100"
-          initial={{ color: "#64748b" }}
-          animate={{
-            color: isSaved ? "#f43f5e" : "#64748b",
-            scale: 1,
-          }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ duration: 0.2 }}
+          className="absolute -top-1 -right-1 h-8 w-8 rounded-full bg-white shadow-lg flex items-center justify-center z-10 border border-slate-50 active:scale-90 transition-transform"
         >
           <Heart
-            className={`h-5 w-5 transition-colors duration-300 ${isSaved ? "fill-rose-500 text-rose-500" : ""}`}
+            className={`h-4 w-4 transition-colors duration-300 ${isSaved ? "fill-rose-500 text-rose-500" : "text-slate-300"}`}
           />
-        </motion.button>
+        </button>
 
-        {/* Level Badge Overlay (Optional) */}
-        <div className="absolute bottom-3 left-3 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          {vendorLevel}
-        </div>
+        {/* Status indicator (Verified) */}
+        {vendorLevel === "Top Rated" && (
+            <div className="absolute -bottom-1 right-2 bg-white p-1 rounded-full shadow-md border border-slate-50">
+                <BadgeCheck className="w-5 h-5 text-teal-600" />
+            </div>
+        )}
       </div>
 
-      {/* Content */}
-      <div className="p-5">
-        {/* Vendor Info */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-10 w-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
-            {vendorAvatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={vendorAvatar}
-                alt={vendorName}
-                className="h-full w-full object-cover transition-opacity duration-300"
-              />
-            ) : (
-              <span className="text-[10px] font-bold text-slate-400 uppercase">
-                {vendorName.substring(0, 2)}
-              </span>
-            )}
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-bold text-slate-900 truncate hover:text-teal-700 transition-colors cursor-pointer">
+      {/* Content - Centered */}
+      <div className="flex flex-col flex-1 text-center">
+        {/* Vendor Name & Level */}
+        <div className="mb-2 px-1">
+            <h4 className="text-sm sm:text-base font-bold text-slate-900 truncate mb-0.5">
                 {vendorName}
-              </span>
-              <BadgeCheck
-                className={`h-3.5 w-3.5 flex-shrink-0 ${
-                  vendorLevel === "Top Rated" ? "text-yellow-500" : "text-teal-600"
-                }`}
-              />
+            </h4>
+            <div className="flex items-center justify-center gap-1.5 uppercase tracking-widest text-[9px] sm:text-[10px] font-bold text-slate-400">
+                <span>{vendorLevel}</span>
+                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                <div className="flex items-center gap-0.5 text-slate-900">
+                    <Star className="h-2.5 w-2.5 text-amber-500 fill-amber-500" />
+                    <span>{rating.toFixed(1)}</span>
+                </div>
             </div>
-            <p className="text-[11px] font-medium text-slate-500 uppercase tracking-tight">
-              {vendorLevel}
-            </p>
-          </div>
         </div>
 
         {/* Title */}
-        <h3 className="text-sm text-slate-800 font-semibold leading-relaxed mb-4 line-clamp-2 min-h-[40px] group-hover:text-teal-950 transition-colors">
-          {title}
-        </h3>
+        <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed mb-4 px-2 flex-1">
+          {truncateWords(title, 20)}
+        </p>
 
-        {/* Stats */}
-        <div className="flex items-center gap-1 text-sm mb-5 pt-4 border-t border-slate-100">
-          <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-          <span className="font-bold text-slate-900">{rating.toFixed(1)}</span>
-          <span className="text-slate-400 font-medium">({reviews.toLocaleString()})</span>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Starting at</span>
-          <div className="flex items-baseline gap-0.5">
-            <span className="text-sm font-bold text-slate-900">{currency}</span>
-            <span className="text-lg font-extrabold text-slate-900 tracking-tight">{startingPrice}</span>
-          </div>
+        {/* Pricing Area */}
+        <div className="bg-slate-50/50 rounded-2xl p-2.5 border border-slate-100/50 group-hover:bg-teal-50/30 group-hover:border-teal-100/30 transition-colors">
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">Starts at</p>
+            <div className="flex items-baseline justify-center gap-0.5">
+                <span className="text-[10px] sm:text-xs font-bold text-teal-700">{currency}</span>
+                <span className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">{startingPrice}</span>
+            </div>
         </div>
       </div>
     </motion.div>

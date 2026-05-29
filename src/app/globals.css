@@ -9,6 +9,7 @@
   --container-max-width: 1280px;
   --color-1: #0f766e;
   --indigo: #334155;
+  --cool-blue:#334155;
   --color-light: #ccfbf1;
 }
 
@@ -42,6 +43,9 @@ body {
   --color-1: #0f766e;
   --indigo: #334155;
   --color-light: #ccfbf1;
+}
+input{
+  color:black;
 }
 
 /* Responsive container utilities */

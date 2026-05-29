@@ -45,10 +45,9 @@ export default function HomeHeroSection({
   };
 
   const popularTags = [
-    { name: "Plumbing", slug: "plumbing", type: "subcategory" },
+    { name: "Plumbing", slug: "plumbing-repairs", type: "skill" },
     { name: "Logo Design", slug: "logo-design", type: "skill" },
-    { name: "Web Development", slug: "web-development", type: "subcategory" },
-    { name: "AI Art", slug: "ai-art", type: "skill" },
+    { name: "Web Development", slug: "web-development", type: "skill" },
   ];
 
   return (

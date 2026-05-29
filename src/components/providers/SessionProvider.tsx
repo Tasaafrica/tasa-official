@@ -26,7 +26,11 @@ function SessionSync({ children }: SessionProviderProps) {
 
 export function SessionProvider({ children, session }: SessionProviderProps) {
   return (
-    <NextAuthSessionProvider session={session}>
+    <NextAuthSessionProvider 
+      session={session} 
+      refetchOnWindowFocus={false}
+      refetchInterval={5 * 60}
+    >
       <SessionSync>{children}</SessionSync>
     </NextAuthSessionProvider>
   );

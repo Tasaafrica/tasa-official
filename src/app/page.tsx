@@ -17,47 +17,51 @@ const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
 });
 
+import CustomContextMenu from "@/components/ui/CustomContextMenu";
+
 export default function HomePage() {
   // No client state needed - search modal is handled in Header component
 
   return (
-    <div>
-        {/*header*/}
-        <Header />
-        {/*hero section*/}
-        <HomeHeroSection fontClassName={poppins.className} />
-        {/* Trusted By Section */}
-        <TrustedBySection />
-        <section className="hidden md:block py-8 bg-white">
-          <div className="container-responsive">
-            <PopularCategory />
-          </div>
-        </section>
-        {/**category for mobile*/}
-        <section className="block md:hidden">
-          <PopularCategory layout="vertical" />
-        </section>
+    <CustomContextMenu>
+      <div>
+          {/*header*/}
+          <Header />
+          {/*hero section*/}
+          <HomeHeroSection fontClassName={poppins.className} />
+          {/* Trusted By Section */}
+          <TrustedBySection />
+          <section className="hidden md:block py-8 bg-white">
+            <div className="container-responsive">
+              <PopularCategory />
+            </div>
+          </section>
+          {/**category for mobile*/}
+          <section className="block md:hidden">
+            <PopularCategory layout="vertical" />
+          </section>
 
-        {/* Totally Impressed Services Section */}
-        <ImpressedServiceSection />
+          {/* Totally Impressed Services Section */}
+          <ImpressedServiceSection />
 
-        {/* African Talent Section */}
-        <AfricanTalent />
+          {/* African Talent Section */}
+          <AfricanTalent />
 
-        {/* Why Choose Tasa Section */}
-        <WhyChooseTasa />
+          {/* Why Choose Tasa Section */}
+          <WhyChooseTasa />
 
-        {/* Student Enrollment Section */}
-        <StudentCTA />
+          {/* Student Enrollment Section */}
+          <StudentCTA />
 
-        <HowItWorksSection />
+          <HowItWorksSection />
 
-        {/* Ready To Get Started Section */}
-        <CtaSection />
+          {/* Ready To Get Started Section */}
+          <CtaSection />
 
-        <FooterLinksSection />
+          <FooterLinksSection />
 
-        {/* Search functionality is now handled in the Header component */}
-      </div>
+          {/* Search functionality is now handled in the Header component */}
+        </div>
+    </CustomContextMenu>
   );
 }

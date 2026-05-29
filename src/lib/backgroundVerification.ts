@@ -7,10 +7,15 @@ import { startBackgroundVerificationCheck } from "./verificationChecker";
  * This should be called after user signs in
  */
 export function initializeBackgroundVerification(userId: string): void {
+  // Don't re-initialize if already running for the same user
+  if ((window as any).__verificationUserId === userId && (window as any).__verificationIntervalId) {
+    return;
+  }
+
   // Clean up any existing interval first to prevent duplicates
   cleanupBackgroundVerification();
 
-  // Start the background check
+  // Start the background check immediately
   startBackgroundVerificationCheck(userId);
 
   // Set up periodic checks (every 10 minutes)
@@ -18,8 +23,9 @@ export function initializeBackgroundVerification(userId: string): void {
     startBackgroundVerificationCheck(userId);
   }, 10 * 60 * 1000);
 
-  // Store interval ID for cleanup
+  // Store metadata for cleanup
   (window as any).__verificationIntervalId = intervalId;
+  (window as any).__verificationUserId = userId;
 }
 
 /**
@@ -31,6 +37,7 @@ export function cleanupBackgroundVerification(): void {
   if (intervalId) {
     clearInterval(intervalId);
     (window as any).__verificationIntervalId = null;
+    (window as any).__verificationUserId = null;
   }
 }
 

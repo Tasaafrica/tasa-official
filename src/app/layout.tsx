@@ -27,6 +27,11 @@ export const metadata: Metadata = {
 
 
 
+import { Toaster } from "sonner";
+
+import { AuthModalProvider } from "@/components/providers/AuthModalProvider";
+import { SearchModalProvider } from "@/components/providers/SearchModalProvider";
+
 export default async function RootLayout({
   children,
 }: {
@@ -49,7 +54,12 @@ export default async function RootLayout({
       </head>
       <body>
         <SessionProvider session={session}>
-          <EmailVerificationWrapper>{children}</EmailVerificationWrapper>
+          <SearchModalProvider>
+            <AuthModalProvider>
+              <Toaster position="top-right" richColors />
+              <EmailVerificationWrapper>{children}</EmailVerificationWrapper>
+            </AuthModalProvider>
+          </SearchModalProvider>
         </SessionProvider>
       </body>
     </html>

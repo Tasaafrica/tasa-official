@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import FooterLinksSection from "@/app/component/parts/footerLinksSection";
 import CategoryHero from "@/app/component/parts/categoryHero";
-import SubcategoryGroupCard from "@/app/component/parts/subcategoryGroupCard";
 import VendorCard from "@/app/component/parts/vendorCard";
 import { Button } from "@/app/component/ui/button";
 import { ArrowRight, Briefcase, Search, Sparkles, Users } from "lucide-react";
@@ -30,11 +29,13 @@ interface Subcategory {
 
 interface CategoriesPageProps {
   categorySlug: string;
+  categoryName?: string;
   subcategories: Subcategory[];
 }
 
 export default function CategoriesPage({
   categorySlug,
+  categoryName: initialCategoryName,
   subcategories,
 }: CategoriesPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,24 +52,8 @@ export default function CategoriesPage({
     );
   }, [subcategories, searchQuery]);
 
-  const formatCategoryName = (slug: string) => {
-    const decodedSlug = decodeURIComponent(slug);
-    const normalized = decodedSlug
-      .replace(/[-_]+/g, " ")
-      .replace(/\band\b/gi, "&")
-      .replace(/\s*&\s*/g, " & ")
-      .replace(/\s+/g, " ")
-      .trim();
+  const categoryName = initialCategoryName || categorySlug.replace(/-/g, " ");
 
-    return normalized
-      .split(" ")
-      .map((word) =>
-        word === "&" ? word : word.charAt(0).toUpperCase() + word.slice(1),
-      )
-      .join(" ");
-  };
-
-  const categoryName = formatCategoryName(categorySlug);
   const allSkills = useMemo(
     () => subcategories.flatMap((subcategory) => subcategory.skills || []),
     [subcategories],
@@ -128,39 +113,17 @@ export default function CategoriesPage({
           { label: categoryName },
         ]}
         onSearch={setSearchQuery}
+        totalSkills={allSkills.length}
+        skills={allSkills}
       />
 
-      <section className="py-8 sm:py-10">
-        <div className="container mx-auto px-4 sm:px-8 md:px-10 lg:px-16">
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-5 sm:px-6 md:px-8 md:py-6 shadow-sm">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Total Skills
-                </p>
-                <p className="mt-2 text-2xl font-bold text-slate-900">
-                  {allSkills.length}+
-                </p>
-              </div>
-              <div className="rounded-xl bg-teal-50 p-4 border border-teal-100">
-                <p className="text-xs font-semibold uppercase tracking-wider text-teal-700">
-                  Discover Faster
-                </p>
-                <p className="mt-2 text-sm text-teal-900">
-                  Use search to quickly find relevant skills and top vendors.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="pb-8">
+      <section className="pb-8 mt-6">
         <div className="container mx-auto px-4 sm:px-8 md:px-10 lg:px-16">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-teal-600" />
-              Featured Skills
+              Featured Skills & Services
             </h2>
           </div>
 
@@ -180,7 +143,7 @@ export default function CategoriesPage({
                       `Explore expert ${skill.name.toLowerCase()} services and qualified vendors.`}
                   </p>
                   <span className="mt-4 inline-flex items-center text-xs font-semibold text-teal-700">
-                    View Skill <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                    View <ArrowRight className="ml-1 h-3.5 w-3.5" />
                   </span>
                 </Link>
               ))}
@@ -202,7 +165,7 @@ export default function CategoriesPage({
               <Users className="h-5 w-5 text-teal-600" />
               Top Vendors In {categoryName}
             </h2>
-            <p className="mt-2 text-slate-600">
+            <p className="mt-2 text-teal-700">
              Pro tip: View more specialised vendors by clicking a skill.
             </p>
           </div>
@@ -231,7 +194,7 @@ export default function CategoriesPage({
           <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 md:p-8">
             <div className="mb-5 sm:mb-6">
               <h3 className="text-lg sm:text-xl font-bold text-slate-900 text-center sm:text-left">
-                More Skills In {categoryName}
+                More Skills & Services In {categoryName}
               </h3>
             </div>
 
