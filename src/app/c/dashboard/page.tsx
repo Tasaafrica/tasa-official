@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Briefcase, MessageSquare, User, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useClientHeader } from "../layout";
-import { User, Briefcase, Users, MessageSquare } from "lucide-react";
+import { useEffect, useState } from "react";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { userApi } from "@/lib/user";
+import { useClientHeader } from "../context";
+import AccountCompletion from "@/components/dashboard/AccountCompletion";
 
 export default function ClientDashboard() {
   const { data: session } = useSession();
@@ -16,7 +17,9 @@ export default function ClientDashboard() {
   // Set header title and description
   useEffect(() => {
     setTitle("Dashboard");
-    setDescription("Manage your projects and find the perfect talent for your needs");
+    setDescription(
+      "Manage your projects and find the perfect talent for your needs",
+    );
   }, [setTitle, setDescription]);
 
   useEffect(() => {
@@ -30,10 +33,7 @@ export default function ClientDashboard() {
   const fetchUserData = async () => {
     try {
       if (!session?.user?.id || !session?.authToken) return;
-      const result = await userApi.getById(
-        session.user.id,
-        session.authToken
-      );
+      const result = await userApi.getById(session.user.id, session.authToken);
       if (result.success && result.data) {
         setUserData(result.data);
       }
@@ -48,6 +48,9 @@ export default function ClientDashboard() {
     <div className="relative min-h-[400px]">
       {/* Loading Overlay */}
       <LoadingOverlay isVisible={loading} />
+
+      {/* Account Completion Status */}
+      <AccountCompletion />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-[#334155] via-[#475569] to-[#334155] rounded-2xl p-6 lg:p-8 mb-8 shadow-xl text-white relative overflow-hidden">
@@ -75,11 +78,17 @@ export default function ClientDashboard() {
 
           {/* User Info */}
           <div className="flex-1 text-center lg:text-left">
-            <h2 className="text-2xl lg:text-3xl font-bold mb-2">
+            <h2 className="text-2xl lg:text-3xl font-bold mb-1">
               Welcome back, {userData?.name || session?.user?.name || "Client"}!
             </h2>
+            {userData?.username && (
+              <p className="text-teal-300 font-medium text-sm mb-3">
+                @{userData.username}
+              </p>
+            )}
             <p className="text-white/80 text-sm max-w-xl">
-              Post projects, browse our vetted talent network, and bring your ideas to life with TASA professionals.
+              Post projects, browse our vetted talent network, and bring your
+              ideas to life with TASA professionals.
             </p>
           </div>
         </div>
@@ -93,7 +102,9 @@ export default function ClientDashboard() {
               <Briefcase className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Active Projects</h3>
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Active Projects
+              </h3>
               <p className="text-2xl font-bold text-gray-900">0</p>
             </div>
           </div>
@@ -105,7 +116,9 @@ export default function ClientDashboard() {
               <Users className="w-6 h-6 text-teal-600" />
             </div>
             <div>
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Hires</h3>
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Total Hires
+              </h3>
               <p className="text-2xl font-bold text-gray-900">0</p>
             </div>
           </div>
@@ -117,7 +130,9 @@ export default function ClientDashboard() {
               <MessageSquare className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Messages</h3>
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Messages
+              </h3>
               <p className="text-2xl font-bold text-gray-900">0</p>
             </div>
           </div>
@@ -133,25 +148,33 @@ export default function ClientDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button className="flex items-center p-5 border border-gray-100 rounded-xl hover:bg-gray-50 hover:border-gray-200 transition-all text-left group">
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 group-hover:text-[#334155]">Post a Project</h3>
+              <h3 className="font-semibold text-gray-900 group-hover:text-[#334155]">
+                Post a Project
+              </h3>
               <p className="text-sm text-gray-500 mt-1">
                 Create a new project and find the perfect talent for your needs.
               </p>
             </div>
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-white border border-transparent group-hover:border-gray-100 transition-all">
-              <span className="text-xl font-light text-gray-400 group-hover:text-gray-600">→</span>
+              <span className="text-xl font-light text-gray-400 group-hover:text-gray-600">
+                →
+              </span>
             </div>
           </button>
 
           <button className="flex items-center p-5 border border-gray-100 rounded-xl hover:bg-gray-50 hover:border-gray-200 transition-all text-left group">
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 group-hover:text-[#334155]">Browse Talent</h3>
+              <h3 className="font-semibold text-gray-900 group-hover:text-[#334155]">
+                Browse Talent
+              </h3>
               <p className="text-sm text-gray-500 mt-1">
                 Explore our network of vetted African professionals.
               </p>
             </div>
             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-white border border-transparent group-hover:border-gray-100 transition-all">
-              <span className="text-xl font-light text-gray-400 group-hover:text-gray-600">→</span>
+              <span className="text-xl font-light text-gray-400 group-hover:text-gray-600">
+                →
+              </span>
             </div>
           </button>
         </div>

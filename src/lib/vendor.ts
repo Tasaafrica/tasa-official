@@ -435,5 +435,180 @@ export const vendorApi = {
       };
     }
   },
+
+  // ── Vendor Projects (Portfolio) ──────────────────────────────────
+
+  // Get all projects for a vendor
+  getProjects: async (
+    vendorId: string,
+    authToken: string,
+  ): Promise<ApiResponse<VendorProject[]>> => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.tasa.com.ng";
+      const response = await fetch(`${baseUrl}/api/vendor-projects/${vendorId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const items = Array.isArray(result)
+        ? result
+        : result.data && Array.isArray(result.data)
+          ? result.data
+          : [];
+
+      return {
+        success: true,
+        data: items,
+      };
+    } catch (error) {
+      console.error("Error fetching vendor projects:", error);
+      return {
+        success: false,
+        data: [],
+        message: "Failed to fetch portfolio projects",
+      };
+    }
+  },
+
+  // Create a new project in vendor portfolio
+  createProject: async (
+    vendorId: string,
+    authToken: string,
+    data: VendorProjectCreateData,
+  ): Promise<ApiResponse<VendorProject>> => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.tasa.com.ng";
+      const response = await fetch(`${baseUrl}/api/vendor-projects/${vendorId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorResult = await response.json().catch(() => ({}));
+        throw new Error(errorResult.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return {
+        success: result.success !== undefined ? result.success : true,
+        data: result.data || result,
+        ...result,
+      };
+    } catch (error: any) {
+      console.error("Error creating vendor project:", error);
+      return {
+        success: false,
+        message: error.message || "Failed to create project",
+      };
+    }
+  },
+
+  // Update a specific project
+  updateProject: async (
+    vendorId: string,
+    projectId: string,
+    authToken: string,
+    data: Partial<VendorProjectCreateData>,
+  ): Promise<ApiResponse<VendorProject>> => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.tasa.com.ng";
+      const response = await fetch(
+        `${baseUrl}/api/vendor-projects/${vendorId}/${projectId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(data),
+        },
+      );
+
+      if (!response.ok) {
+        const errorResult = await response.json().catch(() => ({}));
+        throw new Error(errorResult.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return {
+        success: result.success !== undefined ? result.success : true,
+        data: result.data || result,
+        ...result,
+      };
+    } catch (error: any) {
+      console.error("Error updating vendor project:", error);
+      return {
+        success: false,
+        message: error.message || "Failed to update project",
+      };
+    }
+  },
+
+  // Delete a specific project
+  deleteProject: async (
+    vendorId: string,
+    projectId: string,
+    authToken: string,
+  ): Promise<ApiResponse<null>> => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.tasa.com.ng";
+      const response = await fetch(
+        `${baseUrl}/api/vendor-projects/${vendorId}/${projectId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const errorResult = await response.json().catch(() => ({}));
+        throw new Error(errorResult.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json().catch(() => ({}));
+      return {
+        success: true,
+        data: null,
+        ...result,
+      };
+    } catch (error: any) {
+      console.error("Error deleting vendor project:", error);
+      return {
+        success: false,
+        message: error.message || "Failed to delete project",
+      };
+    }
+  },
 };
 
+// Vendor project types
+export interface VendorProject {
+  _id: string;
+  title: string;
+  link: string;
+  thumbnail: string;
+  vendorId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface VendorProjectCreateData {
+  title: string;
+  link: string;
+  thumbnail: string;
+}

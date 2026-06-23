@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Star, TrendingUp, User } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { vendorApi } from "@/lib/vendor";
-import { useVendorHeader } from "../layout";
-import { User, Star, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
+import { vendorApi } from "@/lib/vendor";
+import { useVendorHeader } from "../context";
+import AccountCompletion from "@/components/dashboard/AccountCompletion";
 
 export default function VendorDashboard() {
   const { data: session } = useSession();
@@ -72,6 +73,9 @@ export default function VendorDashboard() {
       {/* Loading Overlay */}
       <LoadingOverlay isVisible={loading} />
 
+      {/* Account Completion Status */}
+      <AccountCompletion />
+
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-[#334155] via-[#475569] to-[#334155] rounded-2xl p-6 lg:p-8 mb-6 shadow-xl text-white relative overflow-hidden">
         {/* Background Pattern */}
@@ -84,7 +88,7 @@ export default function VendorDashboard() {
           {/* Profile Image */}
           <div className="flex-shrink-0">
             <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30 shadow-lg overflow-hidden">
-              {(vendorData?.profileImage || session?.user?.image) ? (
+              {vendorData?.profileImage || session?.user?.image ? (
                 <img
                   src={vendorData?.profileImage || session?.user?.image}
                   alt={vendorData?.name || session?.user?.name || "User"}
@@ -101,6 +105,11 @@ export default function VendorDashboard() {
             <h2 className="text-2xl lg:text-3xl font-bold mb-1">
               {vendorData?.name || session?.user?.name || "Welcome back!"}
             </h2>
+            {vendorData?.username && (
+              <p className="text-teal-300 font-medium text-sm mb-2">
+                @{vendorData.username}
+              </p>
+            )}
             <p className="text-white/80 text-sm mb-4">
               {vendorData?.bio || "Vendor"}
             </p>

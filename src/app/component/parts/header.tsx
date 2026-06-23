@@ -93,7 +93,7 @@ const HeaderContent = ({
               Home
             </a>
             <a
-              href="/services"
+              href="/about"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible ${
                 shouldUseWhiteText
                   ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
@@ -298,6 +298,18 @@ const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("login") === "true") {
+        openLogin();
+        // Remove the query parameter from URL bar so it doesn't open again on page refresh
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    }
+  }, [mounted, openLogin]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

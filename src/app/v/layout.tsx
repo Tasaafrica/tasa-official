@@ -1,25 +1,11 @@
 "use client";
 
-import { useEffect, useState, createContext, useContext } from "react";
+import { Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import VendorSidebar from "@/app/v/component/VendorSidebar";
-
-interface VendorHeaderContextType {
-  setTitle: (title: string) => void;
-  setDescription: (description: string) => void;
-}
-
-const VendorHeaderContext = createContext<VendorHeaderContextType | null>(null);
-
-export const useVendorHeader = () => {
-  const context = useContext(VendorHeaderContext);
-  if (!context) {
-    throw new Error("useVendorHeader must be used within VendorLayout");
-  }
-  return context;
-};
+import { VendorHeaderContext } from "./context";
 
 export default function VendorLayout({
   children,
@@ -34,7 +20,7 @@ export default function VendorLayout({
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/auth/signin");
+      router.push("/?login=true");
     } else if (status === "authenticated" && session?.user?.role !== "vendor") {
       if (session.user.role === "client") {
         router.push("/c/dashboard");

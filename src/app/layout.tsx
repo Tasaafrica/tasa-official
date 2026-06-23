@@ -5,6 +5,8 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import EmailVerificationWrapper from "@/components/layout/EmailVerificationWrapper";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { GoogleAnalytics } from '@next/third-parties/google';
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +40,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession(authOptions);
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
   return (
     <html lang="en" data-scroll-behavior="smooth">
@@ -53,6 +56,8 @@ export default async function RootLayout({
     <link rel="manifest" href="/favicon/site.webmanifest" />
       </head>
       <body>
+        {/**Google analytics */}
+      {gaId && <GoogleAnalytics gaId={gaId} />}
         <SessionProvider session={session}>
           <SearchModalProvider>
             <AuthModalProvider>
@@ -61,6 +66,8 @@ export default async function RootLayout({
             </AuthModalProvider>
           </SearchModalProvider>
         </SessionProvider>
+        {/**vercel analytics */}
+         <Analytics />
       </body>
     </html>
   );

@@ -1,20 +1,29 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
-import { Camera, Save, X, ChevronDown, ChevronUp, Check, Mail, RotateCcw } from "lucide-react";
-import { toast, Toaster } from "sonner";
-import ImageCropModal from "@/components/ui/ImageCropModal";
 import {
-  vendorApi,
-  VendorData,
-  VendorUpdateData,
-  Category,
-  Skill,
-} from "@/lib/vendor";
-import { useVendorHeader } from "../layout";
+  Camera,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Mail,
+  RotateCcw,
+  Save,
+  X,
+} from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useEffect, useRef, useState } from "react";
 import { FiChevronDown, FiSearch } from "react-icons/fi";
+import { Toaster, toast } from "sonner";
+import ImageCropModal from "@/components/ui/ImageCropModal";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
+import {
+  type Category,
+  type Skill,
+  type VendorData,
+  type VendorUpdateData,
+  vendorApi,
+} from "@/lib/vendor";
+import { useVendorHeader } from "../context";
 import VendorDashboard from "../dashboard/page";
 
 // Location data types
@@ -106,7 +115,7 @@ export default function VendorSettings() {
   const [countriesList, setCountriesList] = useState<CountryData[]>([]);
   const [statesList, setStatesList] = useState<StateData[]>([]);
   const [citiesList, setCityDataList] = useState<CityData[]>([]);
-  
+
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
@@ -130,7 +139,7 @@ export default function VendorSettings() {
   useEffect(() => {
     fetchCategories();
     fetchCountries();
-    
+
     // Close dropdowns when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -189,8 +198,9 @@ export default function VendorSettings() {
           // but we MUST NOT update the 'email' state which is the new email being verified
           setOriginalEmail(data.email || "");
         }
-        
-        if (!loading) { // Don't clobber if we are in the middle of an update
+
+        if (!loading) {
+          // Don't clobber if we are in the middle of an update
           setName(data.name || "");
           setProfileImage(data.profileImage || "");
           setBio(data.bio || "");
@@ -227,7 +237,7 @@ export default function VendorSettings() {
 
         setSelectedSkills(allSkills);
         setSkillTypes(newSkillTypes);
-        
+
         return data;
       } else {
         setMessage({
@@ -263,9 +273,9 @@ export default function VendorSettings() {
         session.user.id,
         session.authToken,
         originalEmail,
-        email
+        email,
       );
-      
+
       if (result.success) {
         setIsOtpSent(true);
         toast.success("Verification code sent to your new email");
@@ -275,7 +285,11 @@ export default function VendorSettings() {
         } else if (result.status === 409) {
           toast.error("This email is already taken by another account.");
         } else {
-          toast.error(result.error || result.message || "Failed to send verification code");
+          toast.error(
+            result.error ||
+              result.message ||
+              "Failed to send verification code",
+          );
         }
       }
     } catch (error) {
@@ -301,7 +315,7 @@ export default function VendorSettings() {
       const result = await vendorApi.verifyEmailChange(
         session.user.id,
         session.authToken,
-        otpCode
+        otpCode,
       );
 
       if (result.success) {
@@ -310,7 +324,7 @@ export default function VendorSettings() {
         setOtpCode("");
         setOriginalEmail(email); // Update original email state
         setIsEditingEmail(false);
-        
+
         // Update session explicitly
         await update({
           ...session,
@@ -321,7 +335,7 @@ export default function VendorSettings() {
         });
 
         toast.success("Email changed successfully.");
-        
+
         // Optionally refresh vendor data
         await fetchVendorData();
       } else {
@@ -346,7 +360,7 @@ export default function VendorSettings() {
     setLoadingCountries(true);
     try {
       const response = await fetch(
-        "https://countriesnow.space/api/v0.1/countries"
+        "https://countriesnow.space/api/v0.1/countries",
       );
       const data = await response.json();
       if (data.error === false && data.data) {
@@ -370,7 +384,7 @@ export default function VendorSettings() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ country: countryName }),
-        }
+        },
       );
       const data = await response.json();
       if (data.error === false && data.data) {
@@ -394,7 +408,7 @@ export default function VendorSettings() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ country: countryName, state: stateName }),
-        }
+        },
       );
       const data = await response.json();
       if (data.error === false && data.data) {
@@ -501,23 +515,29 @@ export default function VendorSettings() {
 
     try {
       setLoading(true);
-      
+
       const formData = new FormData();
       formData.append("file", blob, "profile.jpg");
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://api.tasa.com.ng"}/api/users/${session.user.id}/image`, {
-        method: "POST",
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${session.authToken}`,
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "https://api.tasa.com.ng"}/api/users/${session.user.id}/image`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${session.authToken}`,
+          },
         },
-      });
+      );
 
       const result = await response.json();
 
       if (result.success) {
         // According to the snippet, successful response has result.data.user.profileImage
-        const imageUrl = result.data?.user?.profileImage || result.imageUrl || result.data?.imageUrl;
+        const imageUrl =
+          result.data?.user?.profileImage ||
+          result.imageUrl ||
+          result.data?.imageUrl;
         if (imageUrl) {
           setProfileImage(imageUrl);
           // Update the session explicitly
@@ -544,7 +564,9 @@ export default function VendorSettings() {
           toast.success("Profile picture updated");
         }
       } else {
-        toast.error(result.message || (result as any).error || "Failed to upload image");
+        toast.error(
+          result.message || (result as any).error || "Failed to upload image",
+        );
       }
     } catch (error) {
       console.error("Error in handleCropSave:", error);
@@ -657,7 +679,7 @@ export default function VendorSettings() {
         session.user.id,
         session.authToken,
         updateData,
-        "PATCH"
+        "PATCH",
       );
 
       if (result.success) {
@@ -680,7 +702,10 @@ export default function VendorSettings() {
           });
         }
       } else {
-        const errorMsg = result.message || (result as any).error || "Failed to update profile information";
+        const errorMsg =
+          result.message ||
+          (result as any).error ||
+          "Failed to update profile information";
         toast.error(errorMsg);
         setMessage({
           type: "error",
@@ -701,12 +726,15 @@ export default function VendorSettings() {
 
   const findSkillId = (skillName: string): string => {
     const availableMatch = availableSkills.find((s) => s.name === skillName);
-    if (availableMatch) return availableMatch._id || (availableMatch as any).id || "";
+    if (availableMatch)
+      return availableMatch._id || (availableMatch as any).id || "";
 
     const coreMatch = vendorData?.coreSkills?.find((s) => s.name === skillName);
     if (coreMatch) return coreMatch._id || coreMatch.id || "";
 
-    const peripheralMatch = vendorData?.peripheralSkills?.find((s) => s.name === skillName);
+    const peripheralMatch = vendorData?.peripheralSkills?.find(
+      (s) => s.name === skillName,
+    );
     if (peripheralMatch) return peripheralMatch._id || peripheralMatch.id || "";
 
     const skillMatch = vendorData?.skills?.find((s) => s.name === skillName);
@@ -754,7 +782,7 @@ export default function VendorSettings() {
         session.user.id,
         session.authToken,
         updateData,
-        "PATCH"
+        "PATCH",
       );
 
       if (result.success) {
@@ -783,7 +811,9 @@ export default function VendorSettings() {
 
   return (
     <div className="relative">
-      <LoadingOverlay isVisible={loading || (!vendorData && !!session?.user?.id)} />
+      <LoadingOverlay
+        isVisible={loading || (!vendorData && !!session?.user?.id)}
+      />
       <Toaster />
       {message && (
         <div
@@ -860,7 +890,10 @@ export default function VendorSettings() {
 
         {/* Slug */}
         <div className="mb-4">
-          <label htmlFor="slug" className="block text-xs font-medium text-gray-700 mb-1.5">
+          <label
+            htmlFor="slug"
+            className="block text-xs font-medium text-gray-700 mb-1.5"
+          >
             Profile Slug
           </label>
           <input
@@ -872,7 +905,10 @@ export default function VendorSettings() {
             placeholder="No profile slug assigned"
           />
           <p className="text-[10px] text-gray-400 mt-1">
-            Your unique profile identifier used in your public URL: {vendorData?.slug ? `/vendors/${vendorData.slug}` : "Not generated yet"}
+            Your unique profile identifier used in your public URL:{" "}
+            {vendorData?.slug
+              ? `/vendors/${vendorData.slug}`
+              : "Not generated yet"}
           </p>
         </div>
 
@@ -926,7 +962,9 @@ export default function VendorSettings() {
             {isEditingEmail && email !== originalEmail && (
               <div className="flex flex-col space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-gray-600 font-medium">Verify your new email</span>
+                  <span className="text-[10px] text-gray-600 font-medium">
+                    Verify your new email
+                  </span>
                   {emailVerified ? (
                     <span className="text-[10px] text-green-600 font-bold flex items-center">
                       <Check className="w-3 h-3 mr-1" />
@@ -951,7 +989,9 @@ export default function VendorSettings() {
                     ) : (
                       <Mail className="w-3 h-3" />
                     )}
-                    <span>{sendingOtp ? "Sending OTP..." : "Send Verification Code"}</span>
+                    <span>
+                      {sendingOtp ? "Sending OTP..." : "Send Verification Code"}
+                    </span>
                   </button>
                 )}
                 {isOtpSent && !emailVerified && (
@@ -961,7 +1001,9 @@ export default function VendorSettings() {
                         type="text"
                         placeholder="6-digit code"
                         value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                        onChange={(e) =>
+                          setOtpCode(e.target.value.replace(/\D/g, ""))
+                        }
                         className="flex-1 text-[11px] px-3 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#334155]"
                         maxLength={6}
                         inputMode="numeric"
@@ -989,7 +1031,10 @@ export default function VendorSettings() {
               </div>
             )}
             <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed">
-              <span className="font-medium text-gray-700">Note:</span> If you previously used Google Sign-In, your original Google account will remain linked and can still be used to log in, even after updating your primary email address.
+              <span className="font-medium text-gray-700">Note:</span> If you
+              previously used Google Sign-In, your original Google account will
+              remain linked and can still be used to log in, even after updating
+              your primary email address.
             </p>
           </div>
         </div>
@@ -1068,21 +1113,41 @@ export default function VendorSettings() {
                   </div>
                   <div className="overflow-y-auto flex-1">
                     {loadingCountries ? (
-                      <div className="p-3 text-center text-gray-500 text-[11px]">Loading...</div>
+                      <div className="p-3 text-center text-gray-500 text-[11px]">
+                        Loading...
+                      </div>
                     ) : (
                       countriesList
                         .filter((c) => {
-                          const countryName = c?.name || c?.country || (typeof c === "string" ? c : "");
-                          return countryName.toLowerCase().includes(countrySearch.toLowerCase());
+                          const countryName =
+                            c?.name ||
+                            c?.country ||
+                            (typeof c === "string" ? c : "");
+                          return countryName
+                            .toLowerCase()
+                            .includes(countrySearch.toLowerCase());
                         })
                         .map((c) => (
                           <button
-                            key={c.iso2 || (typeof c === "string" ? c : Math.random().toString())}
+                            key={
+                              c.iso2 ||
+                              (typeof c === "string"
+                                ? c
+                                : Math.random().toString())
+                            }
                             type="button"
-                            onClick={() => handleCountrySelect(c?.name || c?.country || (typeof c === "string" ? c : ""))}
+                            onClick={() =>
+                              handleCountrySelect(
+                                c?.name ||
+                                  c?.country ||
+                                  (typeof c === "string" ? c : ""),
+                              )
+                            }
                             className="w-full px-3 py-2 text-left text-[11px] text-gray-700 hover:bg-gray-50 hover:text-[#334155] transition-colors"
                           >
-                            {c?.name || c?.country || (typeof c === "string" ? c : "")}
+                            {c?.name ||
+                              c?.country ||
+                              (typeof c === "string" ? c : "")}
                           </button>
                         ))
                     )}
@@ -1099,11 +1164,15 @@ export default function VendorSettings() {
             <div className="relative">
               <button
                 type="button"
-                onClick={() => country && setStateDropdownOpen(!stateDropdownOpen)}
+                onClick={() =>
+                  country && setStateDropdownOpen(!stateDropdownOpen)
+                }
                 disabled={!country}
                 className="w-full flex items-center justify-between px-3 py-2 border border-gray-200 rounded-lg text-xs text-black focus:outline-none focus:ring-2 focus:ring-[#334155] bg-white transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
               >
-                <span>{state || (country ? "Select State" : "Select Country first")}</span>
+                <span>
+                  {state || (country ? "Select State" : "Select Country first")}
+                </span>
                 <FiChevronDown className="w-3.5 h-3.5 text-gray-400" />
               </button>
 
@@ -1123,10 +1192,16 @@ export default function VendorSettings() {
                   </div>
                   <div className="overflow-y-auto flex-1">
                     {loadingStates ? (
-                      <div className="p-3 text-center text-gray-500 text-[11px]">Loading...</div>
+                      <div className="p-3 text-center text-gray-500 text-[11px]">
+                        Loading...
+                      </div>
                     ) : statesList.length > 0 ? (
                       statesList
-                        .filter((s) => s?.name?.toLowerCase().includes(stateSearch.toLowerCase()))
+                        .filter((s) =>
+                          s?.name
+                            ?.toLowerCase()
+                            .includes(stateSearch.toLowerCase()),
+                        )
                         .map((s) => (
                           <button
                             key={s.state_code}
@@ -1138,7 +1213,9 @@ export default function VendorSettings() {
                           </button>
                         ))
                     ) : (
-                      <div className="p-3 text-center text-gray-500 text-[11px]">No states found</div>
+                      <div className="p-3 text-center text-gray-500 text-[11px]">
+                        No states found
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1157,7 +1234,9 @@ export default function VendorSettings() {
                 disabled={!state}
                 className="w-full flex items-center justify-between px-3 py-2 border border-gray-200 rounded-lg text-xs text-black focus:outline-none focus:ring-2 focus:ring-[#334155] bg-white transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
               >
-                <span>{city || (state ? "Select City" : "Select State first")}</span>
+                <span>
+                  {city || (state ? "Select City" : "Select State first")}
+                </span>
                 <FiChevronDown className="w-3.5 h-3.5 text-gray-400" />
               </button>
 
@@ -1177,25 +1256,35 @@ export default function VendorSettings() {
                   </div>
                   <div className="overflow-y-auto flex-1">
                     {loadingCities ? (
-                      <div className="p-3 text-center text-gray-500 text-[11px]">Loading...</div>
+                      <div className="p-3 text-center text-gray-500 text-[11px]">
+                        Loading...
+                      </div>
                     ) : citiesList.length > 0 ? (
                       citiesList
                         .filter((c) => {
                           const cityName = typeof c === "string" ? c : c?.name;
-                          return cityName?.toLowerCase()?.includes(citySearch.toLowerCase());
+                          return cityName
+                            ?.toLowerCase()
+                            ?.includes(citySearch.toLowerCase());
                         })
                         .map((c, index) => (
                           <button
                             key={index}
                             type="button"
-                            onClick={() => handleCitySelect(typeof c === "string" ? c : c?.name)}
+                            onClick={() =>
+                              handleCitySelect(
+                                typeof c === "string" ? c : c?.name,
+                              )
+                            }
                             className="w-full px-3 py-2 text-left text-[11px] text-gray-700 hover:bg-gray-50 hover:text-[#334155] transition-colors"
                           >
                             {typeof c === "string" ? c : c?.name}
                           </button>
                         ))
                     ) : (
-                      <div className="p-3 text-center text-gray-500 text-[11px]">No cities found</div>
+                      <div className="p-3 text-center text-gray-500 text-[11px]">
+                        No cities found
+                      </div>
                     )}
                   </div>
                 </div>
