@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, useReducedMotion, type MotionProps } from "framer-motion";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/app/component/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import LoginModal from "./loginModal";
@@ -105,11 +106,12 @@ export default function CtaSection() {
                 className="relative min-h-[240px] md:min-h-[320px]"
               >
                 <div className="absolute inset-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=1600"
                     alt="Team working together"
-                    className="h-full w-full object-cover"
+                    fill
+                    priority
+                    className="object-cover"
                   />
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#334155]/90 via-[#334155]/40 to-transparent" />

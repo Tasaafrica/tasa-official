@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 import SearchAutocomplete from "@/app/component/parts/SearchAutocomplete";
 import Link from "next/link";
+import Image from "next/image";
 
 interface HomeHeroSectionProps {
   fontClassName?: string;
@@ -72,7 +73,7 @@ export default function HomeHeroSection({
               className="text-4xl md:text-5xl font-semibold leading-tight text-gray-900 mb-5"
               variants={itemVariants}
             >
-              Find the right skills and services for your business
+              Find the right skills and services for your work
             </motion.h1>
             <motion.p
               className="text-gray-600 text-base md:text-lg mb-6 max-w-xl"
@@ -97,17 +98,18 @@ export default function HomeHeroSection({
               </div>
             </motion.div>
           </div>
-          <motion.div className="relative -mt-10 md:mt-0" variants={imageVariants}>
-            <div className="relative overflow-hidden rounded-2xl  aspect-[4/3]">
-              <div className="absolute inset-0 flex items-center justify-center  text-sm">
-                <img
-                  src="/hero-image.png"
-                  alt="Hero Image"
-                  className="w-full object-cover transition-transform duration-300"
-                />
-              </div>
+          <motion.div className="relative -mt-10 md:mt-0 flex flex-col items-center sm:items-start" variants={imageVariants}>
+            <div className="relative w-full max-w-[400px] lg:max-w-[500px] mx-auto sm:mx-0">
+              <Image
+                src="/hero-image.png"
+                alt="Hero Image"
+                width={600}
+                height={600}
+                priority
+                className="w-full h-auto object-contain transition-transform duration-300 rounded-2xl"
+              />
             </div>
-            <div className="relative sm:absolute sm:-left-6 sm:bottom-6 w-fit sm:w-auto mx-auto sm:mx-0 mt-0 sm:mt-0 bg-[#334155] rounded-xl shadow-md px-4 py-3 border border-[#334155]">
+            <div className="relative w-fit mx-auto sm:mx-0 mt-6 bg-[#334155] rounded-xl shadow-md px-4 py-3 border border-[#334155] whitespace-nowrap">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-white/15 flex items-center justify-center">
                   <CheckCircle className="h-5 w-5 text-white" />

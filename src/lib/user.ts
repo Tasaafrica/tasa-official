@@ -52,7 +52,7 @@ export const userApi = {
     data: any
   ): Promise<ApiResponse<UserData>> => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.tasa.com.ng";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL as string;
       const response = await fetch(`${baseUrl}/api/users/${userId}`, {
         method: "PUT",
         headers: {
@@ -88,7 +88,7 @@ export const userApi = {
     newEmail: string
   ): Promise<ApiResponse<any>> => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.tasa.com.ng";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL as string;
       const response = await fetch(`${baseUrl}/api/users/${userId}/change-email/request`, {
         method: "POST",
         headers: {
@@ -119,7 +119,7 @@ export const userApi = {
     otp: string
   ): Promise<ApiResponse<any>> => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.tasa.com.ng";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL as string;
       const response = await fetch(`${baseUrl}/api/users/${userId}/change-email/verify`, {
         method: "POST",
         headers: {

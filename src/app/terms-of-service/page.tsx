@@ -1,355 +1,345 @@
 "use client";
 
+import React, { useState } from "react";
+import Header from "@/app/component/parts/header";
+import FooterLinksSection from "@/app/component/parts/footerLinksSection";
 import { motion } from "framer-motion";
 import {
-  AlertCircle,
+  Mail,
+  Clock,
   CheckCircle2,
-  FileText,
-  HelpCircle,
-  RefreshCcw,
-  Scale,
-  Shield,
+  AlertCircle,
+  MapPin,
+  Globe
 } from "lucide-react";
-import FooterLinksSection from "@/app/component/parts/footerLinksSection";
-import Header from "@/app/component/parts/header";
 
 export default function TermsOfServiceClient() {
-  const sections = [
-    {
-      id: "introduction",
-      title: "1. Introduction",
-      content: (
-        <div className="space-y-4">
-          <p>
-            Welcome to TASA. These Terms of Service ("Terms") govern your access
-            to and use of the TASA platform, including our website, mobile
-            applications, and any other services provided by TASA (collectively,
-            the "Platform").
-          </p>
-          <p>
-            By accessing or using the Platform, you agree to be bound by these
-            Terms and our Privacy Policy. If you are using the Platform on
-            behalf of an organization, you agree to these Terms for that
-            organization and represent that you have the authority to bind that
-            organization to these Terms.
-          </p>
-          <p>
-            Please read these Terms carefully. If you do not agree to these
-            Terms, you may not use our services.
-          </p>
-        </div>
-      ),
-      icon: HelpCircle,
-    },
-    {
-      id: "definitions",
-      title: "2. Definitions",
-      content: (
-        <div className="space-y-4">
-          <p>
-            <strong>"Platform"</strong> refers to the TASA ecosystem, including
-            all digital interfaces and services.
-          </p>
-          <p>
-            <strong>"User"</strong> refers to any individual or entity that
-            registers an account or uses the Platform.
-          </p>
-          <p>
-            <strong>"Vendor"</strong> refers to users who offer, provide, and
-            perform services through the Platform.
-          </p>
-          <p>
-            <strong>"Client"</strong> refers to users who seek, purchase, and
-            receive services through the Platform.
-          </p>
-          <p>
-            <strong>"Service Listing"</strong> refers to the description of a
-            service offered by a Vendor on the Platform.
-          </p>
-        </div>
-      ),
-      icon: FileText,
-    },
-    {
-      id: "user-accounts",
-      title: "3. User Accounts & Security",
-      content: (
-        <div className="space-y-4">
-          <p>
-            To access most features of the Platform, you must register for an
-            account. You agree to provide accurate, current, and complete
-            information during the registration process and to update such
-            information to keep it accurate, current, and complete.
-          </p>
-          <p>
-            You are responsible for maintaining the confidentiality of your
-            account credentials and are fully responsible for all activities
-            that occur under your account. You agree to immediately notify TASA
-            of any unauthorized use, or suspected unauthorized use of your
-            account.
-          </p>
-          <div className="bg-teal-50 border-l-4 border-teal-500 p-4 rounded-r-xl mt-4">
-            <p className="text-teal-800 font-medium flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" /> Account Safety Tip:
-            </p>
-            <p className="text-teal-700 text-sm">
-              Always use a strong, unique password to protect your personal and
-              financial data.
-            </p>
-          </div>
-        </div>
-      ),
-      icon: Shield,
-    },
-    {
-      id: "marketplace-rules",
-      title: "4. Marketplace Guidelines",
-      content: (
-        <div className="space-y-4">
-          <p>
-            TASA acts as a bridge connecting Vendors and Clients. Except where
-            explicitly stated, TASA is not a party to the contractual
-            relationship between Users.
-          </p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li>
-              <strong>Professionalism:</strong> All users must maintain
-              professional conduct and respect.
-            </li>
-            <li>
-              <strong>Quality Assurance:</strong> Vendors are expected to
-              deliver services that match or exceed their listing descriptions.
-            </li>
-          </ul>
-        </div>
-      ),
-      icon: Scale,
-    },
-    {
-      id: "prohibited",
-      title: "5. Prohibited Activities",
-      content: (
-        <div className="space-y-4">
-          <p>Users are strictly prohibited from:</p>
-          <ul className="list-disc pl-6 space-y-2 text-red-600/80">
-            <li className="text-slate-600">
-              Engaging in fraudulent or deceptive behavior.
-            </li>
-            <li className="text-slate-600">
-              Posting illegal, offensive, or infringing content.
-            </li>
-            <li className="text-slate-600">
-              Interfering with the security or operation of the Platform.
-            </li>
-            <li className="text-slate-600">
-              Collecting other users' data without their explicit consent.
-            </li>
-          </ul>
-          <div className="bg-red-50 border border-red-100 p-4 rounded-xl mt-4 flex gap-3 text-red-700 text-sm">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <p>
-              Violation of these rules may lead to immediate suspension or
-              permanent termination of your account without prior notice.
-            </p>
-          </div>
-        </div>
-      ),
-      icon: Shield,
-    },
-    {
-      id: "disputes",
-      title: "6. Dispute Resolution",
-      content: (
-        <div className="space-y-4">
-          <p>
-            In the event of a disagreement between a Client and a Vendor, TASA
-            provides a dispute resolution mechanism. Users agree to cooperate in
-            good faith with TASA's resolution process.
-          </p>
-          <p>
-            If a dispute cannot be resolved through TASA's internal tools, it
-            shall be governed by the laws of the jurisdiction where TASA is
-            registered, without regard to its conflict of law principles.
-          </p>
-        </div>
-      ),
-      icon: RefreshCcw,
-    },
+  const [activeSection, setActiveSection] = useState("introduction");
+
+  const shortcutLinks = [
+    { id: "introduction", label: "Introduction" },
+    { id: "definitions", label: "Definitions" },
+    { id: "user-accounts", label: "User Accounts & Security" },
+    { id: "marketplace-rules", label: "Marketplace Guidelines" },
+    { id: "prohibited", label: "Prohibited Activities" },
+    { id: "disputes", label: "Dispute Resolution" },
+    { id: "terms-contact", label: "Contact Us" },
   ];
 
   const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
   };
 
   return (
-    <div className="min-h-screen bg-white vendor-font-body">
+    <div className="min-h-screen bg-white font-poppins text-black">
       <Header variant="white" />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden bg-slate-50">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-teal-50/50 rounded-bl-[200px] -z-10" />
-
-        {/* Africa Sketch Background - Subtle */}
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 0.1, x: 0 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-          className="absolute top-10 lg:left-200 sm:left-100 left-20 w-[600px] h-[600px] pointer-events-none z-0"
-        >
-          <img
-            src="/africa-sketch.svg"
-            alt=""
-            className="w-full h-full object-contain object-right-top"
-          />
-        </motion.div>
-
+      <section className="relative pt-28 pb-10 bg-white text-black overflow-hidden">
         <div className="container-responsive relative z-10">
           <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeInUp}
-            className="max-w-3xl"
+            className="max-w-4xl"
           >
-            <div className="flex items-center gap-2 mb-6">
-              <span className="px-3 py-1 bg-teal-100 text-teal-700 text-xs font-bold rounded-full uppercase tracking-wider">
-                Legal Framework
+            <h1 className="text-3xl md:text-5xl font-extrabold text-black leading-tight mb-3 tracking-tight font-poppins">
+              Terms of Service
+              <br />
+              <span className="px-3 py-1 bg-[#0f766e] text-white text-xs font-semibold rounded-full border border-[#0f766e] inline-block mt-2">
+                v2.1 • Updated Sept 8, 2026
               </span>
-              <div className="h-px w-12 bg-teal-200" />
-            </div>
-
-            <h1 className="text-4xl md:text-6xl font-bold text-slate-900 leading-tight mb-6">
-              Terms of <span className="text-teal-600">Service</span>
             </h1>
 
-            <div className="flex flex-wrap items-center gap-6 text-slate-500">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-teal-500" />
-                <span>Effective: May 20, 2026</span>
+            {/* Quick Shortcut Navigation Header */}
+            <div className="pt-4 border-t border-slate-200 mt-4">
+              <div className="text-xs font-bold text-black uppercase tracking-wider mb-3 flex items-center justify-between">
+                <span className="text-black">Quick Navigation Shortcuts</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-slate-300" />
-                <span>Version 2.1</span>
-              </div>
+
+              <ol className="text-sm md:text-base font-medium text-black space-y-1.5">
+                {shortcutLinks.map((link, index) => (
+                  <li key={index + 1} className="underline my-1.5 text-black">
+                    <a
+                      key={link.id}
+                      href={`#${link.id}`}
+                      onClick={() => setActiveSection(link.id)}
+                      className="text-black hover:text-[#0f766e] transition-colors"
+                    >
+                      <span>{index + 1}{". "}{link.label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Content Section */}
-      <section className="py-16 lg:py-24">
+      {/* Content Body */}
+      <section className="py-10 lg:py-14 text-black">
         <div className="container-responsive">
-          <div className="flex flex-col lg:flex-row gap-16">
-            {/* Sidebar Navigation - Hidden on mobile */}
-            <aside className="hidden lg:block w-72 flex-shrink-0">
-              <div className="sticky top-24 space-y-2">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-6 px-4">
-                  Navigation
-                </h3>
-                {sections.map((section) => (
-                  <a
-                    key={section.id}
-                    href={`#${section.id}`}
-                    className="group block px-4 py-3 rounded-2xl text-slate-600 hover:text-teal-600 hover:bg-teal-50/50 transition-all font-medium relative overflow-hidden"
-                  >
-                    <span className="relative z-10">
-                      {section.title.split(". ")[1]}
-                    </span>
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500 transform -translate-x-full group-hover:translate-x-0 transition-transform" />
-                  </a>
-                ))}
+          <div className="flex flex-col lg:flex-row gap-10">
 
-                <div className="mt-12 px-4 py-6 bg-slate-50 rounded-3xl border border-slate-100">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-                    Download
+            {/* Sticky Sidebar (Desktop) */}
+            <aside className="hidden lg:block w-72 flex-shrink-0">
+              <div className="sticky top-24 bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm space-y-5">
+                <div>
+                  <h3 className="text-xs font-bold text-black uppercase tracking-wider mb-3 px-2">
+                    Table of Contents
+                  </h3>
+                  <nav className="space-y-1">
+                    {[
+                      { id: "introduction", label: "1. Introduction" },
+                      { id: "definitions", label: "2. Definitions" },
+                      { id: "user-accounts", label: "3. User Accounts & Security" },
+                      { id: "marketplace-rules", label: "4. Marketplace Guidelines" },
+                      { id: "prohibited", label: "5. Prohibited Activities" },
+                      { id: "disputes", label: "6. Dispute Resolution" },
+                      { id: "terms-contact", label: "7. Contact Us" },
+                    ].map((item) => {
+                      const isActive = activeSection === item.id;
+                      return (
+                        <a
+                          key={item.id}
+                          href={`#${item.id}`}
+                          onClick={() => setActiveSection(item.id)}
+                          className={`block px-3 py-1.5 rounded-xl text-xs md:text-sm font-medium transition-all ${
+                            isActive
+                              ? "bg-[#0f766e]/10 text-[#0f766e] font-bold border-l-4 border-[#0f766e]"
+                              : "text-black hover:text-[#0f766e] hover:bg-slate-50"
+                          }`}
+                        >
+                          <span className="truncate">{item.label}</span>
+                        </a>
+                      );
+                    })}
+                  </nav>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 text-xs">
+                  <div className="font-bold text-black mb-1">
+                    Legal & Support Team
+                  </div>
+                  <p className="text-black text-xs mb-2 leading-relaxed">
+                    Have questions about our terms of service, marketplace rules, or policies?
                   </p>
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 text-sm text-slate-700 hover:text-teal-600 transition-colors font-medium"
+                  <a
+                    href="mailto:support@tasaafrica.com"
+                    className="inline-flex items-center text-[#0f766e] hover:underline font-semibold text-xs gap-1"
                   >
-                    <FileText className="w-4 h-4" />
-                    Terms of Service (PDF)
-                  </button>
+                    Contact Support
+                  </a>
                 </div>
               </div>
             </aside>
 
-            {/* Terms Content */}
-            <div className="flex-1 max-w-4xl">
-              <div className="space-y-20">
-                {sections.map((section, _index) => (
-                  <motion.div
-                    key={section.id}
-                    id={section.id}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={fadeInUp}
-                    className="scroll-mt-24 group"
-                  >
-                    <div className="flex items-center gap-4 mb-8">
-                      <div className="w-12 h-12 flex items-center justify-center bg-white shadow-soft border border-slate-100 rounded-2xl group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
-                        <section.icon className="w-6 h-6 transition-colors" />
-                      </div>
-                      <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
-                        {section.title}
-                      </h2>
-                    </div>
-                    <div className="prose prose-slate prose-lg max-w-none text-slate-600 leading-relaxed font-normal">
-                      {section.content}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+            {/* Main Policy Content Column (Clean List Format) */}
+            <div className="flex-1 max-w-4xl divide-y divide-slate-200/80 text-black">
 
-              {/* Bottom Note */}
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeInUp}
-                className="mt-24 p-8 md:p-16 bg-[#1e293b] rounded-[3rem] text-white relative overflow-hidden shadow-2xl shadow-slate-200"
-              >
-                <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-[100px] -mr-48 -mt-48" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] -ml-32 -mb-32" />
+              {/* 1. Introduction */}
+              <section id="introduction" className="scroll-mt-28 py-6 first:pt-0">
+                <div className="mb-3">
+                  <h2 className="text-xl md:text-2xl font-bold text-black mb-1 font-poppins">1. Introduction</h2>
+                  <p className="text-xs font-medium text-black">General terms governing your use of TASA Africa</p>
+                </div>
 
-                <div className="relative z-10 text-center md:text-left">
-                  <h3 className="text-3xl font-bold mb-6">
-                    Need legal clarification?
-                  </h3>
-                  <p className="text-slate-400 text-lg mb-10 max-w-2xl leading-relaxed">
-                    Our team is committed to transparency. If you have questions
-                    about our terms, privacy practices, or marketplace policies,
-                    we're here to help.
+                <div className="space-y-3.5 text-sm md:text-base text-black leading-relaxed">
+                  <p>
+                    Welcome to <strong>TASA Africa</strong>. These Terms of Service (&quot;Terms&quot;) govern your access
+                    to and use of the TASA Africa platform, including our website, mobile
+                    applications, APIs, and escrow payment services (collectively, the &quot;Platform&quot;).
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                    <a
-                      href="mailto:support@tasa.africa"
-                      className="inline-flex items-center justify-center px-10 py-5 bg-teal-500 hover:bg-teal-600 text-white rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-teal-500/20"
-                    >
-                      Contact Support
-                    </a>
-                    <a
-                      href="/help"
-                      className="inline-flex items-center justify-center px-10 py-5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold transition-all active:scale-95 backdrop-blur-sm border border-white/10"
-                    >
-                      Visit Help Center
-                    </a>
+                  <p>
+                    By accessing or using the Platform, you agree to be bound by these
+                    Terms and our Privacy Policy. If you are using the Platform on
+                    behalf of an organization, you agree to these Terms for that
+                    organization and represent that you have the authority to bind that
+                    organization to these Terms.
+                  </p>
+                  <p className="text-xs text-black italic border-t border-slate-200 pt-2.5">
+                    Please read these Terms carefully. If you do not agree to these
+                    Terms, you may not use our services.
+                  </p>
+                </div>
+              </section>
+
+              {/* 2. Definitions */}
+              <section id="definitions" className="scroll-mt-28 py-6">
+                <div className="mb-3">
+                  <h2 className="text-xl md:text-2xl font-bold text-black mb-1 font-poppins">2. Definitions</h2>
+                  <p className="text-xs font-medium text-black">Key terminology used in this agreement</p>
+                </div>
+
+                <div className="space-y-3.5 text-sm md:text-base text-black leading-relaxed">
+                  <p>
+                    <strong>&quot;Platform&quot;</strong> refers to the TASA Africa ecosystem, including
+                    all web interfaces, mobile applications, and escrow facilities.
+                  </p>
+                  <p>
+                    <strong>&quot;User&quot;</strong> refers to any individual or entity that
+                    registers an account or accesses the Platform.
+                  </p>
+                  <p>
+                    <strong>&quot;Vendor&quot;</strong> refers to skilled professionals or agencies offering and executing services through the Platform.
+                  </p>
+                  <p>
+                    <strong>&quot;Client&quot;</strong> refers to individuals or businesses purchasing services or contracting talent through the Platform.
+                  </p>
+                  <p>
+                    <strong>&quot;Service Listing&quot;</strong> refers to a detailed scope of work or gig offered by a Vendor on the Platform.
+                  </p>
+                </div>
+              </section>
+
+              {/* 3. User Accounts & Security */}
+              <section id="user-accounts" className="scroll-mt-28 py-6">
+                <div className="mb-3">
+                  <h2 className="text-xl md:text-2xl font-bold text-black mb-1 font-poppins">3. User Accounts & Security</h2>
+                  <p className="text-xs font-medium text-black">Account registration, security duties, and credentials</p>
+                </div>
+
+                <div className="space-y-3.5 text-sm md:text-base text-black leading-relaxed">
+                  <p>
+                    To access most features of the Platform, you must register for an
+                    account. You agree to provide accurate, current, and complete
+                    information during registration and to update such information promptly.
+                  </p>
+                  <p>
+                    You are responsible for maintaining the confidentiality of your
+                    account credentials and are fully responsible for all activities
+                    that occur under your account. You agree to immediately notify TASA Africa
+                    of any unauthorized account access.
+                  </p>
+
+                  <div className="bg-slate-50 border-l-4 border-[#0f766e] p-3.5 rounded-r-xl text-sm md:text-base text-black leading-relaxed mt-3">
+                    <p className="font-bold text-black flex items-center gap-2 mb-1">
+                      <CheckCircle2 className="w-4.5 h-4.5 text-[#0f766e] shrink-0" /> Account Safety Tip:
+                    </p>
+                    <p className="text-xs md:text-sm text-black">
+                      Always use a strong, unique password and enable two-factor authentication to protect your personal and financial credentials.
+                    </p>
                   </div>
                 </div>
-              </motion.div>
+              </section>
+
+              {/* 4. Marketplace Guidelines */}
+              <section id="marketplace-rules" className="scroll-mt-28 py-6">
+                <div className="mb-3">
+                  <h2 className="text-xl md:text-2xl font-bold text-black mb-1 font-poppins">4. Marketplace Guidelines</h2>
+                  <p className="text-xs font-medium text-black">Rules governing client and vendor engagement</p>
+                </div>
+
+                <div className="space-y-3.5 text-sm md:text-base text-black leading-relaxed">
+                  <p>
+                    TASA Africa acts as a digital bridge connecting Vendors and Clients across Africa and internationally. Except where explicitly stated, TASA Africa is not a party to the independent contract between Users.
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1.5 text-sm md:text-base text-black">
+                    <li>
+                      <strong>Professionalism:</strong> All users must maintain respectful, ethical, and professional conduct at all times.
+                    </li>
+                    <li>
+                      <strong>Quality Assurance:</strong> Vendors are required to deliver completed milestones that match or exceed their service listing descriptions.
+                    </li>
+                    <li>
+                      <strong>Escrow Payments:</strong> Payments are held securely in escrow and released upon client milestone sign-off.
+                    </li>
+                  </ul>
+                </div>
+              </section>
+
+              {/* 5. Prohibited Activities */}
+              <section id="prohibited" className="scroll-mt-28 py-6">
+                <div className="mb-3">
+                  <h2 className="text-xl md:text-2xl font-bold text-black mb-1 font-poppins">5. Prohibited Activities</h2>
+                  <p className="text-xs font-medium text-black">Strict platform restrictions and enforcement</p>
+                </div>
+
+                <div className="space-y-3.5 text-sm md:text-base text-black leading-relaxed">
+                  <p>Users are strictly prohibited from:</p>
+                  <ul className="list-disc pl-5 space-y-1.5 text-sm md:text-base text-black">
+                    <li>
+                      Engaging in fraudulent, deceptive, or money laundering behavior.
+                    </li>
+                    <li>
+                      Posting illegal, offensive, explicit, or intellectual property infringing content.
+                    </li>
+                    <li>
+                      Attempting off-platform payments to circumvent escrow protection.
+                    </li>
+                    <li>
+                      Interfering with the technical infrastructure or scraping user data without authorization.
+                    </li>
+                  </ul>
+
+                  <div className="bg-slate-50 border-l-4 border-amber-600 p-3.5 rounded-r-xl text-sm text-black leading-relaxed mt-3 flex items-start gap-2.5">
+                    <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-black block mb-0.5">Enforcement Warning:</span>
+                      Violation of these guidelines may result in immediate account suspension, escrow withholding, or permanent termination without prior notice.
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* 6. Dispute Resolution */}
+              <section id="disputes" className="scroll-mt-28 py-6">
+                <div className="mb-3">
+                  <h2 className="text-xl md:text-2xl font-bold text-black mb-1 font-poppins">6. Dispute Resolution</h2>
+                  <p className="text-xs font-medium text-black">Fair resolution process for contract disagreements</p>
+                </div>
+
+                <div className="space-y-3.5 text-sm md:text-base text-black leading-relaxed">
+                  <p>
+                    In the event of a disagreement between a Client and a Vendor, TASA Africa provides an internal escrow dispute resolution mechanism. Users agree to cooperate in good faith with TASA Africa&apos;s support team.
+                  </p>
+                  <p>
+                    If a dispute cannot be resolved through internal mediation, it shall be governed by applicable legal frameworks and arbitration procedures in accordance with TASA Africa operating entities.
+                  </p>
+                </div>
+              </section>
+
+              {/* 7. Contact Us */}
+              <section id="terms-contact" className="scroll-mt-28 py-6">
+                <div className="mb-3">
+                  <h2 className="text-xl md:text-2xl font-bold text-black mb-1 font-poppins">7. Contact Us</h2>
+                  <p className="text-xs font-medium text-black">Inquiries regarding these Terms of Service</p>
+                </div>
+
+                <div className="space-y-3.5 text-sm md:text-base text-black leading-relaxed">
+                  <p>
+                    If you have questions regarding these Terms of Service, marketplace policies, or contract guidelines, contact our Legal and Support team:
+                  </p>
+
+                  <ul className="space-y-2.5 pt-1 text-sm md:text-base text-black">
+                    <li className="flex items-center gap-2.5">
+                      <Mail className="w-4.5 h-4.5 text-[#0f766e] shrink-0" />
+                      <span><strong>Email:</strong> <a href="mailto:support@tasaafrica.com" className="text-black hover:text-[#0f766e] underline">support@tasaafrica.com</a></span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <MapPin className="w-4.5 h-4.5 text-[#0f766e] shrink-0" />
+                      <span><strong>Address:</strong> Lagos, Nigeria</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <Globe className="w-4.5 h-4.5 text-[#0f766e] shrink-0" />
+                      <span><strong>Website:</strong> <a href="https://tasaafrica.com" target="_blank" rel="noopener noreferrer" className="text-black hover:text-[#0f766e] underline">www.tasaafrica.com</a></span>
+                    </li>
+                  </ul>
+
+                  <div className="pt-3 border-t border-slate-200 text-xs text-black flex items-center gap-2 italic">
+                    <span>Our Legal and Support team reviews all inquiries within <strong>24 - 48 business hours</strong>.</span>
+                  </div>
+                </div>
+              </section>
+
             </div>
+
           </div>
         </div>
       </section>
 
       <FooterLinksSection />
-
-      <style jsx global>{`
-        .shadow-soft {
-          box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05);
-        }
-      `}</style>
     </div>
   );
 }

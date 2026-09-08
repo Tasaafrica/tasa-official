@@ -520,7 +520,7 @@ export default function VendorSettings() {
       formData.append("file", blob, "profile.jpg");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "https://api.tasa.com.ng"}/api/users/${session.user.id}/image`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/${session.user.id}/image`,
         {
           method: "POST",
           body: formData,

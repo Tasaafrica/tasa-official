@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     cookieStore.set("authToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      domain: ".tasa.com.ng",
+      domain: process.env.NODE_ENV === "production" ? ".tasaafrica.com" : undefined,
       path: "/",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days matching session length
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE() {
   const cookieStore = await cookies();
   cookieStore.set("authToken", "", {
-    domain: ".tasa.com.ng",
+    domain: process.env.NODE_ENV === "production" ? ".tasaafrica.com" : undefined,
     path: "/",
     maxAge: 0,
   });

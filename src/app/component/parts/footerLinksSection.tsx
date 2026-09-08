@@ -142,6 +142,10 @@ const companyLinks: FooterLink[] = [
     links: "/faq",
   },
   {
+    name: "Contact Us",
+    links: "/contact",
+  },
+  {
     name: "Partnerships",
     links: "/partnerships",
     disabled: true,
@@ -176,6 +180,7 @@ const columns: FooterColumn[] = [
 ];
 
 import Image from "next/image";
+import Link from "next/link";
 import { FaFacebook, FaLinkedin, FaXTwitter } from "react-icons/fa6";
 
 const FooterLinksSection = () => (
@@ -217,18 +222,20 @@ const FooterLinksSection = () => (
       <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4 px-4">
         {/* Logo left */}
         <div className="flex items-center justify-center md:justify-start w-full md:w-auto mb-2 md:mb-0">
-          <Image
-            src="/logo/white_logo.png"
-            alt="TASA Logo"
-            width={112}
-            height={28}
-            className="h-7 w-auto object-contain"
-          />
+          <Link href="/">
+            <Image
+              src="/logo/white_logo.png"
+              alt="TASA Logo"
+              width={112}
+              height={28}
+              className="w-[100px] md:w-[120px] h-auto object-contain cursor-pointer"
+            />
+          </Link>
         </div>
         {/* Copyright center */}
         <div className="flex-1 text-center text-gray-300">
           <p>
-            &copy; {new Date().getFullYear()} TASA - Skill and Service
+            &copy; {new Date().getFullYear()} TASA Africa - Skill and Service
             marketplace. All rights reserved.
           </p>
         </div>

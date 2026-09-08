@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Climate_Crisis, Source_Sans_3, Poppins } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
@@ -15,6 +15,22 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const climateCrisis = Climate_Crisis({
+  variable: "--font-climate-crisis",
+  subsets: ["latin"],
+});
+
+const sourceSans = Source_Sans_3({
+  variable: "--font-source-sans",
+  subsets: ["latin"],
+});
+
+const poppins = Poppins({
+  variable: "--font-poppins",
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
 });
 
@@ -55,7 +71,7 @@ export default async function RootLayout({
     <meta name="apple-mobile-web-app-title" content="Tasa | Dashboard" />
     <link rel="manifest" href="/favicon/site.webmanifest" />
       </head>
-      <body>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${climateCrisis.variable} ${sourceSans.variable} ${poppins.variable} font-poppins`}>
         {/**Google analytics */}
       {gaId && <GoogleAnalytics gaId={gaId} />}
         <SessionProvider session={session}>

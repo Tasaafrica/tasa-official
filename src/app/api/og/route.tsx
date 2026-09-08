@@ -141,7 +141,7 @@ export async function GET(request: Request) {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="https://www.tasa.com.ng/logo/teal_logo.png"
+                  src="https://www.tasaafrica.com/logo/teal_logo.png"
                   alt="TASA Logo"
                   width={140}
                   height={40}

@@ -1,9 +1,13 @@
 "use client";
 import { Star, BadgeCheck, Heart } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { bookmarkApi } from "@/lib/bookmarks";
+import { toast } from "sonner";
 
 interface VendorCardProps {
+  vendorId?: string;
   imageAlt: string;
   imageUrl?: string;
   vendorAvatar?: string;
@@ -14,6 +18,7 @@ interface VendorCardProps {
   reviews: number;
   startingPrice: number;
   currency?: string;
+  onBookmarkToggle?: (isSaved: boolean) => void;
 }
 
 const truncateWords = (text: string, maxWords: number) => {
@@ -23,6 +28,7 @@ const truncateWords = (text: string, maxWords: number) => {
 };
 
 export default function VendorCard({
+  vendorId,
   imageAlt,
   imageUrl,
   vendorAvatar,
@@ -33,8 +39,59 @@ export default function VendorCard({
   reviews,
   startingPrice,
   currency = "$",
+  onBookmarkToggle,
 }: VendorCardProps) {
+  const { data: session } = useSession();
   const [isSaved, setIsSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchBookmarkStatus = async () => {
+      if (vendorId && session?.authToken) {
+        const result = await bookmarkApi.checkStatus(vendorId, session.authToken as string);
+        if (result.success) {
+          setIsSaved(result.isBookmarked);
+        }
+      }
+    };
+    fetchBookmarkStatus();
+  }, [vendorId, session]);
+
+  const handleBookmarkToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!session?.authToken) {
+      toast.error("Please sign in to bookmark vendors");
+      return;
+    }
+    if (!vendorId || isLoading) {
+      if (!vendorId) setIsSaved(!isSaved); // Fallback for mock data
+      return;
+    }
+    
+    setIsLoading(true);
+    const token = session.authToken as string;
+    
+    if (isSaved) {
+      const res = await bookmarkApi.removeBookmark(vendorId, token);
+      if (res.success) {
+        setIsSaved(false);
+        toast.success(res.message || "Removed from bookmarks");
+        if (onBookmarkToggle) onBookmarkToggle(false);
+      } else {
+        toast.error(res.error || "Failed to remove bookmark");
+      }
+    } else {
+      const res = await bookmarkApi.addBookmark(vendorId, token);
+      if (res.success) {
+        setIsSaved(true);
+        toast.success(res.message || "Added to bookmarks");
+        if (onBookmarkToggle) onBookmarkToggle(true);
+      } else {
+        toast.error(res.error || "Failed to add bookmark");
+      }
+    }
+    setIsLoading(false);
+  };
 
   return (
     <motion.div
@@ -64,11 +121,9 @@ export default function VendorCard({
         {/* Save Button - Positioned top-right of circle */}
         <button
           type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            setIsSaved(!isSaved);
-          }}
-          className="absolute -top-1 -right-1 h-8 w-8 rounded-full bg-white shadow-lg flex items-center justify-center z-10 border border-slate-50 active:scale-90 transition-transform"
+          onClick={handleBookmarkToggle}
+          disabled={isLoading}
+          className={`absolute -top-1 -right-1 h-8 w-8 rounded-full bg-white shadow-lg flex items-center justify-center z-10 border border-slate-50 transition-transform ${isLoading ? "opacity-70 cursor-wait" : "active:scale-90"}`}
         >
           <Heart
             className={`h-4 w-4 transition-colors duration-300 ${isSaved ? "fill-rose-500 text-rose-500" : "text-slate-300"}`}
@@ -104,15 +159,6 @@ export default function VendorCard({
         <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed mb-4 px-2 flex-1">
           {truncateWords(title, 20)}
         </p>
-
-        {/* Pricing Area */}
-        <div className="bg-slate-50/50 rounded-2xl p-2.5 border border-slate-100/50 group-hover:bg-teal-50/30 group-hover:border-teal-100/30 transition-colors">
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">Starts at</p>
-            <div className="flex items-baseline justify-center gap-0.5">
-                <span className="text-[10px] sm:text-xs font-bold text-teal-700">{currency}</span>
-                <span className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">{startingPrice}</span>
-            </div>
-        </div>
       </div>
     </motion.div>
   );

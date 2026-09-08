@@ -99,7 +99,7 @@ providers.push(
 );
 
 const isProduction = process.env.NODE_ENV === "production";
-const cookieDomain = isProduction ? ".tasa.com.ng" : undefined;
+const cookieDomain = isProduction ? ".tasaafrica.com" : undefined;
 
 export const authOptions: NextAuthOptions = {
   providers,

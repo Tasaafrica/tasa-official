@@ -88,15 +88,22 @@ export default function VendorLayout({
               <Menu className="w-5 h-5" />
             )}
           </button>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">{pageTitle}</h1>
-            <p className="text-xs text-gray-500">{pageDescription}</p>
+          <div className="pt-1.5 lg:pt-0">
+            <h1 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 leading-tight truncate max-w-[200px] sm:max-w-xs md:max-w-md lg:max-w-none">{pageTitle}</h1>
+            <p className="hidden lg:block text-xs text-gray-500 mt-0.5">{pageDescription}</p>
           </div>
         </header>
 
         {/* Main Content */}
         <main className="flex-1 lg:ml-64 pt-17">
-          <div className="py-6 px-4 lg:px-10 max-w-7xl mx-auto">{children}</div>
+          <div className="py-6 px-4 lg:px-10 max-w-7xl mx-auto">
+            {pageDescription && (
+              <p className="lg:hidden text-xs text-gray-500 mb-6 bg-slate-50 border border-slate-100 p-3.5 rounded-xl leading-relaxed">
+                {pageDescription}
+              </p>
+            )}
+            {children}
+          </div>
         </main>
       </div>
     </VendorHeaderContext.Provider>

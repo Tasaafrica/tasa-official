@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
@@ -96,9 +96,12 @@ export default function StudentCTA() {
                 {/* Abstract shape behind image */}
                 <div className="absolute bottom-0 right-0 w-[80%] h-[80%] bg-teal-600/10 rounded-tl-[10rem] -z-0" />
                 
-                <img 
+                <Image 
                   src="/image/nigerian-student.png" 
-                  alt="Talented Student" 
+                  alt="Talented Student"
+                  width={1000}
+                  height={1000}
+                  priority
                   className="relative z-10 w-full max-w-[500px] lg:max-w-none lg:h-[110%] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform scale-125 md:scale-110 lg:scale-100 lg:translate-y-8 origin-bottom"
                 />
               </motion.div>

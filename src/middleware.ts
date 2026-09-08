@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 function getCookieDomain(req: any): string | undefined {
   if (process.env.NODE_ENV === "production") {
-    return ".tasa.com.ng";
+    return ".tasaafrica.com";
   }
 
   // Development: get allowed domains from environment variable

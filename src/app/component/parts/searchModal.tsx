@@ -13,7 +13,7 @@ import { IoIosClose } from "react-icons/io";
 import { ChevronRight, Zap, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { skillApi, categoryApi, subcategoryApi } from "@/lib/api";
+import { skillApi } from "@/lib/api";
 import { Folder, Layers } from "lucide-react";
 
 interface SearchResult {
@@ -148,53 +148,9 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     
     try {
       // Fetch skills from its dedicated search endpoint
-      // Fetch all categories and subcategories to filter client-side as suggested by user requirements
-      const [skillsData, categoriesRes, subcategoriesRes] = await Promise.all([
-        skillApi.search(query),
-        categoryApi.getAll(),
-        subcategoryApi.getAll()
-      ]);
-
-      const categoriesData = categoriesRes?.data || [];
-      const subcategoriesData = subcategoriesRes?.data || [];
+      const skillsData = await skillApi.search(query);
 
       const searchResults: SearchResult[] = [];
-
-      // Process Categories
-      if (categoriesData && categoriesData.length > 0) {
-        const filteredCategories = categoriesData.filter((cat: any) => 
-          cat.name.toLowerCase().includes(query.toLowerCase())
-        );
-        filteredCategories.forEach((cat: any) => {
-          searchResults.push({
-            type: "category",
-            id: cat._id || cat.id,
-            name: cat.name,
-            slug: cat.slug,
-            url: `/categories/${cat.slug}`,
-            description: cat.description || `Browse all services in ${cat.name}`,
-          });
-        });
-      }
-
-      // Process Subcategories
-      if (subcategoriesData && subcategoriesData.length > 0) {
-        const filteredSubcategories = subcategoriesData.filter((sub: any) => 
-          sub.name.toLowerCase().includes(query.toLowerCase())
-        );
-        filteredSubcategories.forEach((sub: any) => {
-          searchResults.push({
-            type: "subcategory",
-            id: sub._id || sub.id,
-            name: sub.name,
-            slug: sub.slug,
-            url: `/subcategories/${sub.slug}`,
-            description: sub.description || `Explore ${sub.name} services`,
-            categoryName: sub.category?.name,
-            categorySlug: sub.category?.slug,
-          });
-        });
-      }
 
       // Process Skills
       if (skillsData && skillsData.length > 0) {

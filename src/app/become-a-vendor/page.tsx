@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Poppins } from "next/font/google";
 import { useSession } from "next-auth/react";
 import { toast, Toaster } from "sonner";
 import Header from "@/app/component/parts/header";
@@ -98,10 +97,7 @@ const vendorHighlights = [
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 const MAX_SKILLS = 7;
 const MAX_CORE_SKILLS = 2;
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+
 
 const buildApiUrl = (path: string) => {
   if (!path.startsWith("/"))
@@ -631,10 +627,7 @@ function VendorSignupContent() {
       // Redirect to success page or dashboard
       if (result.success) {
         toast.success("Registration successful! Redirecting to dashboard...");
-        window.location.href =
-          process.env.NODE_ENV === "production"
-            ? "https://dash.tasa.com.ng"
-            : "http://localhost:5173";
+        window.location.href = "/v/dashboard";
       } else {
         throw new Error(result.message || "Registration failed");
       }
@@ -685,7 +678,7 @@ function VendorSignupContent() {
                 Become <br /> a Vendor <br /> on TASA
               </h1>
               <ul
-                className={`${poppins.className} mt-6 max-w-2xl list-disc space-y-1 pl-6 text-base text-slate-200 marker:text-teal-300 sm:text-lg}`}
+                className={`font-poppins mt-6 max-w-2xl list-disc space-y-1 pl-6 text-base text-slate-200 marker:text-teal-300 sm:text-lg`}
               >
                 <li>Turn your expertise into profit.</li>
                 <li>Connect with high-intent clients</li>
@@ -710,7 +703,7 @@ function VendorSignupContent() {
         </div>
       </section>
 
-      <div className={poppins.className}>
+      <div className="font-poppins">
         <section className="mt-10 pb-14 sm:mx-10 lg:mx-20">
           <div className=" p-6 md:p-10">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4  border-0 border-b-1 border-slate-200 pb-8">
