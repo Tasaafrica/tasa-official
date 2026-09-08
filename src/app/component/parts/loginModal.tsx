@@ -9,9 +9,7 @@ import { FaApple, FaEye, FaEyeSlash, FaFacebook } from "react-icons/fa";
 import {
   FiAlertCircle,
   FiCheckCircle,
-  FiChevronDown,
   FiLoader,
-  FiSearch,
   FiX,
 } from "react-icons/fi";
 import { IoIosClose, IoMdMail } from "react-icons/io";
@@ -26,15 +24,18 @@ const signinSchema = z.object({
 
 const signupSchema = z
   .object({
-    firstName: z
+    name: z
       .string()
-      .min(1, "First name is required")
-      .max(50, "First name too long"),
-    middleName: z.string().max(50, "Middle name too long").optional(),
-    surname: z
+      .min(1, "Name is required")
+      .max(100, "Name too long"),
+    username: z
       .string()
-      .min(1, "Surname is required")
-      .max(50, "Surname too long"),
+      .min(3, "Username must be at least 3 characters")
+      .max(30, "Username too long")
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        "Only letters, numbers, and underscores allowed",
+      ),
     email: z
       .string()
       .min(1, "Email is required")
@@ -47,17 +48,6 @@ const signupSchema = z
         "Password must contain at least one uppercase letter, one lowercase letter, and one number",
       ),
     confirmPassword: z.string(),
-    phone: z
-      .string()
-      .min(1, "Mobile number is required")
-      .regex(/^\+?[1-9]\d{0,15}$/, "Invalid mobile number format"),
-    whatsapp: z
-      .string()
-      .min(1, "WhatsApp number is required")
-      .regex(/^\+?[1-9]\d{0,15}$/, "Invalid WhatsApp number format"),
-    country: z.string().min(1, "Country is required"),
-    state: z.string().min(1, "State is required"),
-    city: z.string().min(1, "City is required"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -80,7 +70,14 @@ type CheckEmailResponse = ApiMessageResponse & {
   };
 };
 
-type EmailAvailabilityStatus = "idle" | "checking" | "available" | "error";
+type CheckUsernameResponse = ApiMessageResponse & {
+  data?: {
+    exists: boolean;
+    username: string;
+  };
+};
+
+type EmailAvailabilityStatus = "idle" | "incomplete" | "checking" | "available" | "error";
 
 type EmailAvailabilityState = {
   email: string;
@@ -88,8 +85,18 @@ type EmailAvailabilityState = {
   message: string | null;
 };
 
+type UsernameAvailabilityStatus = "idle" | "incomplete" | "checking" | "available" | "error";
+
+type UsernameAvailabilityState = {
+  username: string;
+  status: UsernameAvailabilityStatus;
+  message: string | null;
+};
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_CHECK_DEBOUNCE_MS = 450;
+const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
+const USERNAME_CHECK_DEBOUNCE_MS = 450;
 
 interface LoginModalProps {
   open: boolean;
@@ -106,21 +113,7 @@ interface PasswordRules {
   hasNumber: boolean;
 }
 
-// Location data types
-interface Country {
-  country: string;
-  iso2: string;
-  iso3: string;
-}
 
-interface State {
-  name: string;
-  state_code: string;
-}
-
-interface City {
-  name: string;
-}
 
 // Password Rules Display Component
 function PasswordRulesDisplay({ rules }: { rules: PasswordRules }) {
@@ -183,7 +176,7 @@ export default function LoginModal({
 
   // Sign up (email OTP) stepper state
   const [signupStep, setSignupStep] = useState<
-    "credentials" | "personal" | "contact" | "otp"
+    "credentials" | "personal" | "otp"
   >("credentials");
   const [signupEmail, setSignupEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -204,6 +197,20 @@ export default function LoginModal({
   const emailCheckDebounceRef = useRef<number | null>(null);
   const emailCheckRequestIdRef = useRef(0);
 
+  // Username availability state
+  const [signupUsernameAvailability, setSignupUsernameAvailability] =
+    useState<UsernameAvailabilityState>({
+      username: "",
+      status: "idle",
+      message: null,
+    });
+  const usernameCheckCacheRef = useRef<Map<string, boolean>>(new Map());
+  const usernameCheckRequestsRef = useRef<Map<string, Promise<boolean>>>(
+    new Map(),
+  );
+  const usernameCheckDebounceRef = useRef<number | null>(null);
+  const usernameCheckRequestIdRef = useRef(0);
+
   // Form setup
   const signinForm = useForm<SigninFormData>({
     resolver: zodResolver(signinSchema),
@@ -216,21 +223,16 @@ export default function LoginModal({
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      firstName: "",
-      middleName: "",
-      surname: "",
+      name: "",
+      username: "",
       email: "",
       password: "",
       confirmPassword: "",
-      phone: "",
-      whatsapp: "",
-      country: "",
-      state: "",
-      city: "",
     },
   });
 
   const isCheckingEmail = signupEmailAvailability.status === "checking";
+  const isCheckingUsername = signupUsernameAvailability.status === "checking";
 
   // Utility function to validate password rules
   const validatePasswordRules = (password: string): PasswordRules => {
@@ -426,7 +428,11 @@ export default function LoginModal({
     }
 
     if (!isValidEmail(normalizedEmail)) {
-      resetSignupEmailAvailability(normalizedEmail);
+      setSignupEmailAvailability({
+        email: normalizedEmail,
+        status: "incomplete",
+        message: "Please enter a complete email address",
+      });
       return;
     }
 
@@ -479,118 +485,235 @@ export default function LoginModal({
     await verifySignupEmailAvailability(normalizedEmail);
   };
 
-  // Location state
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [states, setStates] = useState<State[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
-  const [selectedCountry, setSelectedCountry] = useState<string>("");
-  const [selectedState, setSelectedState] = useState<string>("");
-  const [selectedCity, setSelectedCity] = useState<string>("");
+  // --- Username availability check ---
+  const normalizeUsername = (username: string) => username.trim().toLowerCase();
+  const isValidUsername = (username: string) =>
+    USERNAME_REGEX.test(username) && username.length >= 3;
 
-  // Dropdown states
-  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
-  const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
-  const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
-
-  // Search states
-  const [countrySearch, setCountrySearch] = useState("");
-  const [stateSearch, setStateSearch] = useState("");
-  const [citySearch, setCitySearch] = useState("");
-
-  // Loading states
-  const [loadingCountries, setLoadingCountries] = useState(false);
-  const [loadingStates, setLoadingStates] = useState(false);
-  const [loadingCities, setLoadingCities] = useState(false);
-
-  // API Functions
-  const fetchCountries = async () => {
-    setLoadingCountries(true);
-
-    try {
-      const response = await fetch(
-        "https://countriesnow.space/api/v0.1/countries",
-      );
-      const data = await response.json();
-      if (data.error === false && data.data) {
-        const flattenedData = data.data.flat();
-        setCountries(flattenedData);
-      }
-    } catch (error) {
-      console.error("Error fetching countries:", error);
-    } finally {
-      setLoadingCountries(false);
+  const clearPendingUsernameCheck = () => {
+    if (usernameCheckDebounceRef.current !== null) {
+      window.clearTimeout(usernameCheckDebounceRef.current);
+      usernameCheckDebounceRef.current = null;
     }
   };
 
-  const fetchStates = async (country: string) => {
-    setLoadingStates(true);
-    try {
+  const resetSignupUsernameAvailability = (username = "") => {
+    setSignupUsernameAvailability({
+      username,
+      status: "idle",
+      message: null,
+    });
+  };
+
+  const checkUsernameExists = async (username: string): Promise<boolean> => {
+    const normalizedUsername = normalizeUsername(username);
+    const cachedResult = usernameCheckCacheRef.current.get(normalizedUsername);
+
+    if (typeof cachedResult === "boolean") {
+      return cachedResult;
+    }
+
+    const existingRequest =
+      usernameCheckRequestsRef.current.get(normalizedUsername);
+    if (existingRequest) {
+      return existingRequest;
+    }
+
+    const request = (async () => {
       const response = await fetch(
-        "https://countriesnow.space/api/v0.1/countries/states",
+        `/api/auth/check-username?username=${encodeURIComponent(normalizedUsername)}`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ country }),
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
         },
       );
-      const data = await response.json();
-      if (data.error === false && data.data && data.data.states) {
-        setStates(data.data.states);
-      }
-    } catch (error) {
-      console.error("Error fetching states:", error);
-    } finally {
-      setLoadingStates(false);
-    }
-  };
 
-  const fetchCities = async (country: string, state: string) => {
-    setLoadingCities(true);
+      const data = (await response
+        .json()
+        .catch(() => null)) as CheckUsernameResponse | null;
+
+      if (!response.ok || data?.success === false) {
+        throw new Error(
+          data?.error ||
+            data?.message ||
+            "Couldn't verify this username right now. Please try again.",
+        );
+      }
+
+      const exists = data?.data?.exists ?? false;
+      usernameCheckCacheRef.current.set(normalizedUsername, exists);
+      return exists;
+    })();
+
+    usernameCheckRequestsRef.current.set(normalizedUsername, request);
+
     try {
-      const response = await fetch(
-        "https://countriesnow.space/api/v0.1/countries/state/cities",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ country, state }),
-        },
-      );
-      const data = await response.json();
-      if (data.error === false && data.data) {
-        console.log("Fetched cities:", data.data);
-        setCities(data.data);
-      } else {
-        console.log("No cities data received:", data);
-      }
-    } catch (error) {
-      console.error("Error fetching cities:", error);
+      return await request;
     } finally {
-      setLoadingCities(false);
+      usernameCheckRequestsRef.current.delete(normalizedUsername);
     }
   };
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest(".dropdown-container")) {
-        setCountryDropdownOpen(false);
-        setStateDropdownOpen(false);
-        setCityDropdownOpen(false);
-      }
-    };
+  const verifySignupUsernameAvailability = async (
+    username: string,
+  ): Promise<"available" | "taken" | "error" | "invalid"> => {
+    const normalizedUsername = normalizeUsername(username);
 
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
+    if (!isValidUsername(normalizedUsername)) {
+      resetSignupUsernameAvailability(normalizedUsername);
+      return "invalid";
     }
-  }, [open]);
 
+    const cachedResult =
+      usernameCheckCacheRef.current.get(normalizedUsername);
+    if (typeof cachedResult === "boolean") {
+      if (cachedResult) {
+        setSignupUsernameAvailability({
+          username: normalizedUsername,
+          status: "error",
+          message: "This username is already taken",
+        });
+        return "taken";
+      }
+
+      setSignupUsernameAvailability({
+        username: normalizedUsername,
+        status: "available",
+        message: null,
+      });
+      return "available";
+    }
+
+    const requestId = ++usernameCheckRequestIdRef.current;
+    setSignupUsernameAvailability({
+      username: normalizedUsername,
+      status: "checking",
+      message: null,
+    });
+
+    try {
+      const exists = await checkUsernameExists(normalizedUsername);
+      const latestUsername = normalizeUsername(
+        signupForm.getValues("username"),
+      );
+
+      if (
+        requestId !== usernameCheckRequestIdRef.current ||
+        latestUsername !== normalizedUsername
+      ) {
+        return exists ? "taken" : "available";
+      }
+
+      if (exists) {
+        setSignupUsernameAvailability({
+          username: normalizedUsername,
+          status: "error",
+          message: "This username is already taken",
+        });
+        return "taken";
+      }
+
+      setSignupUsernameAvailability({
+        username: normalizedUsername,
+        status: "available",
+        message: null,
+      });
+      return "available";
+    } catch (error) {
+      const latestUsername = normalizeUsername(
+        signupForm.getValues("username"),
+      );
+
+      if (
+        requestId !== usernameCheckRequestIdRef.current ||
+        latestUsername !== normalizedUsername
+      ) {
+        return "error";
+      }
+
+      console.error("Error checking username:", error);
+      setSignupUsernameAvailability({
+        username: normalizedUsername,
+        status: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Couldn't verify this username right now. Please try again.",
+      });
+      return "error";
+    }
+  };
+
+  const scheduleSignupUsernameCheck = (username: string) => {
+    const normalizedUsername = normalizeUsername(username);
+
+    clearPendingUsernameCheck();
+    usernameCheckRequestIdRef.current += 1;
+
+    if (!normalizedUsername) {
+      resetSignupUsernameAvailability();
+      return;
+    }
+
+    if (!isValidUsername(normalizedUsername)) {
+      setSignupUsernameAvailability({
+        username: normalizedUsername,
+        status: "incomplete",
+        message:
+          normalizedUsername.length < 3
+            ? "Username must be at least 3 characters"
+            : "Only letters, numbers, and underscores allowed",
+      });
+      return;
+    }
+
+    const cachedResult =
+      usernameCheckCacheRef.current.get(normalizedUsername);
+    if (typeof cachedResult === "boolean") {
+      if (cachedResult) {
+        setSignupUsernameAvailability({
+          username: normalizedUsername,
+          status: "error",
+          message: "This username is already taken",
+        });
+        return;
+      }
+
+      setSignupUsernameAvailability({
+        username: normalizedUsername,
+        status: "available",
+        message: null,
+      });
+      return;
+    }
+
+    setSignupUsernameAvailability({
+      username: normalizedUsername,
+      status: "checking",
+      message: null,
+    });
+
+    usernameCheckDebounceRef.current = window.setTimeout(() => {
+      void verifySignupUsernameAvailability(normalizedUsername);
+    }, USERNAME_CHECK_DEBOUNCE_MS);
+  };
+
+  const handleSignupUsernameChange = (username: string) => {
+    if (error) setError(null);
+    if (success) setSuccess(null);
+    scheduleSignupUsernameCheck(username);
+  };
+
+  const handleSignupUsernameBlur = async (username: string) => {
+    const normalizedUsername = normalizeUsername(username);
+    if (!normalizedUsername || !isValidUsername(normalizedUsername)) return;
+    clearPendingUsernameCheck();
+    await verifySignupUsernameAvailability(normalizedUsername);
+  };
+
+
+  // Load auth providers
   useEffect(() => {
     if (!open) return;
     let active = true;
@@ -606,49 +729,6 @@ export default function LoginModal({
       active = false;
     };
   }, [open]);
-
-  // Handle country selection
-  const handleCountrySelect = (country: string) => {
-    setSelectedCountry(country);
-    signupForm.setValue("country", country);
-    setCountryDropdownOpen(false);
-    setCountrySearch("");
-
-    // Reset state and city
-    setSelectedState("");
-    setSelectedCity("");
-    signupForm.setValue("state", "");
-    signupForm.setValue("city", "");
-    setStates([]);
-    setCities([]);
-
-    // Fetch states for selected country
-    fetchStates(country);
-  };
-
-  // Handle state selection
-  const handleStateSelect = (state: string) => {
-    setSelectedState(state);
-    signupForm.setValue("state", state);
-    setStateDropdownOpen(false);
-    setStateSearch("");
-
-    // Reset city
-    setSelectedCity("");
-    signupForm.setValue("city", "");
-    setCities([]);
-
-    // Fetch cities for selected state
-    fetchCities(selectedCountry, state);
-  };
-
-  // Handle city selection
-  const handleCitySelect = (city: string) => {
-    setSelectedCity(city);
-    signupForm.setValue("city", city);
-    setCityDropdownOpen(false);
-    setCitySearch("");
-  };
 
   // Reset form and state when modal opens/closes or mode changes
   useEffect(() => {
@@ -676,19 +756,24 @@ export default function LoginModal({
         status: "idle",
         message: null,
       });
+      setSignupUsernameAvailability({
+        username: "",
+        status: "idle",
+        message: null,
+      });
+      if (usernameCheckDebounceRef.current !== null) {
+        window.clearTimeout(usernameCheckDebounceRef.current);
+        usernameCheckDebounceRef.current = null;
+      }
+      usernameCheckRequestIdRef.current += 1;
+      usernameCheckCacheRef.current.clear();
+      usernameCheckRequestsRef.current.clear();
       setPasswordRules({
         minLength: false,
         hasUppercase: false,
         hasLowercase: false,
         hasNumber: false,
       });
-
-      // Reset location selections
-      setSelectedCountry("");
-      setSelectedState("");
-      setSelectedCity("");
-      setStates([]);
-      setCities([]);
     }
   }, [open, mode, signinForm, signupForm]);
 
@@ -696,6 +781,9 @@ export default function LoginModal({
     return () => {
       if (emailCheckDebounceRef.current !== null) {
         window.clearTimeout(emailCheckDebounceRef.current);
+      }
+      if (usernameCheckDebounceRef.current !== null) {
+        window.clearTimeout(usernameCheckDebounceRef.current);
       }
     };
   }, []);
@@ -940,21 +1028,16 @@ export default function LoginModal({
       // }
 
       const normalizedEmail = data.email.trim().toLowerCase();
-      const name =
-        `${data.firstName} ${data.middleName ? `${data.middleName} ` : ""}${data.surname}`.trim();
+      const name = data.name.trim();
 
       const registrationData = {
         name,
+        username: data.username,
         email: normalizedEmail,
         password: data.password,
         role: "client",
         provider: "email",
         token: "",
-        mobile: data.phone,
-        whatsapp: data.whatsapp,
-        country: data.country,
-        state: data.state,
-        city: data.city,
       };
 
       const response = await fetch("/api/auth/register", {
@@ -1171,17 +1254,22 @@ export default function LoginModal({
     setSignupStep("personal");
   };
 
-  const handleSignupNextFromPersonal = async () => {
+  const handleSignupSubmitFromPersonal = async () => {
     setError(null);
     setSuccess(null);
 
-    const isValid = await signupForm.trigger([
-      "firstName",
-      "middleName",
-      "surname",
-    ]);
+    const isValid = await signupForm.trigger(["name", "username"]);
+    if (!isValid) return;
 
-    if (isValid) setSignupStep("contact");
+    const normalizedUsername = normalizeUsername(
+      signupForm.getValues("username"),
+    );
+    const availability =
+      await verifySignupUsernameAvailability(normalizedUsername);
+    if (availability !== "available") return;
+
+    // All validated — submit the form to create account
+    await signupForm.handleSubmit(handleSignUp, handleSignUpInvalid)();
   };
 
   const handleSignUpInvalid: SubmitErrorHandler<SignupFormData> = (
@@ -1192,19 +1280,8 @@ export default function LoginModal({
       return;
     }
 
-    if (formErrors.firstName || formErrors.surname || formErrors.middleName) {
+    if (formErrors.name || formErrors.username) {
       setSignupStep("personal");
-      return;
-    }
-
-    if (
-      formErrors.phone ||
-      formErrors.whatsapp ||
-      formErrors.country ||
-      formErrors.state ||
-      formErrors.city
-    ) {
-      setSignupStep("contact");
       return;
     }
   };
@@ -1218,12 +1295,7 @@ export default function LoginModal({
     }
 
     if (signupStep === "personal") {
-      void handleSignupNextFromPersonal();
-      return;
-    }
-
-    if (signupStep === "contact") {
-      signupForm.handleSubmit(handleSignUp, handleSignUpInvalid)(e);
+      void handleSignupSubmitFromPersonal();
       return;
     }
 
@@ -1236,6 +1308,8 @@ export default function LoginModal({
   const toggleMode = () => {
     clearPendingEmailCheck();
     emailCheckRequestIdRef.current += 1;
+    clearPendingUsernameCheck();
+    usernameCheckRequestIdRef.current += 1;
     setActiveMode(activeMode === "login" ? "signup" : "login");
     setShowEmailForm(false);
     setError(null);
@@ -1244,6 +1318,7 @@ export default function LoginModal({
     signupForm.reset();
     resetSignupOtpState();
     resetSignupEmailAvailability();
+    resetSignupUsernameAvailability();
   };
 
   const signupEmailValue = signupForm.watch("email") ?? "";
@@ -1254,6 +1329,27 @@ export default function LoginModal({
     !!normalizedSignupEmail &&
     isValidEmail(normalizedSignupEmail) &&
     signupEmailAvailability.email === normalizedSignupEmail;
+  const showSignupEmailIncomplete =
+    !signupForm.formState.errors.email &&
+    !!normalizedSignupEmail &&
+    !isValidEmail(normalizedSignupEmail) &&
+    signupEmailAvailability.status === "incomplete" &&
+    signupEmailAvailability.email === normalizedSignupEmail;
+
+  const signupUsernameValue = signupForm.watch("username") ?? "";
+  const normalizedSignupUsername = normalizeUsername(signupUsernameValue);
+  const signupUsernameField = signupForm.register("username");
+  const showSignupUsernameAvailability =
+    !signupForm.formState.errors.username &&
+    !!normalizedSignupUsername &&
+    isValidUsername(normalizedSignupUsername) &&
+    signupUsernameAvailability.username === normalizedSignupUsername;
+  const showSignupUsernameIncomplete =
+    !signupForm.formState.errors.username &&
+    !!normalizedSignupUsername &&
+    !isValidUsername(normalizedSignupUsername) &&
+    signupUsernameAvailability.status === "incomplete" &&
+    signupUsernameAvailability.username === normalizedSignupUsername;
 
   if (!open) return null;
 
@@ -1261,15 +1357,8 @@ export default function LoginModal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       ref={modalRef}
-      role="button"
-      tabIndex={0}
       aria-label="Close login modal"
       onMouseDown={handleBackdropClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          onClose();
-        }
-      }}
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex overflow-hidden h-5/6 relative animate-in fade-in-0 zoom-in-95">
         {/* Left Side - Motivation & Image */}
@@ -1511,9 +1600,6 @@ export default function LoginModal({
                   >
                     {/* Hidden inputs for submission/validation */}
                     <input type="hidden" {...signupForm.register("email")} />
-                    <input type="hidden" {...signupForm.register("country")} />
-                    <input type="hidden" {...signupForm.register("state")} />
-                    <input type="hidden" {...signupForm.register("city")} />
 
                     {signupStep === "credentials" && (
                       <div className="space-y-4">
@@ -1536,7 +1622,9 @@ export default function LoginModal({
                                   : showSignupEmailAvailability &&
                                       signupEmailAvailability.status === "error"
                                     ? "border-red-300 focus:ring-red-500"
-                                    : "border-gray-300 focus:ring-teal-500"
+                                    : showSignupEmailIncomplete
+                                      ? "border-amber-300 focus:ring-amber-500"
+                                      : "border-gray-300 focus:ring-teal-500"
                               }`}
                               placeholder="Enter your email"
                               disabled={isLoading}
@@ -1561,6 +1649,9 @@ export default function LoginModal({
                             {showSignupEmailAvailability &&
                               signupEmailAvailability.status === "error" && (
                                 <FiAlertCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-red-500" />
+                              )}
+                            {showSignupEmailIncomplete && (
+                                <FiAlertCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-500" />
                               )}
                           </div>
                           {signupForm.formState.errors.email && (
@@ -1587,6 +1678,12 @@ export default function LoginModal({
                             signupEmailAvailability.status === "error" &&
                             signupEmailAvailability.message && (
                               <p className="mt-1 text-sm text-red-500">
+                                {signupEmailAvailability.message}
+                              </p>
+                            )}
+                          {showSignupEmailIncomplete &&
+                            signupEmailAvailability.message && (
+                              <p className="mt-1 text-sm text-amber-600">
                                 {signupEmailAvailability.message}
                               </p>
                             )}
@@ -1726,434 +1823,125 @@ export default function LoginModal({
                       </div>
                     )}
                     {signupStep === "personal" && (
-                      <>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label
-                              htmlFor="firstName"
-                              className="block text-sm font-medium text-gray-700 mb-1"
-                            >
-                              First Name *
-                            </label>
-                            <input
-                              type="text"
-                              id="firstName"
-                              {...signupForm.register("firstName")}
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                              placeholder="First name"
-                              disabled={isLoading}
-                            />
-                            {signupForm.formState.errors.firstName && (
-                              <p className="text-red-500 text-sm mt-1">
-                                {signupForm.formState.errors.firstName.message}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="surname"
-                              className="block text-sm font-medium text-gray-700 mb-1"
-                            >
-                              Surname *
-                            </label>
-                            <input
-                              type="text"
-                              id="surname"
-                              {...signupForm.register("surname")}
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                              placeholder="Surname"
-                              disabled={isLoading}
-                            />
-                            {signupForm.formState.errors.surname && (
-                              <p className="text-red-500 text-sm mt-1">
-                                {signupForm.formState.errors.surname.message}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
+                      <div className="space-y-4">
                         <div>
                           <label
-                            htmlFor="middleName"
+                            htmlFor="signupName"
                             className="block text-sm font-medium text-gray-700 mb-1"
                           >
-                            Middle Name (Optional)
+                            Name *
                           </label>
                           <input
                             type="text"
-                            id="middleName"
-                            {...signupForm.register("middleName")}
+                            id="signupName"
+                            {...signupForm.register("name")}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                            placeholder="Middle name"
+                            placeholder="Enter your name"
                             disabled={isLoading}
                           />
-                          {signupForm.formState.errors.middleName && (
+                          {signupForm.formState.errors.name && (
                             <p className="text-red-500 text-sm mt-1">
-                              {signupForm.formState.errors.middleName.message}
+                              {signupForm.formState.errors.name.message}
                             </p>
                           )}
-                        </div>
-                      </>
-                    )}
-
-                    {signupStep === "contact" && (
-                      <>
-                        <div>
-                          <label
-                            htmlFor="phone"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                          >
-                            Mobile Number *
-                          </label>
-                          <input
-                            type="tel"
-                            id="phone"
-                            {...signupForm.register("phone")}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                            placeholder="+1 (555) 123-4567"
-                            disabled={isLoading}
-                          />
-                          {signupForm.formState.errors.phone && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {signupForm.formState.errors.phone.message}
-                            </p>
-                          )}
+                          <p className="mt-1 text-xs text-gray-500">
+                            Use your real name or business name to gain client trust.
+                          </p>
                         </div>
 
                         <div>
                           <label
-                            htmlFor="whatsapp"
+                            htmlFor="signupUsername"
                             className="block text-sm font-medium text-gray-700 mb-1"
                           >
-                            WhatsApp Number *
+                            Username *
                           </label>
-                          <input
-                            type="tel"
-                            id="whatsapp"
-                            {...signupForm.register("whatsapp")}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
-                            placeholder="+1 (555) 123-4567"
-                            disabled={isLoading}
-                          />
-                          {signupForm.formState.errors.whatsapp && (
+                          <div className="relative">
+                            <input
+                              type="text"
+                              id="signupUsername"
+                              {...signupUsernameField}
+                              className={`w-full rounded-lg border p-3 pr-10 text-black focus:ring-2 focus:border-transparent ${
+                                showSignupUsernameAvailability &&
+                                signupUsernameAvailability.status === "available"
+                                  ? "border-green-400 focus:ring-green-500"
+                                  : showSignupUsernameAvailability &&
+                                      signupUsernameAvailability.status === "error"
+                                    ? "border-red-300 focus:ring-red-500"
+                                    : showSignupUsernameIncomplete
+                                      ? "border-amber-300 focus:ring-amber-500"
+                                      : "border-gray-300 focus:ring-teal-500"
+                              }`}
+                              placeholder="Choose a username"
+                              disabled={isLoading}
+                              onChange={(e) => {
+                                signupUsernameField.onChange(e);
+                                handleSignupUsernameChange(e.target.value);
+                              }}
+                              onBlur={(e) => {
+                                signupUsernameField.onBlur(e);
+                                void handleSignupUsernameBlur(e.target.value);
+                              }}
+                            />
+                            {showSignupUsernameAvailability &&
+                              signupUsernameAvailability.status === "checking" && (
+                                <FiLoader className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-gray-400" />
+                              )}
+                            {showSignupUsernameAvailability &&
+                              signupUsernameAvailability.status === "available" && (
+                                <FiCheckCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-green-500" />
+                              )}
+                            {showSignupUsernameAvailability &&
+                              signupUsernameAvailability.status === "error" && (
+                                <FiAlertCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-red-500" />
+                              )}
+                            {showSignupUsernameIncomplete && (
+                              <FiAlertCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-500" />
+                            )}
+                          </div>
+                          {signupForm.formState.errors.username && (
                             <p className="text-red-500 text-sm mt-1">
-                              {signupForm.formState.errors.whatsapp.message}
+                              {signupForm.formState.errors.username.message}
                             </p>
                           )}
+                          {!signupForm.formState.errors.username &&
+                            showSignupUsernameAvailability &&
+                            signupUsernameAvailability.status === "checking" && (
+                              <p className="mt-1 text-sm text-gray-500">
+                                Checking username...
+                              </p>
+                            )}
+                          {!signupForm.formState.errors.username &&
+                            showSignupUsernameAvailability &&
+                            signupUsernameAvailability.status === "available" && (
+                              <p className="mt-1 text-sm text-green-600">
+                                Username is available.
+                              </p>
+                            )}
+                          {!signupForm.formState.errors.username &&
+                            showSignupUsernameAvailability &&
+                            signupUsernameAvailability.status === "error" &&
+                            signupUsernameAvailability.message && (
+                              <p className="mt-1 text-sm text-red-500">
+                                {signupUsernameAvailability.message}
+                              </p>
+                            )}
+                          {showSignupUsernameIncomplete &&
+                            signupUsernameAvailability.message && (
+                              <p className="mt-1 text-sm text-amber-600">
+                                {signupUsernameAvailability.message}
+                              </p>
+                            )}
                         </div>
-
-                        {/* Location Fields */}
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-medium text-gray-900">
-                            Location Information
-                          </h3>
-
-                          {/* Country Dropdown */}
-                          <div className="relative dropdown-container">
-                            <span className="block text-sm font-medium text-gray-700 mb-1">
-                              Country *
-                            </span>
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (
-                                    !countryDropdownOpen &&
-                                    countries.length === 0
-                                  ) {
-                                    fetchCountries();
-                                  }
-                                  setCountryDropdownOpen(!countryDropdownOpen);
-                                }}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-teal-500 focus:border-teal-500 flex items-center justify-between"
-                              >
-                                <span
-                                  className={
-                                    selectedCountry
-                                      ? "text-gray-900"
-                                      : "text-gray-500"
-                                  }
-                                >
-                                  {selectedCountry || "Select Country"}
-                                </span>
-                                <FiChevronDown className="w-4 h-4 text-gray-400" />
-                              </button>
-
-                              {countryDropdownOpen && (
-                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                                  <div className="p-2 border-b border-gray-200">
-                                    <div className="relative">
-                                      <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                      <input
-                                        type="text"
-                                        placeholder="Search countries..."
-                                        value={countrySearch}
-                                        onChange={(e) =>
-                                          setCountrySearch(e.target.value)
-                                        }
-                                        className="w-full pl-10 pr-3 py-2 border text-gray-500 border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="h-48 overflow-y-auto">
-                                    {loadingCountries ? (
-                                      <div className="p-3 text-center text-gray-500">
-                                        Loading countries...
-                                      </div>
-                                    ) : countries.length === 0 ? (
-                                      <div className="p-3 text-center text-gray-500">
-                                        No countries loaded
-                                      </div>
-                                    ) : (
-                                      countries
-                                        .filter((country) => {
-                                          if (!countrySearch.trim())
-                                            return true;
-                                          return country.country
-                                            .toLowerCase()
-                                            .includes(
-                                              countrySearch.toLowerCase(),
-                                            );
-                                        })
-                                        .map((country) => (
-                                          <button
-                                            key={`${country.iso2}-${country.country}`}
-                                            type="button"
-                                            onClick={() =>
-                                              handleCountrySelect(
-                                                String(country.country),
-                                              )
-                                            }
-                                            className="w-full px-3 py-2 text-left text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                          >
-                                            {country.country}
-                                          </button>
-                                        ))
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            {signupForm.formState.errors.country && (
-                              <p className="mt-1 text-sm text-red-600">
-                                {signupForm.formState.errors.country.message}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* State Dropdown */}
-                          <div className="relative dropdown-container">
-                            <span className="block text-sm font-medium text-gray-700 mb-1">
-                              State *
-                            </span>
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  selectedCountry &&
-                                  setStateDropdownOpen(!stateDropdownOpen)
-                                }
-                                disabled={!selectedCountry}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-teal-500 focus:border-teal-500 flex items-center justify-between disabled:bg-gray-50 disabled:cursor-not-allowed"
-                              >
-                                <span
-                                  className={
-                                    selectedState
-                                      ? "text-gray-900"
-                                      : "text-gray-500"
-                                  }
-                                >
-                                  {selectedState ||
-                                    (selectedCountry
-                                      ? "Select State"
-                                      : "Select Country First")}
-                                </span>
-                                <FiChevronDown className="w-4 h-4 text-gray-400" />
-                              </button>
-
-                              {stateDropdownOpen && selectedCountry && (
-                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                                  <div className="p-2 border-b border-gray-200">
-                                    <div className="relative">
-                                      <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                      <input
-                                        type="text"
-                                        placeholder="Search states..."
-                                        value={stateSearch}
-                                        onChange={(e) =>
-                                          setStateSearch(e.target.value)
-                                        }
-                                        className="w-full pl-10 pr-3 py-2 border text-gray-500 border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="h-48 overflow-y-auto">
-                                    {loadingStates ? (
-                                      <div className="p-3 text-center text-gray-500">
-                                        Loading states...
-                                      </div>
-                                    ) : (
-                                      states
-                                        .filter((state) => {
-                                          if (!stateSearch.trim()) return true;
-                                          return state?.name
-                                            ?.toLowerCase()
-                                            ?.includes(
-                                              stateSearch.toLowerCase(),
-                                            );
-                                        })
-                                        .map(
-                                          (state) =>
-                                            state?.name && (
-                                              <button
-                                                key={state.state_code}
-                                                type="button"
-                                                onClick={() =>
-                                                  handleStateSelect(state.name)
-                                                }
-                                                className="w-full px-3 py-2 text-left text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                              >
-                                                {state.name}
-                                              </button>
-                                            ),
-                                        )
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            {signupForm.formState.errors.state && (
-                              <p className="mt-1 text-sm text-red-600">
-                                {signupForm.formState.errors.state.message}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* City Dropdown */}
-                          <div className="relative dropdown-container">
-                            <span className="block text-sm font-medium text-gray-700 mb-1">
-                              City *
-                            </span>
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  selectedState &&
-                                    setCityDropdownOpen(!cityDropdownOpen);
-                                }}
-                                disabled={!selectedState}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-teal-500 focus:border-teal-500 flex items-center justify-between disabled:bg-gray-50 disabled:cursor-not-allowed"
-                              >
-                                <span
-                                  className={
-                                    selectedCity
-                                      ? "text-gray-900"
-                                      : "text-gray-500"
-                                  }
-                                >
-                                  {selectedCity ||
-                                    (selectedState
-                                      ? "Select City"
-                                      : "Select State First")}
-                                </span>
-                                <FiChevronDown className="w-4 h-4 text-gray-400" />
-                              </button>
-
-                              {cityDropdownOpen && selectedState && (
-                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                                  <div className="p-2 border-b border-gray-200">
-                                    <div className="relative">
-                                      <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                      <input
-                                        type="text"
-                                        placeholder="Search cities..."
-                                        value={citySearch}
-                                        onChange={(e) =>
-                                          setCitySearch(e.target.value)
-                                        }
-                                        className="w-full pl-10 pr-3 py-2 border text-gray-500 border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="h-48 overflow-y-auto">
-                                    {loadingCities ? (
-                                      <div className="p-3 text-center text-gray-500">
-                                        Loading cities...
-                                      </div>
-                                    ) : cities.length > 0 ? (
-                                      (() => {
-                                        console.log(
-                                          "Rendering cities array:",
-                                          cities,
-                                        );
-                                        console.log("First city:", cities[0]);
-                                        console.log(
-                                          "Cities length:",
-                                          cities.length,
-                                        );
-                                        return cities;
-                                      })()
-                                        .filter((city) => {
-                                          if (!citySearch.trim()) return true;
-                                          const cityName =
-                                            typeof city === "string"
-                                              ? city
-                                              : city?.name;
-                                          return cityName
-                                            ?.toLowerCase()
-                                            ?.includes(
-                                              citySearch.toLowerCase(),
-                                            );
-                                        })
-                                        .map((city) => {
-                                          const cityName =
-                                            typeof city === "string"
-                                              ? city
-                                              : city?.name;
-                                          return cityName ? (
-                                            <button
-                                              key={cityName}
-                                              type="button"
-                                              onClick={() =>
-                                                handleCitySelect(cityName)
-                                              }
-                                              className="w-full px-3 py-2 text-left text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                            >
-                                              {cityName}
-                                            </button>
-                                          ) : null;
-                                        })
-                                    ) : (
-                                      <div className="p-3 text-center text-gray-500">
-                                        No cities available for this state
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            {signupForm.formState.errors.city && (
-                              <p className="mt-1 text-sm text-red-600">
-                                {signupForm.formState.errors.city.message}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </>
+                      </div>
                     )}
 
                     <div className="flex gap-3">
-                      {signupStep !== "credentials" && signupStep !== "otp" && (
+                      {signupStep === "personal" && (
                         <button
                           type="button"
                           className="w-1/3 border border-gray-300 text-gray-700 p-3 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          onClick={() => {
-                            if (signupStep === "personal")
-                              setSignupStep("credentials");
-                            else if (signupStep === "contact")
-                              setSignupStep("personal");
-                          }}
+                          onClick={() => setSignupStep("credentials")}
                           disabled={isLoading}
                         >
                           Back
@@ -2162,11 +1950,14 @@ export default function LoginModal({
                       <button
                         type="submit"
                         className={`${
-                          signupStep === "credentials" ? "w-full" : "w-2/3"
+                          signupStep === "credentials" || signupStep === "otp"
+                            ? "w-full"
+                            : "w-2/3"
                         } bg-teal-600 text-white p-3 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                         disabled={
                           isLoading ||
                           (signupStep === "credentials" && isCheckingEmail) ||
+                          (signupStep === "personal" && isCheckingUsername) ||
                           (signupStep === "otp" &&
                             otp.replace(/\D/g, "").length !== 6)
                         }
@@ -2175,10 +1966,12 @@ export default function LoginModal({
                           ? isLoading
                             ? "Verifying..."
                             : "Verify OTP"
-                          : signupStep === "contact"
+                          : signupStep === "personal"
                             ? isLoading
                               ? "Creating Account..."
-                              : "Create Account"
+                              : isCheckingUsername
+                                ? "Checking..."
+                                : "Create Account"
                             : signupStep === "credentials" && isCheckingEmail
                               ? "Checking..."
                               : "Next"}

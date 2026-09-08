@@ -158,36 +158,7 @@ export default function CategoriesPage({
 
       
 
-      <section className="py-10 sm:py-12">
-        <div className="container mx-auto px-4 sm:px-8 md:px-10 lg:px-16">
-          <div className="mb-8">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
-              <Users className="h-5 w-5 text-teal-600" />
-              Top Vendors In {categoryName}
-            </h2>
-            <p className="mt-2 text-teal-700">
-             Pro tip: View more specialised vendors by clicking a skill.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {vendorShowcase.map((vendor) => (
-              <VendorCard
-                key={vendor.id}
-                imageAlt={vendor.imageAlt}
-                imageUrl={vendor.imageUrl}
-                vendorAvatar={vendor.vendorAvatar}
-                vendorName={vendor.vendorName}
-                vendorLevel={vendor.vendorLevel}
-                title={vendor.title}
-                rating={vendor.rating}
-                reviews={vendor.reviews}
-                startingPrice={vendor.startingPrice}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
 
       <section className="pb-12 sm:pb-16">
         <div className="container mx-auto px-4 sm:px-8 md:px-10 lg:px-16">

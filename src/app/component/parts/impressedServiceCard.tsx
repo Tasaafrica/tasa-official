@@ -2,6 +2,7 @@
 import { Star, BadgeCheck, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import Image from "next/image";
 
 interface ImpressedServiceCardProps {
   imageAlt: string;
@@ -85,10 +86,12 @@ export default function ImpressedServiceCard({
         <div className="flex items-center gap-3 mb-4">
           <div className="h-10 w-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
             {sellerAvatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img 
+              <Image 
                 src={sellerAvatar} 
-                alt={sellerName} 
+                alt={sellerName}
+                width={40}
+                height={40}
+                priority
                 className="h-full w-full object-cover transition-opacity duration-300"
               />
             ) : (

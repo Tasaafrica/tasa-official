@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
 
   // Image optimization
   images: {
-    domains: ["tasa-server.onrender.com", "lh3.googleusercontent.com"],
+    domains: ["tasa-server.onrender.com", "lh3.googleusercontent.com", "images.unsplash.com"],
     unoptimized: false,
   },
 };

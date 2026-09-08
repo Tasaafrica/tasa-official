@@ -1,14 +1,25 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import {
+  Camera,
+  ChevronDown,
+  ChevronUp,
+  CreditCard,
+  Globe,
+  Mail,
+  MapPin,
+  Phone,
+  Save,
+  User,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
-import { Camera, Save, Mail, User, Phone, MapPin, Globe, CreditCard, ChevronDown, ChevronUp } from "lucide-react";
-import { toast, Toaster } from "sonner";
+import { useEffect, useRef, useState } from "react";
+import { FiSearch } from "react-icons/fi";
+import { Toaster, toast } from "sonner";
 import ImageCropModal from "@/components/ui/ImageCropModal";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
-import { userApi, UserData } from "@/lib/user";
-import { useClientHeader } from "../layout";
-import { FiSearch } from "react-icons/fi";
+import { type UserData, userApi } from "@/lib/user";
+import { useClientHeader } from "../context";
 
 // Location data types
 interface CountryData {
@@ -46,7 +57,7 @@ export default function ClientSettings() {
   const [countriesList, setCountriesList] = useState<CountryData[]>([]);
   const [statesList, setStatesList] = useState<StateData[]>([]);
   const [citiesList, setCitiesList] = useState<CityData[]>([]);
-  
+
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
@@ -120,38 +131,54 @@ export default function ClientSettings() {
   // Location API Helpers (using same service as vendor)
   const fetchCountries = async () => {
     try {
-      const response = await fetch("https://countriesnow.space/api/v0.1/countries");
+      const response = await fetch(
+        "https://countriesnow.space/api/v0.1/countries",
+      );
       const data = await response.json();
       if (!data.error) setCountriesList(data.data);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchStates = async (countryName: string) => {
     setLoadingLocations(true);
     try {
-      const response = await fetch("https://countriesnow.space/api/v0.1/countries/states", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ country: countryName }),
-      });
+      const response = await fetch(
+        "https://countriesnow.space/api/v0.1/countries/states",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ country: countryName }),
+        },
+      );
       const data = await response.json();
       if (!data.error) setStatesList(data.data.states);
-    } catch (err) { console.error(err); }
-    finally { setLoadingLocations(false); }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingLocations(false);
+    }
   };
 
   const fetchCities = async (countryName: string, stateName: string) => {
     setLoadingLocations(true);
     try {
-      const response = await fetch("https://countriesnow.space/api/v0.1/countries/state/cities", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ country: countryName, state: stateName }),
-      });
+      const response = await fetch(
+        "https://countriesnow.space/api/v0.1/countries/state/cities",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ country: countryName, state: stateName }),
+        },
+      );
       const data = await response.json();
       if (!data.error) setCitiesList(data.data);
-    } catch (err) { console.error(err); }
-    finally { setLoadingLocations(false); }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingLocations(false);
+    }
   };
 
   const handleCountrySelect = (cName: string) => {
@@ -191,8 +218,12 @@ export default function ClientSettings() {
     try {
       if (!session?.user?.id || !session?.authToken) return;
       const updateData = { name, bio, mobile, whatsapp, country, state, city };
-      const result = await userApi.updateById(session.user.id, session.authToken, updateData);
-      
+      const result = await userApi.updateById(
+        session.user.id,
+        session.authToken,
+        updateData,
+      );
+
       if (result.success) {
         toast.success("Profile updated successfully");
         await update({ ...session, user: { ...session?.user, name } });
@@ -219,15 +250,23 @@ export default function ClientSettings() {
         toast.error("Session error. Please try again.");
         return;
       }
-      const result = await userApi.requestEmailChange(session.user.id, session.authToken, originalEmail, email);
+      const result = await userApi.requestEmailChange(
+        session.user.id,
+        session.authToken,
+        originalEmail,
+        email,
+      );
       if (result.success) {
         setIsOtpSent(true);
         toast.success("OTP sent to your new email");
       } else {
         toast.error(result.message || "Failed to send OTP");
       }
-    } catch (err) { toast.error("Error sending OTP"); }
-    finally { setSendingOtp(false); }
+    } catch (err) {
+      toast.error("Error sending OTP");
+    } finally {
+      setSendingOtp(false);
+    }
   };
 
   const handleVerifyOtp = async () => {
@@ -241,7 +280,11 @@ export default function ClientSettings() {
         toast.error("Session error. Please try again.");
         return;
       }
-      const result = await userApi.verifyEmailChange(session.user.id, session.authToken, otpCode);
+      const result = await userApi.verifyEmailChange(
+        session.user.id,
+        session.authToken,
+        otpCode,
+      );
       if (result.success) {
         setOriginalEmail(email);
         setIsEditingEmail(false);
@@ -252,8 +295,11 @@ export default function ClientSettings() {
       } else {
         toast.error(result.message || "Invalid OTP");
       }
-    } catch (err) { toast.error("Verification error"); }
-    finally { setVerifyingOtp(false); }
+    } catch (err) {
+      toast.error("Verification error");
+    } finally {
+      setVerifyingOtp(false);
+    }
   };
 
   // Image Upload Logic
@@ -275,11 +321,14 @@ export default function ClientSettings() {
       const formData = new FormData();
       formData.append("file", blob, "profile.jpg");
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${session?.user.id}/image`, {
-        method: "POST",
-        body: formData,
-        headers: { Authorization: `Bearer ${session?.authToken}` },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/${session?.user.id}/image`,
+        {
+          method: "POST",
+          body: formData,
+          headers: { Authorization: `Bearer ${session?.authToken}` },
+        },
+      );
 
       const result = await response.json();
       if (result.success) {
@@ -288,18 +337,22 @@ export default function ClientSettings() {
         await update({ ...session, user: { ...session?.user, image: newImg } });
         toast.success("Profile image updated");
       }
-    } catch (err) { toast.error("Failed to upload image"); }
-    finally { setLoading(false); setIsCropModalOpen(false); }
+    } catch (err) {
+      toast.error("Failed to upload image");
+    } finally {
+      setLoading(false);
+      setIsCropModalOpen(false);
+    }
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       <LoadingOverlay isVisible={loading} />
-      <ImageCropModal 
-        isOpen={isCropModalOpen} 
-        onClose={() => setIsCropModalOpen(false)} 
-        imageSrc={imageToCrop} 
-        onCropSave={handleCropSave} 
+      <ImageCropModal
+        isOpen={isCropModalOpen}
+        onClose={() => setIsCropModalOpen(false)}
+        imageSrc={imageToCrop}
+        onCropSave={handleCropSave}
       />
       <Toaster position="top-right" />
 
@@ -307,11 +360,15 @@ export default function ClientSettings() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 lg:p-8 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Profile Information</h2>
-            <p className="text-sm text-gray-500 mt-1">Update your personal details and how you're seen</p>
+            <h2 className="text-xl font-bold text-gray-900">
+              Profile Information
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Update your personal details and how you're seen
+            </p>
           </div>
           <div className="flex sm:block">
-            <button 
+            <button
               onClick={handleSaveProfile}
               className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-2.5 bg-[#334155] text-white rounded-xl hover:bg-[#1e293b] transition-all font-medium text-sm shadow-sm"
             >
@@ -327,25 +384,39 @@ export default function ClientSettings() {
             <div className="relative group">
               <div className="w-24 h-24 rounded-full bg-gray-100 border-4 border-white shadow-md overflow-hidden relative">
                 {profileImage ? (
-                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-50">
                     <User className="w-10 h-10 text-gray-300" />
                   </div>
                 )}
               </div>
-              <button 
+              <button
                 onClick={() => fileInputRef.current?.click()}
                 className="absolute bottom-0 right-0 p-2 bg-[#334155] text-white rounded-full border-2 border-white shadow-lg hover:scale-110 transition-transform"
               >
                 <Camera className="w-4 h-4" />
               </button>
-              <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*"
+              />
             </div>
             <div className="text-center sm:text-left">
-              <h3 className="font-bold text-gray-900 text-lg">{name || "Client"}</h3>
-              <p className="text-sm text-gray-500">JPG, GIF or PNG. Max size of 2MB</p>
-              <button 
+              <h3 className="font-bold text-gray-900 text-lg">
+                {name || "Client"}
+              </h3>
+              <p className="text-sm text-gray-500">
+                JPG, GIF or PNG. Max size of 2MB
+              </p>
+              <button
                 onClick={() => fileInputRef.current?.click()}
                 className="mt-2 text-sm font-semibold text-[#334155] hover:underline"
               >
@@ -357,11 +428,13 @@ export default function ClientSettings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Name */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Full Name</label>
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Full Name
+              </label>
               <div className="relative group">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 group-focus-within:text-[#334155] transition-colors" />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-[#334155]/5 focus:border-[#334155] outline-none transition-all text-sm"
@@ -372,18 +445,20 @@ export default function ClientSettings() {
 
             {/* Email */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Email Address</label>
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Email Address
+              </label>
               <div className="relative group">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={email}
                   disabled={!isEditingEmail}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full pl-11 pr-24 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-[#334155]/5 focus:border-[#334155] outline-none transition-all text-sm ${!isEditingEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`w-full pl-11 pr-24 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-[#334155]/5 focus:border-[#334155] outline-none transition-all text-sm ${!isEditingEmail ? "opacity-70 cursor-not-allowed" : ""}`}
                 />
                 {!isEditingEmail ? (
-                  <button 
+                  <button
                     onClick={() => setIsEditingEmail(true)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#334155] hover:underline"
                   >
@@ -391,14 +466,18 @@ export default function ClientSettings() {
                   </button>
                 ) : (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-2">
-                     <button 
-                      onClick={() => { setIsEditingEmail(false); setEmail(originalEmail); setIsOtpSent(false); }}
+                    <button
+                      onClick={() => {
+                        setIsEditingEmail(false);
+                        setEmail(originalEmail);
+                        setIsOtpSent(false);
+                      }}
                       className="text-xs font-bold text-gray-400"
                     >
                       Cancel
                     </button>
                     {!isOtpSent && (
-                      <button 
+                      <button
                         onClick={handleSendOtp}
                         disabled={sendingOtp}
                         className="text-xs font-bold text-[#334155]"
@@ -411,15 +490,17 @@ export default function ClientSettings() {
               </div>
               {isOtpSent && (
                 <div className="mt-3 flex items-center space-x-2 animate-in fade-in slide-in-from-top-2">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={otpCode}
                     maxLength={6}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    onChange={(e) =>
+                      setOtpCode(e.target.value.replace(/\D/g, ""))
+                    }
                     className="flex-1 px-4 py-2 bg-white border border-[#334155] rounded-lg text-sm tracking-widest text-center font-bold outline-none"
                     placeholder="ENTER OTP"
                   />
-                  <button 
+                  <button
                     onClick={handleVerifyOtp}
                     disabled={verifyingOtp}
                     className="px-6 py-2 bg-[#334155] text-white rounded-lg text-sm font-bold shadow-md hover:bg-[#1e293b]"
@@ -432,11 +513,13 @@ export default function ClientSettings() {
 
             {/* Mobile */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Mobile Number</label>
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Mobile Number
+              </label>
               <div className="relative group">
                 <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 group-focus-within:text-[#334155] transition-colors" />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-[#334155]/5 focus:border-[#334155] outline-none transition-all text-sm"
@@ -447,11 +530,13 @@ export default function ClientSettings() {
 
             {/* WhatsApp */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">WhatsApp Number</label>
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                WhatsApp Number
+              </label>
               <div className="relative group">
                 <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-green-500/70" />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-[#334155]/5 focus:border-[#334155] outline-none transition-all text-sm"
@@ -463,8 +548,10 @@ export default function ClientSettings() {
 
           {/* Bio */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Short Bio</label>
-            <textarea 
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+              Short Bio
+            </label>
+            <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-[#334155]/5 focus:border-[#334155] outline-none transition-all text-sm min-h-[100px] resize-none"
@@ -481,31 +568,39 @@ export default function ClientSettings() {
             <MapPin className="w-5 h-5 mr-3 text-[#334155]" />
             Location
           </h2>
-          <p className="text-sm text-gray-500 mt-1">Enter your location, you can still access vendors from any location</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Enter your location, you can still access vendors from any location
+          </p>
         </div>
-        
+
         <div className="p-6 lg:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Country */}
           <div className="space-y-2 flex-1 relative dropdown-container">
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Country</label>
-            <div 
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+              Country
+            </label>
+            <div
               onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
               className="flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl cursor-pointer hover:bg-white transition-all text-sm"
             >
               <div className="flex items-center space-x-2">
                 <Globe className="w-4 h-4 text-gray-400" />
-                <span className={country ? "text-gray-900" : "text-gray-400"}>{country || "Select Country"}</span>
+                <span className={country ? "text-gray-900" : "text-gray-400"}>
+                  {country || "Select Country"}
+                </span>
               </div>
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${countryDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-4 h-4 text-gray-400 transition-transform ${countryDropdownOpen ? "rotate-180" : ""}`}
+              />
             </div>
-            
+
             {countryDropdownOpen && (
               <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="p-2 border-b border-gray-50">
                   <div className="relative">
                     <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="Search..."
                       className="w-full pl-9 pr-4 py-2 bg-gray-50 border-none rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#334155]/5"
                       value={countrySearch}
@@ -514,21 +609,25 @@ export default function ClientSettings() {
                   </div>
                 </div>
                 <div className="max-h-[250px] overflow-y-auto">
-                  {countriesList.filter(c => {
-                    const name = c.name || c.country || "";
-                    return name.toLowerCase().includes(countrySearch.toLowerCase());
-                  }).map((c, i) => {
-                    const name = c.name || c.country;
-                    return (
-                      <div 
-                        key={i} 
-                        onClick={() => handleCountrySelect(name || "")}
-                        className="px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 cursor-pointer transition-colors"
-                      >
-                        {name}
-                      </div>
-                    );
-                  })}
+                  {countriesList
+                    .filter((c) => {
+                      const name = c.name || c.country || "";
+                      return name
+                        .toLowerCase()
+                        .includes(countrySearch.toLowerCase());
+                    })
+                    .map((c, i) => {
+                      const name = c.name || c.country;
+                      return (
+                        <div
+                          key={i}
+                          onClick={() => handleCountrySelect(name || "")}
+                          className="px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 cursor-pointer transition-colors"
+                        >
+                          {name}
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             )}
@@ -536,23 +635,31 @@ export default function ClientSettings() {
 
           {/* State */}
           <div className="space-y-2 flex-1 relative dropdown-container">
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">State / Province</label>
-            <div 
-              onClick={() => country && setStateDropdownOpen(!stateDropdownOpen)}
-              className={`flex items-center justify-between px-4 py-3 border rounded-xl transition-all text-sm ${!country ? 'bg-gray-100 cursor-not-allowed border-gray-100' : 'bg-gray-50 border-gray-100 cursor-pointer hover:bg-white'}`}
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+              State / Province
+            </label>
+            <div
+              onClick={() =>
+                country && setStateDropdownOpen(!stateDropdownOpen)
+              }
+              className={`flex items-center justify-between px-4 py-3 border rounded-xl transition-all text-sm ${!country ? "bg-gray-100 cursor-not-allowed border-gray-100" : "bg-gray-50 border-gray-100 cursor-pointer hover:bg-white"}`}
             >
               <div className="flex items-center space-x-2">
                 <MapPin className="w-4 h-4 text-gray-400" />
-                <span className={state ? "text-gray-900" : "text-gray-400"}>{state || "Select State"}</span>
+                <span className={state ? "text-gray-900" : "text-gray-400"}>
+                  {state || "Select State"}
+                </span>
               </div>
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${stateDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-4 h-4 text-gray-400 transition-transform ${stateDropdownOpen ? "rotate-180" : ""}`}
+              />
             </div>
-            
+
             {stateDropdownOpen && (
               <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden">
                 <div className="p-2 border-b border-gray-50">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Search..."
                     className="w-full px-4 py-2 bg-gray-50 border-none rounded-lg text-sm outline-none"
                     value={stateSearch}
@@ -560,12 +667,27 @@ export default function ClientSettings() {
                   />
                 </div>
                 <div className="max-h-[250px] overflow-y-auto">
-                   {loadingLocations ? (<div className="p-4 text-center text-xs text-gray-400">Loading...</div>) : 
-                    statesList.filter(s => (s.name || "").toLowerCase().includes(stateSearch.toLowerCase())).map((s, i) => (
-                    <div key={i} onClick={() => handleStateSelect(s.name)} className="px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 cursor-pointer">
-                      {s.name}
+                  {loadingLocations ? (
+                    <div className="p-4 text-center text-xs text-gray-400">
+                      Loading...
                     </div>
-                  ))}
+                  ) : (
+                    statesList
+                      .filter((s) =>
+                        (s.name || "")
+                          .toLowerCase()
+                          .includes(stateSearch.toLowerCase()),
+                      )
+                      .map((s, i) => (
+                        <div
+                          key={i}
+                          onClick={() => handleStateSelect(s.name)}
+                          className="px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 cursor-pointer"
+                        >
+                          {s.name}
+                        </div>
+                      ))
+                  )}
                 </div>
               </div>
             )}
@@ -573,23 +695,29 @@ export default function ClientSettings() {
 
           {/* City */}
           <div className="space-y-2 flex-1 relative dropdown-container">
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">City</label>
-            <div 
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+              City
+            </label>
+            <div
               onClick={() => state && setCityDropdownOpen(!cityDropdownOpen)}
-              className={`flex items-center justify-between px-4 py-3 border rounded-xl transition-all text-sm ${!state ? 'bg-gray-100 cursor-not-allowed border-gray-100' : 'bg-gray-50 border-gray-100 cursor-pointer hover:bg-white'}`}
+              className={`flex items-center justify-between px-4 py-3 border rounded-xl transition-all text-sm ${!state ? "bg-gray-100 cursor-not-allowed border-gray-100" : "bg-gray-50 border-gray-100 cursor-pointer hover:bg-white"}`}
             >
               <div className="flex items-center space-x-2">
                 <MapPin className="w-4 h-4 text-gray-400" />
-                <span className={city ? "text-gray-900" : "text-gray-400"}>{city || "Select City"}</span>
+                <span className={city ? "text-gray-900" : "text-gray-400"}>
+                  {city || "Select City"}
+                </span>
               </div>
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${cityDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-4 h-4 text-gray-400 transition-transform ${cityDropdownOpen ? "rotate-180" : ""}`}
+              />
             </div>
-            
+
             {cityDropdownOpen && (
               <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden">
                 <div className="p-2 border-b border-gray-50">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Search..."
                     className="w-full px-4 py-2 bg-gray-50 border-none rounded-lg text-sm outline-none"
                     value={citySearch}
@@ -597,18 +725,33 @@ export default function ClientSettings() {
                   />
                 </div>
                 <div className="max-h-[250px] overflow-y-auto">
-                  {loadingLocations ? (<div className="p-4 text-center text-xs text-gray-400">Loading...</div>) : 
-                    citiesList.filter(c => {
-                      const cityName = typeof c === 'string' ? c : (c as any).name || "";
-                      return cityName.toLowerCase().includes(citySearch.toLowerCase());
-                    }).map((c, i) => {
-                      const cityName = typeof c === 'string' ? c : (c as any).name;
-                      return (
-                        <div key={i} onClick={() => handleCitySelect(cityName)} className="px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 cursor-pointer">
-                          {cityName}
-                        </div>
-                      );
-                    })}
+                  {loadingLocations ? (
+                    <div className="p-4 text-center text-xs text-gray-400">
+                      Loading...
+                    </div>
+                  ) : (
+                    citiesList
+                      .filter((c) => {
+                        const cityName =
+                          typeof c === "string" ? c : (c as any).name || "";
+                        return cityName
+                          .toLowerCase()
+                          .includes(citySearch.toLowerCase());
+                      })
+                      .map((c, i) => {
+                        const cityName =
+                          typeof c === "string" ? c : (c as any).name;
+                        return (
+                          <div
+                            key={i}
+                            onClick={() => handleCitySelect(cityName)}
+                            className="px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 cursor-pointer"
+                          >
+                            {cityName}
+                          </div>
+                        );
+                      })
+                  )}
                 </div>
               </div>
             )}
@@ -618,7 +761,7 @@ export default function ClientSettings() {
 
       {/* Final Save Button */}
       <div className="flex items-center justify-end pt-2">
-        <button 
+        <button
           onClick={handleSaveProfile}
           className="flex items-center space-x-2 px-10 py-2 bg-[#334155] text-white rounded-2xl hover:bg-[#1e293b] transition-all font-bold text-base shadow-lg hover:shadow-xl active:scale-[0.98]"
         >

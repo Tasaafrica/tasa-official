@@ -12,7 +12,7 @@ export default function ImpressedServiceSection() {
       imageAlt: "Modern website design",
       imageUrl:
         "https://res.cloudinary.com/duo4b1nit/image/upload/v1773857079/ui-ux.jpg",
-      sellerAvatar: "male-ui-ux.png",
+      sellerAvatar: "/male-ui-ux.png",
       sellerName: "Mikel Ali",
       sellerLevel: "Top Rated",
       title: "UI/UX Designer creating high-converting digital experiences",
@@ -24,8 +24,8 @@ export default function ImpressedServiceSection() {
     {
       imageAlt: "Social media marketing manager",
       imageUrl:
-        "digital-marketing.png",
-      sellerAvatar: "female-digital-marketing.png",
+        "/digital-marketing.png",
+      sellerAvatar: "/female-digital-marketing.png",
       sellerName: "Sara Lanti",
       sellerLevel: "Level 2",
       title: "Digital Strategist scaling brands through social media marketing",

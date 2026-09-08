@@ -11,8 +11,7 @@ export function TokenSync() {
     if (status === "authenticated" && (session as any)?.authToken) {
       const currentToken = (session as any).authToken;
       
-      // We call the API to update the HttpOnly, Secure cookie across subdomains
-      // This is crucial for cross-domain auth between tasa.com.ng and dash.tasa.com.ng
+      // We call the API to update the HttpOnly, Secure cookie for tasaafrica.com
       fetch("/api/auth/token-cookie", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -4,11 +4,12 @@ import React, { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Settings, LogOut, User } from "lucide-react";
+import { Home, Settings, LogOut, User, Heart } from "lucide-react";
 import { userApi } from "@/lib/user";
 
 const navItems = [
   { name: "Dashboard", href: "/c/dashboard", icon: Home },
+  { name: "Bookmarks", href: "/c/bookmarks", icon: Heart },
   { name: "Settings", href: "/c/settings", icon: Settings },
 ];
 

@@ -56,13 +56,11 @@ export function UserProfile() {
           </div>
 
           <a
-            href={process.env.NODE_ENV === "production" ? "https://dash.tasa.com.ng" : "http://localhost:5173"}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={user.role === "vendor" ? "/v/dashboard" : "/c/dashboard"}
             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
           >
             <FiSettings className="w-4 h-4 mr-2" />
-            Profile Settings
+            Dashboard
           </a>
 
           <button

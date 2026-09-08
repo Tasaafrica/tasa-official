@@ -10,6 +10,13 @@ export async function GET(
     const session = await getServerSession(authOptions);
     const { userId } = await params;
 
+    if (!userId || userId === "undefined" || !/^[0-9a-fA-F]{24}$/.test(userId)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid user ID format" },
+        { status: 400 }
+      );
+    }
+
     if (!session?.user?.email) {
       return NextResponse.json(
         { success: false, error: "User not authenticated" },

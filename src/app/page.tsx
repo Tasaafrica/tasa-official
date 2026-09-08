@@ -8,14 +8,8 @@ import FooterLinksSection from "@/app/component/parts/footerLinksSection";
 import HomeHeroSection from "@/app/component/parts/homeHeroSection";
 import TrustedBySection from "@/app/component/parts/trustedBySection";
 import CtaSection from "@/app/component/parts/ctaSection";
-import { Poppins } from "next/font/google";
 import AfricanTalent from "@/app/component/parts/africanTalent";
 import StudentCTA from "@/app/component/parts/studentCTA";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 import CustomContextMenu from "@/components/ui/CustomContextMenu";
 
@@ -28,7 +22,7 @@ export default function HomePage() {
           {/*header*/}
           <Header />
           {/*hero section*/}
-          <HomeHeroSection fontClassName={poppins.className} />
+          <HomeHeroSection fontClassName="font-poppins" />
           {/* Trusted By Section */}
           <TrustedBySection />
           <section className="hidden md:block py-8 bg-white">

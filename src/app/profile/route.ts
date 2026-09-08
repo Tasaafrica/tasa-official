@@ -6,7 +6,11 @@ export async function GET() {
   const session = await getServerSession(authOptions);
 
   if (session?.user?.id) {
-    redirect(`https://dash.tasa.com.ng/users/${session.user.id}`);
+    const role = (session.user as any)?.role;
+    if (role === "vendor") {
+      redirect("/v/dashboard");
+    }
+    redirect("/c/dashboard");
   }
 
   // Redirect to signin if no session

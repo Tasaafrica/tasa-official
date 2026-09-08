@@ -480,6 +480,7 @@ export default function SkillsPage({ skill }: SkillsPageProps) {
                         className="block h-full transition-transform duration-300 hover:-translate-y-1"
                       >
                         <VendorCard
+                          vendorId={professional._id}
                           imageAlt={`${professional.name} profile`}
                           imageUrl={professional.profileImage}
                           vendorAvatar={professional.profileImage}

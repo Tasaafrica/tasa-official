@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function AfricanTalent() {
   const fadeInUp = {
@@ -62,9 +63,12 @@ export default function AfricanTalent() {
                 and object-top to show the upper bodies.
             */}
             <div className="relative w-full overflow-hidden">
-              <img
+              <Image
                 src="/image/African_professionals.png"
                 alt="African Professionals"
+                width={1920}
+                height={1080}
+                priority
                 className="w-full h-auto"
               />
               

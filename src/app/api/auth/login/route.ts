@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
     
     if (token) {
       // Set the token cookie exactly as requested:
-      // domain=.tasa.com.ng, path=/, HttpOnly, Secure, SameSite=none
+      // domain=.tasaafrica.com, path=/, HttpOnly, Secure, SameSite=none
       nextResponse.cookies.set("token", token, {
-        domain: process.env.NODE_ENV === "production" ? ".tasa.com.ng" : undefined,
+        domain: process.env.NODE_ENV === "production" ? ".tasaafrica.com" : undefined,
         path: "/",
         httpOnly: true,
         secure: true, // Required for SameSite: "none"

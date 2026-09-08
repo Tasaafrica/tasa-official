@@ -1,25 +1,11 @@
 "use client";
 
-import { useEffect, useState, createContext, useContext } from "react";
+import { Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import ClientSidebar from "@/app/c/component/ClientSidebar";
-
-interface ClientHeaderContextType {
-  setTitle: (title: string) => void;
-  setDescription: (description: string) => void;
-}
-
-const ClientHeaderContext = createContext<ClientHeaderContextType | null>(null);
-
-export const useClientHeader = () => {
-  const context = useContext(ClientHeaderContext);
-  if (!context) {
-    throw new Error("useClientHeader must be used within ClientLayout");
-  }
-  return context;
-};
+import { ClientHeaderContext } from "./context";
 
 export default function ClientLayout({
   children,
@@ -34,7 +20,7 @@ export default function ClientLayout({
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/auth/signin");
+      router.push("/?login=true");
     } else if (status === "authenticated" && session?.user?.role !== "client") {
       if (session.user.role === "vendor") {
         router.push("/v/dashboard");
@@ -110,7 +96,9 @@ export default function ClientLayout({
 
         {/* Main Content */}
         <main className="flex-1 lg:ml-64 pt-17">
-          <div className="py-6 px-4 lg:px-10 max-w-7xl mx-auto text-gray-800">{children}</div>
+          <div className="py-6 px-4 lg:px-10 max-w-7xl mx-auto text-gray-800">
+            {children}
+          </div>
         </main>
       </div>
     </ClientHeaderContext.Provider>
