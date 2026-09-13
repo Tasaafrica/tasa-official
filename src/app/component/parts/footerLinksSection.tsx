@@ -184,7 +184,7 @@ import Link from "next/link";
 import { FaFacebook, FaLinkedin, FaXTwitter } from "react-icons/fa6";
 
 const FooterLinksSection = () => (
-  <div className="mx-auto bg-[#334155] w-full border-t border-slate-700">
+  <div className="mx-auto bg-[#0F172A] w-full border-t border-slate-700">
     <div className="container-responsive py-12">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 text-center md:text-left">
         {columns.map((column) => (
