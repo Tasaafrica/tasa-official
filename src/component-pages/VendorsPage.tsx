@@ -29,6 +29,15 @@ import { useSession } from "next-auth/react";
 import { bookmarkApi } from "@/lib/bookmarks";
 import { toast } from "sonner";
 
+const formatProjectLink = (link?: string) => {
+  if (!link || link.trim() === "" || link === "#") return "#";
+  const trimmed = link.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("//")) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+};
+
 interface Professional {
   _id: string;
   name: string;
@@ -95,7 +104,6 @@ export default function VendorsPage({ professional }: VendorsPageProps) {
   const [projects, setProjects] = useState<VendorProject[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [projectsError, setProjectsError] = useState("");
-  const [selectedProject, setSelectedProject] = useState<VendorProject | null>(null);
 
   useEffect(() => {
     if (professional._id) {
@@ -172,7 +180,22 @@ export default function VendorsPage({ professional }: VendorsPageProps) {
     setIsLoadingBookmark(false);
   };
 
-  const displayLocation = state && country ? `${state}, ${country}` : state || country || "Location not specified";
+  const handleShare = () => {
+    if (typeof window !== "undefined") {
+      if (navigator.share) {
+        navigator.share({
+          title: `Hi, I'm ${name} | TASA`,
+          text: bio,
+          url: window.location.href,
+        }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        toast.success("Profile link copied to clipboard!");
+      }
+    }
+  };
+
+  const displayLocation = country || "Location not specified";
 
   const stats = [
     { icon: <Star className="w-4 h-4 text-amber-500" />, label: "Rating", value: rating.toFixed(1) },
@@ -185,87 +208,88 @@ export default function VendorsPage({ professional }: VendorsPageProps) {
 
       {/* ─── Hero Profile Banner ─── */}
       <section className="relative bg-slate-950 overflow-hidden">
-        {/* Background decorative blobs */}
+        {/* Background decorative glows */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-teal-600/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-32 -right-32 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-3xl" />
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
         </div>
 
-        <div className="relative container mx-auto px-4 sm:px-8 md:px-10 lg:px-16 pt-28 pb-16">
-          <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-8">
+        <div className="relative container mx-auto px-4 sm:px-8 md:px-10 lg:px-16 pt-24 md:pt-28 pb-16">
+          <div className="flex flex-col md:flex-row-reverse items-center justify-between text-center md:text-left gap-8 lg:gap-12">
 
-            {/* Avatar */}
+            {/* Avatar / Image (First on mobile, Right on desktop) */}
             <div className="relative flex-shrink-0">
-              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full p-[3px] bg-gradient-to-tr from-teal-500 to-emerald-300 shadow-2xl">
-                <div className="w-full h-full rounded-full overflow-hidden border-2 border-white bg-slate-800">
+              <div className="w-44 h-44 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 rounded-full p-1.5 bg-gradient-to-tr from-teal-500 via-emerald-400 to-indigo-500 shadow-2xl shadow-teal-500/10">
+                <div className="w-full h-full rounded-full overflow-hidden border-4 border-slate-950 bg-slate-900">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={profileImage} alt={name} className="w-full h-full object-cover" />
                 </div>
               </div>
               {isEmailVerified && (
-                <div className="absolute bottom-0 right-2 bg-teal-500 rounded-xl p-1.5 shadow-lg border-2 border-slate-950">
-                  <BadgeCheck className="w-5 h-5 text-white" />
+                <div className="absolute bottom-2 right-4 bg-teal-500 rounded-2xl p-2 shadow-xl border-2 border-slate-950 flex items-center gap-1">
+                  <BadgeCheck className="w-6 h-6 text-white" />
                 </div>
               )}
             </div>
 
-            {/* Name & Meta */}
-            <div className="flex-1 min-w-0 flex flex-col items-center md:items-start">
-              <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 mb-3">
-                {isEmailVerified && (
-                  <span className="hidden text-[11px] font-bold uppercase tracking-widest text-teal-400 bg-teal-400/10 border border-teal-400/20 px-3 py-1 rounded-full">
-                    Verified Expert
-                  </span>
-                )}
-                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 bg-slate-800 border border-slate-700 px-3 py-1 rounded-full">
-                  {category}
-                </span>
-              </div>
-
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-3 leading-tight">
-                {name}
+            {/* Hero Text & Meta (Second on mobile, Left on desktop) */}
+            <div className="flex-1 min-w-0 flex flex-col items-center md:items-start max-w-2xl">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-3 leading-tight tracking-tight">
+                Hi, I&apos;m {name}
               </h1>
 
-              <div className="flex flex-wrap justify-center md:justify-start items-center gap-2 mb-5">
-                <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                <span className="text-slate-400 text-sm">{displayLocation}</span>
-                <span className="text-slate-700">·</span>
-                <StarRow rating={rating} size="sm" />
-                <span className="text-amber-400 font-bold text-sm">{rating.toFixed(1)}</span>
-                <span className="text-slate-500 text-sm">({reviewCount} reviews)</span>
-              </div>
+              <p className="text-base sm:text-lg text-slate-300 mb-5 leading-relaxed font-normal">
+                {bio}
+              </p>
 
-              <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                {skills.map((skill, i) => (
-                  <span
-                    key={i}
-                    className="text-xs font-semibold text-slate-300 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-xl"
+              {/* Location, Ratings, Reviews, Bookmark, Share */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-slate-300">
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-teal-400 flex-shrink-0" />
+                  <span>{displayLocation}</span>
+                </div>
+
+                <span className="text-slate-700 hidden sm:inline">·</span>
+
+                <div className="flex items-center gap-1.5">
+                  <StarRow rating={rating} size="sm" />
+                  <span className="text-amber-400 font-bold">{rating.toFixed(1)}</span>
+                  <span className="text-slate-400">({reviewCount} reviews)</span>
+                </div>
+
+                <span className="text-slate-700 hidden sm:inline">·</span>
+
+                <div className="flex items-center gap-1">
+                  <motion.button
+                    whileTap={{ scale: 0.88 }}
+                    onClick={handleBookmarkToggle}
+                    disabled={isLoadingBookmark}
+                    title={isSaved ? "Saved" : "Save Vendor"}
+                    aria-label="Save Vendor"
+                    className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors"
                   >
-                    {typeof skill === "object" && skill !== null ? skill.name : skill}
-                  </span>
-                ))}
+                    <Heart className={`w-5 h-5 ${isSaved ? "fill-rose-500 text-rose-500" : ""}`} />
+                  </motion.button>
+
+                  <motion.button
+                    whileTap={{ scale: 0.88 }}
+                    onClick={handleShare}
+                    title="Share Profile"
+                    aria-label="Share Profile"
+                    className="p-1.5 text-slate-400 hover:text-teal-400 transition-colors"
+                  >
+                    <Share2 className="w-5 h-5" />
+                  </motion.button>
+                </div>
               </div>
+
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center justify-center md:justify-start w-full md:w-auto gap-3 mt-4 md:mt-2">
-              <motion.button
-                whileTap={{ scale: 0.92 }}
-                onClick={handleBookmarkToggle}
-                disabled={isLoadingBookmark}
-                className={`p-3 rounded-2xl border transition-all ${isSaved ? "bg-rose-500 border-rose-500 text-white" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"} ${isLoadingBookmark ? "opacity-70 cursor-wait" : ""}`}
-              >
-                <Heart className={`w-5 h-5 ${isSaved ? "fill-white" : ""}`} />
-              </motion.button>
-              <button className="p-3 rounded-2xl bg-slate-800 border border-slate-700 text-slate-400 hover:border-slate-500 transition-colors">
-                <Share2 className="w-5 h-5" />
-              </button>
-            </div>
           </div>
 
           {/* Stats strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-10">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-12">
             {stats.map((s) => (
               <div key={s.label} className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex items-center gap-3 backdrop-blur-sm">
                 <div className="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center flex-shrink-0">
@@ -290,15 +314,15 @@ export default function VendorsPage({ professional }: VendorsPageProps) {
             <div className="flex-1 min-w-0">
 
               {/* Tab Navigation */}
-              <div className="flex gap-1 bg-white border border-slate-200 p-1.5 rounded-2xl shadow-sm mb-8 w-full md:w-fit overflow-x-auto hide-scrollbar">
+              <div className="flex gap-8 border-b border-slate-200 mb-8 w-full overflow-x-auto hide-scrollbar">
                 {(["about", "portfolio", "reviews"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-5 py-2 rounded-xl text-sm font-semibold capitalize transition-all ${
+                    className={`pb-3 text-base font-semibold capitalize transition-all relative ${
                       activeTab === tab
-                        ? "bg-slate-950 text-white shadow-sm"
-                        : "text-slate-500 hover:text-slate-800"
+                        ? "text-slate-950 font-bold border-b-2 border-slate-950 -mb-px"
+                        : "text-slate-500 hover:text-slate-800 border-b-2 border-transparent -mb-px"
                     }`}
                   >
                     {tab}
@@ -318,7 +342,7 @@ export default function VendorsPage({ professional }: VendorsPageProps) {
                     className="w-full space-y-8"
                   >
                     {/* Bio */}
-                    <div className="w-full bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-sm">
+                    <div className="w-full">
                       <h2 className="text-xl font-bold text-slate-900 mb-4">About Me</h2>
                       <p className="text-slate-600 leading-relaxed text-[15px]">{bio}</p>
                     </div>
@@ -326,7 +350,7 @@ export default function VendorsPage({ professional }: VendorsPageProps) {
                     {/* Highlights - Removed dummy data */}
 
                     {/* Skills */}
-                    <div className="w-full bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-sm">
+                    <div className="w-full">
                       <h2 className="text-xl font-bold text-slate-900 mb-5">Skills & Expertise</h2>
                       <div className="flex flex-wrap gap-2.5">
                         {skills.map((skill, i) => (
@@ -352,7 +376,7 @@ export default function VendorsPage({ professional }: VendorsPageProps) {
                     transition={{ duration: 0.2 }}
                     className="w-full space-y-8"
                   >
-                    <div className="w-full bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-sm">
+                    <div className="w-full">
                       <h2 className="text-xl font-bold text-slate-900 mb-6">Recent Work</h2>
                       {loadingProjects ? (
                         <div className="py-10 flex flex-col items-center justify-center text-center">
@@ -368,47 +392,57 @@ export default function VendorsPage({ professional }: VendorsPageProps) {
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                          {projects.map((project, index) => (
-                            <button
-                              key={project.id || `project-${index}`}
-                              onClick={() => setSelectedProject(project)}
-                              className="group text-left flex flex-col bg-white rounded-[24px] overflow-hidden border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-slate-200/60 hover:-translate-y-1.5 transition-all duration-500 w-full"
-                            >
-                              <div className="aspect-square w-full relative overflow-hidden bg-slate-50">
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={project.thumbnail}
-                                  alt={project.title}
-                                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                />
-                                <div className="absolute top-4 right-4 z-20 translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
-                                  <div className="bg-white/90 backdrop-blur-md p-2.5 rounded-2xl shadow-lg border border-white/20">
-                                    <ExternalLink className="w-4 h-4 text-slate-800" />
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="p-6 flex flex-col flex-grow justify-between w-full">
-                                <div>
-                                  <h4 
-                                    className="font-extrabold text-slate-900 text-[15px] leading-snug line-clamp-2"
-                                    title={project.title}
-                                  >
-                                    {project.title}
-                                  </h4>
-                                  {project.description && (
-                                    <p className="text-xs text-slate-500 mt-2 line-clamp-2 font-normal leading-relaxed">
-                                      {project.description}
-                                    </p>
+                          {projects.map((project, index) => {
+                            const projectUrl = formatProjectLink(project.link);
+                            const hasLink = projectUrl !== "#";
+                            return (
+                              <a
+                                key={project.id || `project-${index}`}
+                                href={projectUrl}
+                                target={hasLink ? "_blank" : "_self"}
+                                rel="noopener noreferrer"
+                                className="group text-left flex flex-col bg-white rounded-[24px] overflow-hidden border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-slate-200/60 hover:-translate-y-1.5 transition-all duration-500 w-full"
+                              >
+                                <div className="aspect-square w-full relative overflow-hidden bg-slate-50">
+                                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={project.thumbnail}
+                                    alt={project.title}
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                  />
+                                  {hasLink && (
+                                    <div className="absolute top-4 right-4 z-20 translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
+                                      <div className="bg-white/90 backdrop-blur-md p-2.5 rounded-2xl shadow-lg border border-white/20">
+                                        <ExternalLink className="w-4 h-4 text-slate-800" />
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
-                                <div className="mt-4 flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                                  <span className="text-[11px] font-bold text-teal-600 tracking-wider uppercase">View Case Study</span>
-                                  <ChevronRight className="w-3.5 h-3.5 text-teal-600 transition-transform duration-300 group-hover:translate-x-1" />
+                                <div className="p-6 flex flex-col flex-grow justify-between w-full">
+                                  <div>
+                                    <h4 
+                                      className="font-extrabold text-slate-900 text-[15px] leading-snug line-clamp-2"
+                                      title={project.title}
+                                    >
+                                      {project.title}
+                                    </h4>
+                                    {project.description && (
+                                      <p className="text-xs text-slate-500 mt-2 line-clamp-2 font-normal leading-relaxed">
+                                        {project.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="mt-4 flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-[11px] font-bold text-teal-600 tracking-wider uppercase">
+                                      {hasLink ? "Visit Project" : "View Project"}
+                                    </span>
+                                    <ChevronRight className="w-3.5 h-3.5 text-teal-600 transition-transform duration-300 group-hover:translate-x-1" />
+                                  </div>
                                 </div>
-                              </div>
-                            </button>
-                          ))}
+                              </a>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -426,7 +460,7 @@ export default function VendorsPage({ professional }: VendorsPageProps) {
                     className="w-full space-y-8"
                   >
                     {/* Overall Rating */}
-                    <div className="w-full bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center justify-center gap-8 text-center sm:text-left">
+                    <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-8 text-center sm:text-left">
                       <div className="text-center">
                         <p className="text-7xl font-extrabold text-slate-900">{rating.toFixed(1)}</p>
                         <StarRow rating={rating} size="lg" />
@@ -450,7 +484,7 @@ export default function VendorsPage({ professional }: VendorsPageProps) {
                     </div>
 
                     {/* Individual Reviews */}
-                    <div className="w-full bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-sm py-10 flex flex-col items-center justify-center text-center">
+                    <div className="w-full py-10 flex flex-col items-center justify-center text-center">
                       <p className="text-slate-500">No reviews yet.</p>
                     </div>
                   </motion.div>
@@ -513,242 +547,6 @@ export default function VendorsPage({ professional }: VendorsPageProps) {
           Message
         </Button>
       </div>
-
-      {/* ─── Case Study Immersive Modal ─── */}
-      <AnimatePresence>
-        {selectedProject && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-[100] flex items-center justify-center p-4 overflow-y-auto"
-            onClick={() => setSelectedProject(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              transition={{ type: "spring", duration: 0.5 }}
-              className="bg-white w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col my-8"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Cover Banner */}
-              <div className="relative h-60 sm:h-72 w-full bg-slate-950 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent z-10" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={selectedProject.thumbnail}
-                  alt={selectedProject.title}
-                  className="w-full h-full object-cover opacity-60 filter blur-[2px]"
-                />
-                
-                {/* Close Button */}
-                <button
-                  onClick={() => setSelectedProject(null)}
-                  className="absolute top-4 right-4 p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-colors z-20 cursor-pointer"
-                  aria-label="Close modal"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                {/* Banner Content */}
-                <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold tracking-widest text-teal-400 bg-teal-400/10 px-3 py-1 rounded-full border border-teal-400/25">
-                      Case Study
-                    </span>
-                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white mt-3">
-                      {selectedProject.title}
-                    </h3>
-                  </div>
-
-                  <a
-                    href={selectedProject.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-teal-600/20 flex-shrink-0 cursor-pointer self-start sm:self-auto"
-                  >
-                    Visit Live Site <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              </div>
-
-              {/* Modal Body */}
-              <div className="p-6 sm:p-8 max-h-[60vh] overflow-y-auto">
-                {/* Check if case study details exist */}
-                {selectedProject.description || selectedProject.problem ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                    
-                    {/* Left Column (2/3 width) - Case Study details */}
-                    <div className="lg:col-span-2 space-y-6 text-left">
-                      
-                      {/* Overview */}
-                      {selectedProject.description && (
-                        <div className="space-y-2">
-                          <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400">
-                            Overview
-                          </h4>
-                          <p className="text-slate-700 leading-relaxed text-sm font-normal">
-                            {selectedProject.description}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Problem */}
-                      {selectedProject.problem && (
-                        <div className="p-5 rounded-2xl bg-rose-50/40 border border-rose-100/50 space-y-2">
-                          <h4 className="text-xs uppercase font-extrabold tracking-wider text-rose-700 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                            The Challenge / Problem
-                          </h4>
-                          <p className="text-slate-700 leading-relaxed text-sm font-normal">
-                            {selectedProject.problem}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Process */}
-                      {selectedProject.process && (
-                        <div className="p-5 rounded-2xl bg-indigo-50/40 border border-indigo-100/50 space-y-2">
-                          <h4 className="text-xs uppercase font-extrabold tracking-wider text-indigo-700 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                            Process & Roadmap
-                          </h4>
-                          <p className="text-slate-700 leading-relaxed text-sm font-normal">
-                            {selectedProject.process}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Solution */}
-                      {selectedProject.solution && (
-                        <div className="p-5 rounded-2xl bg-teal-50/40 border border-teal-100/50 space-y-2">
-                          <h4 className="text-xs uppercase font-extrabold tracking-wider text-teal-700 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                            The Solution Executed
-                          </h4>
-                          <p className="text-slate-700 leading-relaxed text-sm font-normal">
-                            {selectedProject.solution}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Results */}
-                      {selectedProject.results && (
-                        <div className="p-5 rounded-2xl bg-emerald-50/50 border border-emerald-100/50 space-y-2 shadow-sm">
-                          <h4 className="text-xs uppercase font-extrabold tracking-wider text-emerald-700 flex items-center gap-1.5">
-                            <Sparkles className="w-4 h-4 text-emerald-600 fill-emerald-100" />
-                            Tangible Results & Business Impact
-                          </h4>
-                          <p className="text-slate-700 leading-relaxed text-sm font-normal">
-                            {selectedProject.results}
-                          </p>
-                        </div>
-                      )}
-
-                    </div>
-
-                    {/* Right Column (1/3 width) - Creative/Strategic Context */}
-                    <div className="space-y-6 lg:border-l lg:border-slate-100 lg:pl-6 text-left">
-                      
-                      {/* Strategic Context Details */}
-                      {(selectedProject.brandPersonality || selectedProject.strategicGoals || selectedProject.creativeRationale) && (
-                        <div className="space-y-5">
-                          <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-800 border-b border-slate-100 pb-2">
-                            Strategic Insights
-                          </h4>
-
-                          {/* Brand Personality */}
-                          {selectedProject.brandPersonality && (
-                            <div>
-                              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                                Brand Personality
-                              </p>
-                              <p className="text-slate-700 font-semibold text-xs mt-1">
-                                {selectedProject.brandPersonality}
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Strategic Goals */}
-                          {selectedProject.strategicGoals && (
-                            <div>
-                              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                                Business Objectives
-                              </p>
-                              <p className="text-slate-700 font-semibold text-xs mt-1">
-                                {selectedProject.strategicGoals}
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Creative Rationale */}
-                          {selectedProject.creativeRationale && (
-                            <div>
-                              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                                Design Rationale
-                              </p>
-                              <p className="text-slate-650 text-xs mt-1 leading-relaxed font-normal">
-                                {selectedProject.creativeRationale}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Booking CTA card */}
-                      <div className="bg-slate-50 rounded-2xl p-5 border border-slate-150 space-y-4">
-                        <div className="flex items-center space-x-2">
-                          <Briefcase className="w-4 h-4 text-teal-600" />
-                          <h4 className="font-extrabold text-xs text-slate-800">Need Similar Results?</h4>
-                        </div>
-                        <p className="text-[11px] text-slate-500 leading-relaxed font-normal">
-                          Hire {name.split(" ")[0]} to solve your unique business challenges and build custom high-converting solutions.
-                        </p>
-                        <Link href="#contact" onClick={() => setSelectedProject(null)}>
-                          <Button className="w-full bg-slate-950 hover:bg-slate-850 text-white rounded-xl py-4 text-xs font-bold shadow-md shadow-slate-900/10 flex items-center justify-center gap-1 mt-2">
-                            Book {name.split(" ")[0]} Now
-                            <ArrowRight className="w-3 h-3" />
-                          </Button>
-                        </Link>
-                      </div>
-
-                    </div>
-                  </div>
-                ) : (
-                  /* Fallback clean layout for standard links */
-                  <div className="flex flex-col md:flex-row gap-8 items-center text-left">
-                    <div className="w-full md:w-1/2 aspect-video rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={selectedProject.thumbnail}
-                        alt={selectedProject.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="w-full md:w-1/2 space-y-4">
-                      <h4 className="text-lg font-bold text-slate-900">
-                        {selectedProject.title}
-                      </h4>
-                      <p className="text-slate-650 text-sm leading-relaxed font-normal">
-                        No additional case study breakdown was provided for this project. Check out the link below to view the project directly on the web.
-                      </p>
-                      <a
-                        href={selectedProject.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-5 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-teal-600/20 cursor-pointer"
-                      >
-                        View Project Website <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <FooterLinksSection />
     </div>

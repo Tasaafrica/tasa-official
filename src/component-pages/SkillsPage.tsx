@@ -446,8 +446,8 @@ export default function SkillsPage({ skill }: SkillsPageProps) {
             <div className="flex-1 w-full">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                   {skill.name} Experts
-                   <span className="text-sm font-normal text-slate-400 bg-slate-100 px-3 py-1 rounded-full">{filteredProfessionals.length} found</span>
+                
+                   <span className="text-sm font-normal text-slate-400 bg-slate-100 px-3 py-1 rounded-full">{filteredProfessionals.length} results found</span>
                 </h2>
               </div>
 

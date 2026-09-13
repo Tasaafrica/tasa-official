@@ -122,7 +122,7 @@ export default function CategoriesPage({
         <div className="container mx-auto px-4 sm:px-8 md:px-10 lg:px-16">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-teal-600" />
+              
               Featured Skills & Services
             </h2>
           </div>
@@ -133,7 +133,7 @@ export default function CategoriesPage({
                 <Link
                   key={skill._id}
                   href={`/skills/${skill.slug}`}
-                  className="group rounded-xl border border-slate-200 bg-white p-4 hover:border-teal-200 hover:shadow-md transition-all"
+                  className="group p-4 hover:border-teal-200 transition-all"
                 >
                   <p className="text-sm font-semibold text-slate-900 group-hover:text-teal-700 transition-colors">
                     {skill.name}

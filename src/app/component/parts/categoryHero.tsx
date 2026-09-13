@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Home, Search, ArrowRight, MousePointer2, Zap, Shield, Sparkles } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, Home, Search } from "lucide-react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface Skill {
   _id: string;
@@ -38,10 +38,12 @@ export default function CategoryHero({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const filteredSkills = searchQuery.trim() 
-    ? skills.filter(skill => 
-        skill.name.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 6)
+  const filteredSkills = searchQuery.trim()
+    ? skills
+        .filter((skill) =>
+          skill.name.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+        .slice(0, 6)
     : [];
 
   const handleSearch = (e: React.FormEvent) => {
@@ -52,7 +54,10 @@ export default function CategoryHero({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     };
@@ -67,12 +72,13 @@ export default function CategoryHero({
       <div className="absolute bottom-0 left-0 w-1/2 h-full bg-[radial-gradient(circle_at_20%_80%,rgba(14,165,233,0.1)_0%,transparent_50%)] pointer-events-none" />
 
       {/* Grid Lines Overlay */}
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.15] pointer-events-none overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(to right, #334155 1px, transparent 1px), linear-gradient(to bottom, #334155 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
-          maskImage: 'radial-gradient(ellipse at center, black, transparent 80%)'
+          backgroundSize: "40px 40px",
+          maskImage:
+            "radial-gradient(ellipse at center, black, transparent 80%)",
         }}
       />
 
@@ -86,13 +92,20 @@ export default function CategoryHero({
           {breadcrumbs.map((crumb, index) => (
             <React.Fragment key={index}>
               {crumb.href ? (
-                <Link href={crumb.href} className="hover:text-slate-300 transition-colors">
+                <Link
+                  href={crumb.href}
+                  className="hover:text-slate-300 transition-colors"
+                >
                   {crumb.label}
                 </Link>
               ) : (
-                <span className="text-slate-300 font-medium">{crumb.label}</span>
+                <span className="text-slate-300 font-medium">
+                  {crumb.label}
+                </span>
               )}
-              {index < breadcrumbs.length - 1 && <span className="opacity-40">/</span>}
+              {index < breadcrumbs.length - 1 && (
+                <span className="opacity-40">/</span>
+              )}
             </React.Fragment>
           ))}
         </nav>
@@ -104,16 +117,13 @@ export default function CategoryHero({
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-500/10 border border-teal-500/20 rounded-full text-teal-400 text-[10px] font-bold uppercase tracking-wider mt-6">
-              <Sparkles className="w-3 h-3" />
-              <span>{totalSkills}+ skills & services available</span>
-            </div>
-            <h1 className="text-5xl md:text-7xl font-bold text-white leading-[1.1] mb-6 tracking-tight break-words">
+            <h1 className="text-3xl md:text-5xl font-bold text-white leading-[1.1] mb-6 tracking-tight break-words">
               {title}
             </h1>
 
-            <p className="text-xl text-slate-400 leading-relaxed max-w-xl mb-10">
-              {description || `Discover top-rated professionals in ${title}. From quick tasks to complex projects, find exactly what you need on TASA.`}
+            <p className="text-md text-slate-400 leading-relaxed max-w-xl mb-10">
+              {description ||
+                `You name it, we've got it`}
             </p>
 
             {/* Glassmorphism Search Bar */}
@@ -126,9 +136,9 @@ export default function CategoryHero({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setIsDropdownOpen(true);
-                        if (onSearch) onSearch(e.target.value);
+                      setSearchQuery(e.target.value);
+                      setIsDropdownOpen(true);
+                      if (onSearch) onSearch(e.target.value);
                     }}
                     onFocus={() => setIsDropdownOpen(true)}
                     placeholder={`Search in ${title}...`}
@@ -136,10 +146,11 @@ export default function CategoryHero({
                   />
                   <button
                     type="submit"
-                    className="flex items-center gap-2 px-6 py-3 bg-white text-slate-950 font-bold rounded-xl hover:bg-teal-400 transition-all active:scale-95 flex-shrink-0"
+                    className="flex items-center justify-center gap-2 p-3 sm:px-6 sm:py-3 bg-white text-slate-950 font-bold rounded-xl hover:bg-teal-400 transition-all active:scale-95 flex-shrink-0"
                   >
-                    <span>Explore</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <Search className="w-5 h-5 sm:hidden" />
+                    <span className="hidden sm:inline">Explore</span>
+                    <ArrowRight className="w-4 h-4 hidden sm:block" />
                   </button>
                 </div>
               </form>
@@ -154,7 +165,9 @@ export default function CategoryHero({
                     className="absolute top-full left-0 right-0 mt-2 bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-20 backdrop-blur-xl"
                   >
                     <div className="p-2">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 py-2">Suggested Skills</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 py-2">
+                        Suggested Skills
+                      </p>
                       {filteredSkills.map((skill) => (
                         <Link
                           key={skill._id}
@@ -162,7 +175,9 @@ export default function CategoryHero({
                           className="flex items-center justify-between px-4 py-3 hover:bg-white/5 rounded-xl transition-colors group/item"
                           onClick={() => setIsDropdownOpen(false)}
                         >
-                          <span className="text-slate-300 group-hover/item:text-white transition-colors">{skill.name}</span>
+                          <span className="text-slate-300 group-hover/item:text-white transition-colors">
+                            {skill.name}
+                          </span>
                           <ArrowRight className="w-4 h-4 text-slate-600 opacity-0 group-hover/item:opacity-100 group-hover/item:text-teal-500 transition-all transform -translate-x-2 group-hover/item:translate-x-0" />
                         </Link>
                       ))}
@@ -185,14 +200,15 @@ export default function CategoryHero({
             className="hidden lg:block relative group h-full"
           >
             <div className="relative z-10 p-4 overflow-hidden">
-               <img 
-                  src={`/categoryhero/${categorySlug}.png`} 
-                  alt={`${title} services`}
-                  className="w-full h-full object-cover rounded-[3rem] transition-transform duration-700 group-hover:scale-105"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/categoryhero/graphics-design.png'; // Fallback to a known available image
-                  }}
-               />
+              <img
+                src={`/categoryhero/${categorySlug}.png`}
+                alt={`${title} services`}
+                className="w-full h-full object-cover rounded-[3rem] transition-transform duration-700 group-hover:scale-105"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "/categoryhero/graphics-design.png"; // Fallback to a known available image
+                }}
+              />
             </div>
           </motion.div>
         </div>
