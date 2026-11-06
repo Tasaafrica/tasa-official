@@ -1,0 +1,82 @@
+{
+  "badge": "Why Choose Tasa Africa",
+  "heading": "Study with Confidence.",
+  "highlight": "Earn on Your Own Schedule.",
+  "description": "Turn your creative, technical, or academic skills into dependable pocket money and tuition support while building a verified professional portfolio before graduation.",
+  "image": "/image/nigerian-student.png",
+  "imageAlt": "Smiling African university student with backpack and laptop earning independently",
+  "floatingBadges": [
+    {
+      "type": "flexibility",
+      "label": "Flexibility",
+      "title": "100% Student-Friendly",
+      "iconName": "GraduationCap"
+    },
+    {
+      "type": "security",
+      "label": "Trust",
+      "title": "Guaranteed Payments",
+      "iconName": "ShieldCheck"
+    }
+  ],
+  "items": [
+    {
+      "heading": "Earn Real Income Without Waiting for Graduation",
+      "description": "You shouldn't have to wait until you have a degree in hand before you start earning. Turn your design, writing, research, social media, coding, or academic skills into steady income to support your living costs, tuition, and tech tools.",
+      "skip": false
+    },
+    {
+      "heading": "Your Studies Always Come First",
+      "description": "Lectures, tests, and exam weeks are non-negotiable. With TASA, you choose when you're available, set your own turnaround times, and manage your project volume so your academics never suffer.",
+      "skip": false
+    },
+    {
+      "heading": "Zero Sign-Up Fees, Zero Platform Tax",
+      "description": "Starting out is hard enough without having to pay upfront listing fees or subscriptions. TASA is 100% free for students to join, showcase skills, publish starter gigs, and begin meeting clients.",
+      "skip": false
+    },
+    {
+      "heading": "Guaranteed Payments for Every Milestone",
+      "description": "You've probably heard horror stories of students delivering work only for the client to disappear. On TASA, clients fund project milestones upfront into escrow before you type a word or draft a pixel. When you deliver, your payment is protected.",
+      "skip": false
+    },
+    {
+      "heading": "Graduate with Proven Proof of Work",
+      "description": "Break out of the 'entry-level requires 3 years experience' paradox. Build a track record of five-star reviews, completed client projects, and verified deliverables that give you a huge advantage when entering the job market.",
+      "skip": false
+    },
+    {
+      "heading": "Instant Withdrawals in Your Local Currency",
+      "description": "No jumping through complicated international payment hoops or losing value on exchange fees. Withdraw completed milestone funds straight to your local African bank account or mobile money wallet (M-Pesa, MTN MoMo, Airtel, and more).",
+      "skip": false
+    },
+    {
+      "heading": "Build Professional Confidence Early",
+      "description": "Working with real clients teaches you contract clarity, scope management, and professional communication long before your peers. Graduate not just with book knowledge, but with commercial confidence.",
+      "skip": false
+    },
+    {
+      "heading": "Get Discovered Beyond Campus Walls",
+      "description": "Your talent doesn't have to stay confined to your hostel or campus network. Connect with startups, growing businesses, and founders across Africa looking for hungry, creative talent.",
+      "skip": false
+    },
+    {
+      "heading": "Clear Project Briefs from Day One",
+      "description": "Know exactly what the client expects before you begin. Structured deliverables, deadlines, and revision terms eliminate misunderstandings and prevent endless free revisions.",
+      "skip": false
+    },
+    {
+      "heading": "Turn Side Gigs into Long-Term Opportunities",
+      "description": "A great logo, article, or frontend component can turn into a recurring monthly retainer, a summer internship, or even a full-time job offer before your final semester.",
+      "skip": false
+    }
+  ],
+  "primaryCTA": {
+    "label": "Join the Student Community",
+    "href": "/students"
+  },
+  "secondaryCTA": {
+    "label": "Explore In-Demand Skills",
+    "href": "/students#student-tracks"
+  }
+}

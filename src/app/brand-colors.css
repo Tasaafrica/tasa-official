@@ -1,0 +1,177 @@
+
+/* =========================================
+   START AFRICA — DESIGN SYSTEM
+   Brand palette & semantic colour tokens
+   ========================================= */
+
+:root {
+  /* 1. BRAND COLOURS */
+  --color-brand-primary: #489FB5;   /* Ocean blue */
+  --color-brand-secondary: #82C0CC; /* Sky blue */
+  --color-brand-dark: #334155;      /* Slate */
+  --color-brand-warm: #EDE7E3;      /* Warm neutral */
+  --color-brand-accent: #FFA62B;    /* Amber orange */
+
+  /* 2. TEXT COLOURS */
+  --color-text-primary: #334155;
+  --color-text-secondary: #64748B;
+  --color-text-muted: #94A3B8;
+  --color-text-inverse: #FFFFFF;
+  --color-text-link: #334155;
+
+  /* 3. BACKGROUNDS & SURFACES */
+  --color-bg-page: #FFFFFF;
+  --color-bg-subtle: #F8FAFC;
+  --color-bg-soft: #EDE7E3;
+  --color-bg-brand: #489FB5;
+  --color-bg-brand-soft: #E8F4F6;
+  --color-bg-dark: #334155;
+  --color-bg-highlight: #FFA62B;
+
+  /* 4. BORDERS & DIVIDERS */
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+  --color-border-brand: #489FB5;
+
+  /* 5. INTERACTIVE ELEMENTS */
+  --color-button-primary-bg: #334155;
+  --color-button-primary-text: #FFFFFF;
+  --color-button-primary-hover: #1E293B;
+
+  --color-button-secondary-bg: #489FB5;
+  --color-button-secondary-text: #FFFFFF;
+  --color-button-secondary-hover: #367F92;
+
+  --color-focus-ring: #489FB5;
+
+  /* 6. ACCENT & HIGHLIGHTS */
+  --color-highlight-bg: #FFA62B;
+  --color-highlight-text: #334155;
+  --color-highlight-soft: #FFF4DF;
+
+  /* 7. STATUS COLOURS
+     Functional colours, not brand colours */
+  --color-success: #15803D;
+  --color-success-bg: #F0FDF4;
+  --color-warning: #B45309;
+  --color-warning-bg: #FFFBEB;
+  --color-error: #B91C1C;
+  --color-error-bg: #FEF2F2;
+  --color-info: #1D4ED8;
+  --color-info-bg: #EFF6FF;
+
+  /* 8. SHADOWS */
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 5%);
+  --shadow-md: 0 4px 12px rgb(15 23 42 / 8%);
+  --shadow-lg: 0 12px 28px rgb(15 23 42 / 12%);
+
+  /* 9. DISABLED STATES */
+  --color-disabled-bg: #F1F5F9;
+  --color-disabled-text: #94A3B8;
+  --color-disabled-border: #E2E8F0;
+
+  /* Compatibility alias */
+  --indigo: var(--color-brand-dark);
+}
+
+/* =========================================
+   GLOBAL BASE STYLES
+   ========================================= */
+
+@layer base {
+  body {
+    background-color: var(--color-bg-page);
+    color: var(--color-text-primary);
+  }
+
+  /* Links */
+  a {
+    color: var(--color-text-link);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--color-button-secondary-hover);
+  }
+}
+
+/* Primary button */
+.btn-primary {
+  background-color: var(--color-button-primary-bg);
+  color: var(--color-button-primary-text);
+  border: 1px solid transparent;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-button-primary-hover);
+}
+
+/* Secondary button */
+.btn-secondary {
+  background-color: var(--color-button-secondary-bg);
+  color: var(--color-button-secondary-text);
+  border: 1px solid transparent;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-button-secondary-hover);
+}
+
+/* Cards */
+.card {
+  background-color: var(--color-bg-page);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Soft section */
+.section-soft {
+  background-color: var(--color-bg-subtle);
+}
+
+/* Warm section */
+.section-warm {
+  background-color: var(--color-bg-soft);
+}
+
+/* Highlight badge */
+.badge-highlight {
+  background-color: var(--color-highlight-bg);
+  color: var(--color-highlight-text);
+}
+
+/* Accessible keyboard focus */
+:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 3px;
+}
+
+/* Disabled controls */
+:disabled {
+  background-color: var(--color-disabled-bg);
+  color: var(--color-disabled-text);
+  border-color: var(--color-disabled-border);
+  cursor: not-allowed;
+}
+
+/* Form inputs */
+input,
+textarea,
+select {
+  color: var(--color-text-primary);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar-track {
+  background-color: var(--color-disabled-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-muted);
+}
+

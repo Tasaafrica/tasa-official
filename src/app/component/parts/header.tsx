@@ -1,259 +1,115 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import { ChevronDown, Search } from "lucide-react";
 import Image from "next/image";
-import { LogOut, Search, User } from "lucide-react";
-import ExploreDropdown from "./exploreDropdown";
-import SearchModal from "./searchModal";
-import LoginModal from "./loginModal";
+import Link from "next/link";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
-import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/components/providers/AuthModalProvider";
 import { useSearchModal } from "@/components/providers/SearchModalProvider";
+import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   variant?: "transparent" | "white" | "auto";
   invert?: boolean;
 }
 
-// Separated HeaderContent component to avoid recreation on every render and fix hydration
-const HeaderContent = ({
-  isWhite = false,
-  invert,
-  toggleMobileMenu,
-  openSearch,
-  handleSignInClick,
-  handleJoinClick,
-  isAuthenticated,
-  user,
-  isUserMenuOpen,
-  setIsUserMenuOpen,
-  handleLogout,
-  getUserInitials,
-  isScrolled,
-}: any) => {
-  const shouldUseWhiteText = invert ? !isWhite : isWhite;
+interface TalentsDropdownProps {
+  isTransparent?: boolean;
+}
+
+const TalentsDropdown: React.FC<TalentsDropdownProps> = ({
+  isTransparent = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleToggle = () => {
+    setIsOpen((prev) => !prev);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
 
   return (
-    <div className="container-responsive">
-      <div className="flex items-center justify-between header-height">
-        {/* Logo and Mobile Menu Button Section */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
-          <button
-            onClick={toggleMobileMenu}
-            className={`lg:hidden p-2 rounded-md transition-colors duration-200 focus-visible ${
-              shouldUseWhiteText
-                ? "text-gray-800 hover:bg-gray-100"
-                : "text-[#0F766E] hover:text-[#0D5F59]"
-            }`}
-            aria-label="Toggle mobile menu"
-          >
-            <svg
-              className="w-5 h-5 sm:w-6 sm:h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+    <div ref={dropdownRef} className="relative">
+      <button
+        type="button"
+        onClick={handleToggle}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible flex items-center gap-1.5 cursor-pointer ${
+          isOpen
+            ? "text-[var(--color-brand-primary)] bg-[var(--color-bg-brand-soft)]"
+            : isTransparent
+              ? "text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-white/40"
+              : "text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)]"
+        }`}
+      >
+        <span>For Talents</span>
+        <ChevronDown
+          className={`w-4 h-4 transition-transform duration-200 ${
+            isOpen
+              ? "rotate-180 text-[var(--color-brand-primary)]"
+              : "text-[var(--color-text-muted)]"
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-64 rounded-xl bg-[var(--color-bg-page)] shadow-lg border border-[var(--color-border)] p-1.5 z-50 animate-in fade-in-50 zoom-in-95 duration-150">
+          <div className="space-y-0.5">
+            <Link
+              href="/creatives"
+              onClick={() => setIsOpen(false)}
+              className="group block px-3 py-2 rounded-lg hover:bg-[var(--color-bg-brand-soft)] transition-colors duration-150 text-left"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
-          <div className="flex-shrink-0">
-            <a
-              href="/"
-              className="flex items-center transition-transform duration-200 hover:scale-105"
+              <p className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-primary)] transition-colors">
+                For Creatives
+              </p>
+              <p className="text-xs text-[var(--color-text-secondary)] leading-snug mt-0.5">
+                Designers, animators, writers, video & audio artists
+              </p>
+            </Link>
+
+            <Link
+              href="/professionals"
+              onClick={() => setIsOpen(false)}
+              className="group block px-3 py-2 rounded-lg hover:bg-[var(--color-bg-brand-soft)] transition-colors duration-150 text-left"
             >
-              <Image
-                src="/logo/teal_logo.png"
-                alt="TASA Logo"
-                width={150}
-                height={40}
-                priority
-                className="h-5 w-auto sm:h-5 md:h-7 lg:h-7"
-              />
-            </a>
+              <p className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-primary)] transition-colors">
+                For Professionals
+              </p>
+              <p className="text-xs text-[var(--color-text-secondary)] leading-snug mt-0.5">
+                Developers, marketers, consultants & tech specialists
+              </p>
+            </Link>
           </div>
         </div>
-
-        {/* Navigation Links - Centered */}
-        <nav className="hidden lg:flex items-center justify-center flex-1 px-4 xl:px-8">
-          <div className="flex items-center space-x-6 xl:space-x-8">
-            <a
-              href="/"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible ${
-                shouldUseWhiteText
-                  ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
-                  : "text-[#0F766E] hover:text-[#0D5F59]"
-              }`}
-            >
-              Home
-            </a>
-            <a
-              href="/about"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible ${
-                shouldUseWhiteText
-                  ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
-                  : "text-[#0F766E] hover:text-[#0D5F59]"
-              }`}
-            >
-              About
-            </a>
-            <button
-              onClick={openSearch}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible flex items-center ${
-                shouldUseWhiteText
-                  ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
-                  : "text-[#0F766E] hover:text-[#0D5F59]"
-              }`}
-            >
-              <Search className="w-4 h-4 mr-2" />
-              <span className="hidden xl:inline">Find a Service</span>
-              <span className="xl:hidden">Search</span>
-            </button>
-            {isAuthenticated && user?.role === "client" && (
-              <a
-                href="/vendor"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible ${
-                  shouldUseWhiteText
-                    ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
-                    : "text-[#0F766E] hover:text-[#0D5F59]"
-                }`}
-              >
-                <span className="bg-gradient-to-r from-teal-500 via-black to-teal-600 bg-clip-text text-transparent font-bold">
-                  Become a Vendor
-                </span>
-              </a>
-            )}
-          </div>
-        </nav>
-
-        {/* Auth Buttons or User Profile */}
-        <div className="hidden lg:flex items-center space-x-3 xl:space-x-4">
-          {isAuthenticated && user ? (
-            <div className="relative" data-user-menu>
-              <button
-                onClick={() => {
-                  if (isWhite && !isScrolled) return;
-                  if (!isWhite && isScrolled) return;
-                  setIsUserMenuOpen(!isUserMenuOpen);
-                }}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors duration-200 focus-visible ${
-                  shouldUseWhiteText
-                    ? "text-gray-800 hover:bg-gray-50"
-                    : "text-[#0F766E] hover:text-[#0D5F59]"
-                }`}
-              >
-                {user?.image ? (
-                  <Image
-                    src={user.image}
-                    alt={user?.name || "User"}
-                    width={40}
-                    height={40}
-                    priority
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white text-base font-medium">
-                    {getUserInitials(user.name || "User")}
-                  </div>
-                )}
-              </button>
-
-              {isUserMenuOpen &&
-                ((isWhite && isScrolled) || (!isWhite && !isScrolled)) && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">
-                        {user?.name}
-                      </p>
-                      <p
-                        className="text-sm text-gray-500 truncate"
-                        title={user?.email || ""}
-                      >
-                        {user?.email}
-                      </p>
-                    </div>
-
-                    <Link
-                      href={user?.role === "vendor" ? "/v/dashboard" : "/c/dashboard"}
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </Link>
-
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-            </div>
-          ) : (
-            <>
-              <button
-                onClick={handleSignInClick}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 focus-visible ${
-                  shouldUseWhiteText
-                    ? "text-gray-800 hover:text-teal-600 hover:bg-gray-50"
-                    : "text-[#0F766E] hover:text-[#0D5F59]"
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                onClick={handleJoinClick}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 focus-visible ${
-                  shouldUseWhiteText
-                    ? "bg-teal-600 hover:bg-teal-700 text-white shadow-sm"
-                    : "bg-[#0F766E] hover:bg-[#0D5F59] text-white shadow-sm"
-                }`}
-              >
-                Join
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* Mobile User Profile */}
-        {isAuthenticated && user ? (
-          <div className="lg:hidden flex items-center px-3 py-2">
-            {user?.image ? (
-              <Image
-                src={user.image}
-                alt={user?.name || "User"}
-                width={36}
-                height={36}
-                priority
-                className="w-9 h-9 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-9 h-9 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-medium">
-                {getUserInitials(user.name || "User")}
-              </div>
-            )}
-          </div>
-        ) : (
-          <button
-            onClick={handleJoinClick}
-            className={`lg:hidden px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 focus-visible ${
-              shouldUseWhiteText
-                ? "bg-teal-600 hover:bg-teal-700 text-white shadow-sm"
-                : "bg-[#0F766E] hover:bg-[#0D5F59] text-white shadow-sm"
-            }`}
-          >
-            Join
-          </button>
-        )}
-      </div>
+      )}
     </div>
   );
 };
@@ -263,16 +119,14 @@ const Header: React.FC<HeaderProps> = ({
   invert = false,
 }) => {
   const [mounted, setMounted] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { openLogin, openSignup } = useAuthModal();
   const { openSearch } = useSearchModal();
 
   // Get authentication state
-  const { user, isAuthenticated, logout, session } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
 
-  // Fix hydration issues by only showing client stuff after mount
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -282,7 +136,6 @@ const Header: React.FC<HeaderProps> = ({
       const params = new URLSearchParams(window.location.search);
       if (params.get("login") === "true") {
         openLogin();
-        // Remove the query parameter from URL bar so it doesn't open again on page refresh
         const newUrl = window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);
       }
@@ -303,18 +156,6 @@ const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isUserMenuOpen]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      setIsScrolled(scrollTop > 100);
-    };
-
-    if (variant === "auto") {
-      window.addEventListener("scroll", handleScroll);
-      return () => window.removeEventListener("scroll", handleScroll);
-    }
-  }, [variant]);
-
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
   const handleSignInClick = () => {
@@ -334,45 +175,235 @@ const Header: React.FC<HeaderProps> = ({
   const handleLogout = async () => {
     await logout();
     setIsUserMenuOpen(false);
-    window.location.reload(); // Force a clean refresh to clear all states
+    window.location.reload();
   };
 
-  const commonProps = {
-    invert,
-    toggleMobileMenu,
-    openSearch,
-    handleSignInClick,
-    handleJoinClick,
-    isAuthenticated: mounted ? isAuthenticated : false, // Prevent hydration mismatch
-    user: mounted ? user : null,
-    isUserMenuOpen,
-    setIsUserMenuOpen,
-    handleLogout,
-    getUserInitials,
-    isScrolled,
-  };
+  const isTransparent = variant === "transparent";
+  const headerBgClass = isTransparent
+    ? "bg-transparent"
+    : "bg-[var(--color-bg-page)]";
 
   return (
     <>
       <header
-        className={`absolute top-0 left-0 right-0 z-40 bg-transparent transition-opacity duration-300 ${
-          isScrolled ? "opacity-0 pointer-events-none" : "opacity-100"
-        }`}
+        className={`relative w-full z-40 transition-colors ${headerBgClass}`}
       >
-        <HeaderContent {...commonProps} isWhite={false} />
+        <div className="container-responsive">
+          <div className="flex items-center justify-between header-height">
+            {/* Left: Mobile Menu Trigger & Logo */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <button
+                type="button"
+                onClick={toggleMobileMenu}
+                className="lg:hidden p-2 -ml-2 rounded-lg text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors focus-visible cursor-pointer"
+                aria-label="Toggle mobile menu"
+              >
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <title>Toggle mobile menu</title>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
+
+              <div className="flex-shrink-0">
+                <Link
+                  href="/"
+                  className="flex items-center mt-0 sm:mt-6 transition-transform duration-200 hover:scale-[1.02]"
+                >
+                  <Image
+                    src="/logos/TAL_1.png"
+                    alt="TASA Logo"
+                    width={240}
+                    height={200}
+                    priority
+                    className="h-10 w-auto sm:h-16"
+                  />
+                </Link>
+              </div>
+            </div>
+
+            {/* Right: Navigation Links, Search Pill, & Auth Actions */}
+            <div className="hidden lg:flex items-center space-x-3 xl:space-x-4">
+              <nav className="flex items-center space-x-1">
+                <Link
+                  href="/how-tasa-works"
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible ${
+                    isTransparent
+                      ? "text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-white/40"
+                      : "text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)]"
+                  }`}
+                >
+                  For Business
+                </Link>
+
+                <TalentsDropdown isTransparent={isTransparent} />
+
+                {/* Search Industry Button */}
+                <button
+                  type="button"
+                  onClick={openSearch}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible cursor-pointer ${
+                    isTransparent
+                      ? "text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-white/40"
+                      : "text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)]"
+                  }`}
+                  aria-label="Search Industry"
+                >
+                  <Search className="w-4 h-4" />
+                  <span>Search Industry</span>
+                </button>
+
+                {mounted && isAuthenticated && user?.role === "client" && (
+                  <Link
+                    href="/become-a-vendor"
+                    className="ml-2 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--color-highlight-soft)] text-[var(--color-warning)] hover:bg-[var(--color-highlight-bg)]/20 border border-[var(--color-highlight-bg)]/40 transition-colors"
+                  >
+                    Become a Vendor
+                  </Link>
+                )}
+              </nav>
+
+              {/* Vertical Divider */}
+              <div className="h-5 w-px bg-[var(--color-border)]" />
+
+              {/* Auth Buttons or User Profile */}
+              <div className="flex items-center space-x-2">
+                {mounted && isAuthenticated && user ? (
+                  <div className="relative" data-user-menu>
+                    <button
+                      type="button"
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                      className="flex items-center gap-2 p-1 rounded-full transition-colors focus-visible cursor-pointer"
+                      aria-label="User menu"
+                    >
+                      {user?.image ? (
+                        <Image
+                          src={user.image}
+                          alt={user?.name || "User"}
+                          width={34}
+                          height={34}
+                          priority
+                          className="w-8 h-8 rounded-full object-cover ring-2 ring-[var(--color-border)]"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-[var(--color-brand-dark)] text-[var(--color-text-inverse)] flex items-center justify-center text-xs font-semibold ring-2 ring-[var(--color-border)]">
+                          {getUserInitials(user?.name || "User")}
+                        </div>
+                      )}
+                    </button>
+
+                    {isUserMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-52 rounded-xl bg-[var(--color-bg-page)] shadow-lg border border-[var(--color-border)] py-1.5 z-50 animate-in fade-in-50 zoom-in-95 duration-150">
+                        <div className="px-4 py-2 border-b border-[var(--color-border)]">
+                          <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
+                            {user?.name}
+                          </p>
+                          <p
+                            className="text-xs text-[var(--color-text-secondary)] truncate"
+                            title={user?.email || ""}
+                          >
+                            {user?.email}
+                          </p>
+                        </div>
+
+                        <div className="py-1">
+                          <Link
+                            href={
+                              user?.role === "vendor"
+                                ? "/v/dashboard"
+                                : "/c/dashboard"
+                            }
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="block px-4 py-2 text-sm text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+                          >
+                            Dashboard
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={handleLogout}
+                            className="block w-full text-left px-4 py-2 text-sm text-[var(--color-error)] hover:bg-[var(--color-error-bg)] transition-colors cursor-pointer"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleSignInClick}
+                      className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors cursor-pointer"
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleJoinClick}
+                      className="px-4 py-1.5 rounded-full text-sm font-semibold text-[var(--color-button-primary-text)] bg-[var(--color-button-primary-bg)] hover:bg-[var(--color-button-primary-hover)] active:scale-[0.98] shadow-xs transition-colors cursor-pointer"
+                    >
+                      Join
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile Header Right CTA */}
+            <div className="lg:hidden flex items-center space-x-1.5">
+              <button
+                type="button"
+                onClick={openSearch}
+                className="p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors cursor-pointer"
+                aria-label="Search"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+
+              {mounted && isAuthenticated && user ? (
+                <div className="flex items-center">
+                  {user?.image ? (
+                    <Image
+                      src={user.image}
+                      alt={user?.name || "User"}
+                      width={32}
+                      height={32}
+                      priority
+                      className="w-8 h-8 rounded-full object-cover ring-2 ring-[var(--color-border)]"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-[var(--color-brand-dark)] flex items-center justify-center text-[var(--color-text-inverse)] text-xs font-semibold">
+                      {getUserInitials(user.name || "User")}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleJoinClick}
+                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-[var(--color-button-primary-text)] bg-[var(--color-button-primary-bg)] hover:bg-[var(--color-button-primary-hover)] shadow-xs transition-colors cursor-pointer"
+                >
+                  Join
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </header>
 
-      {/* Sticky White Header */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300 transform ${
-          isScrolled
-            ? "translate-y-0 opacity-100"
-            : "-translate-y-full opacity-0"
-        }`}
-      >
-        <HeaderContent {...commonProps} isWhite={true} />
-      </header>
-
+      {/* Mobile Drawer Navigation */}
       <Sidebar
         isOpen={isMobileMenuOpen}
         onClose={closeMobileMenu}

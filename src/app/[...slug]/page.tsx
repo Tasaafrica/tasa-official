@@ -1,15 +1,7 @@
-"use client";
+import NotFound from "@/app/not-found";
 
-import Header from "@/app/component/parts/header";
-import NotFoundHero from "@/app/component/parts/NotFoundHero";
-import FooterLinksSection from "@/app/component/parts/footerLinksSection";
+export { metadata } from "@/app/not-found";
 
 export default function CatchAllPage() {
-  return (
-    <div>
-        <Header />
-        <NotFoundHero />
-        <FooterLinksSection />
-    </div>
-  );
+  return <NotFound />;
 }

@@ -1,30 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
-import { useAuth } from "@/hooks/useAuth";
-import { useAuthModal } from "@/components/providers/AuthModalProvider";
+import Link from "next/link";
 
 export default function StudentCTA() {
-  const router = useRouter();
-  const { isAuthenticated } = useAuth();
-  const { openSignup } = useAuthModal();
-
-  const handleCTAClick = () => {
-    if (isAuthenticated) {
-      router.push("/become-a-vendor");
-    } else {
-      openSignup();
-    }
-  };
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
-    }
+    },
   };
 
   const staggerContainer = {
@@ -32,77 +19,79 @@ export default function StudentCTA() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.15
-      }
-    }
+        staggerChildren: 0.15,
+      },
+    },
   };
 
   return (
-    <section className="py-20 bg-white overflow-hidden">
-      <div className="container mx-auto px-6 sm:px-8 md:px-10 lg:px-16">
-        <div className="relative rounded-[2.5rem] bg-slate-900 overflow-hidden shadow-2xl">
-          {/* Decorative background effects */}
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-teal-500/10 to-transparent pointer-events-none" />
-          <div className="absolute -top-24 -left-24 w-64 h-64 bg-teal-600/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl opacity-50" />
+    <section className="relative z-30 overflow-hidden bg-transparent py-8 sm:py-10 lg:py-12">
+      <div className="container-responsive">
+        <div className="relative rounded-2xl lg:rounded-3xl bg-[#1E293B] border border-slate-700/60 overflow-hidden shadow-2xl">
+          {/* Decorative ambient brand glows */}
+          <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-80 h-80 bg-[var(--color-brand-primary)]/15 rounded-full blur-3xl pointer-events-none -z-0" />
+          <div className="absolute -top-16 -left-16 w-56 h-56 bg-[var(--color-brand-secondary)]/10 rounded-full blur-2xl pointer-events-none -z-0" />
 
-          <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-0 min-h-[500px]">
+          <div className="grid items-end gap-6 lg:gap-8 lg:grid-cols-12 min-h-[340px] sm:min-h-[370px] lg:min-h-[380px]">
             {/* Text Content */}
-            <motion.div 
-              className="w-full lg:w-1/2 p-10 md:p-16 z-10 text-left"
+            <motion.div
+              className="lg:col-span-7 p-6 sm:p-8 md:p-10 lg:p-12 z-10 text-left self-center"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.3 }}
               variants={staggerContainer}
             >
-              <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-6">
-                <div className="h-px w-8 bg-teal-500" />
-                <span className="text-teal-400 font-semibold tracking-wider text-sm uppercase">For the Gen Alpha</span>
-              </motion.div>
 
-              <motion.h2 
+              {/* Main Heading */}
+              <motion.h2
                 variants={fadeInUp}
-                className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4"
+                className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-[2.5rem] font-extrabold text-white leading-tight mb-2.5"
               >
-                Are you a <span className="text-teal-400 font-extrabold italic">student?</span>
+                Are you a{" "}
+                <span className="text-[var(--color-brand-secondary)]">
+                  student?
+                </span>{" "}
+                Got a skill?
               </motion.h2>
 
-              <motion.div variants={fadeInUp} className="space-y-2 mb-8">
-                <p className="text-2xl md:text-3xl text-slate-300 font-medium">Got a skill?</p>
-                <p className="text-xl text-slate-400">Don't be left out, join the marketplace designed for your success.</p>
-              </motion.div>
+              {/* Subtext description */}
+              <motion.p
+                variants={fadeInUp}
+                className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal mb-6 max-w-lg"
+              >
+                Whether you're self-taught or building your career, turn your creative, technical or
+                academic skills into real opportunities. Showcase what you can do, connect with potential clients
+                across Africa and take the next step in your professional journey.
+              </motion.p>
 
+              {/* CTA Button */}
               <motion.div variants={fadeInUp}>
-                <button 
-                  onClick={handleCTAClick}
-                  className="group relative inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-teal-900/20"
+                <Link
+                  href="/students"
+                  className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-secondary)] hover:text-[#1E293B] font-semibold text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-lg hover:translate-y-[-1px] active:translate-y-[0px]"
                 >
-                  Join the trend
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                  <Sparkles className="absolute -top-2 -right-2 w-5 h-5 text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
+                  <span>Join the community</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
               </motion.div>
             </motion.div>
 
             {/* Image Content */}
-            <div className="w-full lg:w-1/2 relative h-full self-stretch lg:self-end">
-              <motion.div 
-                className="relative h-full flex items-end justify-center lg:justify-end"
-                initial={{ opacity: 0, scale: 0.9, x: 50 }}
-                whileInView={{ opacity: 1, scale: 1, x: 0 }}
+            <div className="lg:col-span-5 relative w-full flex items-end justify-center lg:justify-end self-end translate-y-3 sm:translate-y-4 lg:translate-y-6">
+              <motion.div
+                className="relative w-full max-w-[230px] sm:max-w-[270px] md:max-w-[290px] lg:max-w-[300px] xl:max-w-[320px] h-[240px] sm:h-[280px] md:h-[310px] lg:h-[340px] xl:h-[370px] flex items-end justify-center lg:justify-end"
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               >
-                {/* Abstract shape behind image */}
-                <div className="absolute bottom-0 right-0 w-[80%] h-[80%] bg-teal-600/10 rounded-tl-[10rem] -z-0" />
-                
-                <Image 
-                  src="/image/nigerian-student.png" 
-                  alt="Talented Student"
-                  width={1000}
-                  height={1000}
-                  priority
-                  className="relative z-10 w-full max-w-[500px] lg:max-w-none lg:h-[110%] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform scale-125 md:scale-110 lg:scale-100 lg:translate-y-8 origin-bottom"
+                <Image
+                  src="/image/nigerian-student.png"
+                  alt="Talented African student smiling with books and backpack"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 40vw"
+                  priority={false}
+                  className="object-contain object-bottom drop-shadow-[0_15px_30px_rgba(0,0,0,0.4)] select-none pointer-events-none"
                 />
               </motion.div>
             </div>

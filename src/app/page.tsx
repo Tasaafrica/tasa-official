@@ -1,15 +1,18 @@
 // Server Component - Better performance and SEO
-import Header from "@/app/component/parts/header";
-import PopularCategory from "@/app/component/parts/popularCategory";
-import ImpressedServiceSection from "@/app/component/parts/impressedServiceSection";
-import WhyChooseTasa from "@/app/component/parts/whyChooseTasa";
-import HowItWorksSection from "@/app/component/parts/howItWorksSection";
-import FooterLinksSection from "@/app/component/parts/footerLinksSection";
-import HomeHeroSection from "@/app/component/parts/homeHeroSection";
-import TrustedBySection from "@/app/component/parts/trustedBySection";
+
+import ArtisansProfessionalsSection from "@/app/component/parts/artisansProfessionalsSection";
+import CreativeSection from "@/app/component/parts/creativeSection";
 import CtaSection from "@/app/component/parts/ctaSection";
-import AfricanTalent from "@/app/component/parts/africanTalent";
+import FooterLinksSection from "@/app/component/parts/footerLinksSection";
+import Header from "@/app/component/parts/header";
+import HomeHeroSection from "@/app/component/parts/homeHeroSection";
+// import ImpressedServiceSection from "@/app/component/parts/impressedServiceSection";
+// import AfricanTalent from "@/app/component/parts/africanTalent";
+// import WhyChooseTasa from "@/app/component/parts/whyChooseTasa";
+// import HowItWorksSection from "@/app/component/parts/howItWorksSection";
+import IndustriesCompaniesSection from "@/app/component/parts/industriesCompaniesSection";
 import StudentCTA from "@/app/component/parts/studentCTA";
+import WhyBeOnTasaSection from "@/app/component/parts/whyBeOnTasaSection";
 
 import CustomContextMenu from "@/components/ui/CustomContextMenu";
 
@@ -19,43 +22,41 @@ export default function HomePage() {
   return (
     <CustomContextMenu>
       <div>
-          {/*header*/}
-          <Header />
-          {/*hero section*/}
-          <HomeHeroSection fontClassName="font-poppins" />
-          {/* Trusted By Section */}
-          <TrustedBySection />
-          <section className="hidden md:block py-8 bg-white">
-            <div className="container-responsive">
-              <PopularCategory />
-            </div>
-          </section>
-          {/**category for mobile*/}
-          <section className="block md:hidden">
-            <PopularCategory layout="vertical" />
-          </section>
+        {/*header*/}
+        <Header />
+        {/*hero section*/}
+        <HomeHeroSection fontClassName="font-display" />
 
-          {/* Totally Impressed Services Section */}
-          <ImpressedServiceSection />
+        {/* Creative Section */}
+        <CreativeSection />
 
-          {/* African Talent Section */}
-          <AfricanTalent />
+        {/* Artisans & Professionals Section */}
+        <ArtisansProfessionalsSection />
 
-          {/* Why Choose Tasa Section */}
-          <WhyChooseTasa />
+        {/* Industries & Companies Section */}
+        <IndustriesCompaniesSection />
 
-          {/* Student Enrollment Section */}
-          <StudentCTA />
+        {/* Hidden sections:
+              - ImpressedServiceSection ("On TASA...")
+              - AfricanTalent ("Diverse Talents & Services")
+              - WhyChooseTasa (following section)
+          */}
 
-          <HowItWorksSection />
+        {/* Student Enrollment Section */}
+        <StudentCTA />
 
-          {/* Ready To Get Started Section */}
-          <CtaSection />
+        {/* Hidden: <HowItWorksSection /> */}
 
-          <FooterLinksSection />
+        {/* Ready To Get Started Section */}
+        <CtaSection />
 
-          {/* Search functionality is now handled in the Header component */}
-        </div>
+        {/* Why You Should Be On Tasa Africa Section */}
+        <WhyBeOnTasaSection />
+
+        <FooterLinksSection />
+
+        {/* Search functionality is now handled in the Header component */}
+      </div>
     </CustomContextMenu>
   );
 }

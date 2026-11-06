@@ -1,0 +1,78 @@
+{
+  "badge": "Why Choose Tasa Africa",
+  "heading": "Master Your Craft.",
+  "highlight": "Connect with High-Value Enterprise Clients.",
+  "description": "Your skills deserve better opportunities. Whether you work with your hands, your knowledge, or your expertise, TASA helps you showcase what you do, connect with people who need your services, and build a stronger professional presence.",
+  "image": "/image/male-artisan.png",
+  "imageAlt": "African master artisan and professional craftsman standing confident",
+  "floatingBadges": [
+    {
+      "type": "accreditation",
+      "label": "Accreditation",
+      "title": "Verified Credentials",
+      "iconName": "Award"
+    },
+    {
+      "type": "contracts",
+      "label": "Contracts",
+      "title": "Secured Milestones",
+      "iconName": "ShieldCheck"
+    }
+  ],
+  "items": [
+    {
+      "heading": "Be Found Beyond Your Immediate Network",
+      "description": "You shouldn't have to depend only on friends, referrals, or people in your neighbourhood to find your next customer. There are individuals, businesses, and organisations looking for exactly what you do. Give them a better chance to find you, wherever the opportunity may come from.",
+      "skip": false
+    },
+    {
+      "heading": "Put Your Expertise on Display",
+      "description": "Your work tells a story of skill, experience, and dedication. Whether you've spent years perfecting your craft or building your professional expertise, give people a place to see what you do, explore your services, understand your experience, and discover the value you bring.",
+      "skip": false
+    },
+    {
+      "heading": "Find Opportunities That Match Your Skills",
+      "description": "From a homeowner looking for a reliable electrician to a company searching for a skilled contractor, opportunities come in different sizes. Discover service requests, business projects, and professional engagements that align with what you do best.",
+      "skip": false
+    },
+    {
+      "heading": "Let Your Work Be Valued, Not Undervalued",
+      "description": "You know the time, effort, materials, and expertise that go into delivering quality work. You shouldn't have to keep defending the value of your service. Present your offerings clearly, communicate your quotations, and establish fair expectations before getting started.",
+      "skip": false
+    },
+    {
+      "heading": "Work With Clearer Expectations",
+      "description": "A simple job can quickly become complicated when expectations aren't clear. Extra requests appear, deadlines shift, and disagreements follow. Start on the same page with clear project descriptions, agreed deliverables, timelines, quotations, and payment terms.",
+      "skip": false
+    },
+    {
+      "heading": "Spend Less Time Searching for Your Next Job",
+      "description": "Between following up on referrals, making calls, sharing your details, and asking around for work, finding customers can become a job of its own. TASA gives you another channel to present your services and discover potential customers, so you can spend more time doing the work you're good at.",
+      "skip": false
+    },
+    {
+      "heading": "Build a Reputation That Opens Doors",
+      "description": "Every successful project is another opportunity to show what you're capable of. Bring your experience, qualifications, work samples, and customer feedback together. As you build your professional track record, give future customers more reasons to consider working with you.",
+      "skip": false
+    },
+    {
+      "heading": "Reach Beyond Individual Customers",
+      "description": "Your expertise may be exactly what a business, property developer, institution, or organisation needs. Don't limit your opportunities to one customer at a time. Put your services in front of people and organisations that may need your skills for larger projects, ongoing work, or specialised engagements.",
+      "skip": false
+    },
+    {
+      "heading": "Let Your Experience Take You Further",
+      "description": "You've invested time learning your trade, improving your skills, and gaining experience. Now give that experience room to create new possibilities. Connect with potential clients, explore different kinds of projects, and build relationships that can take your professional journey further.",
+      "skip": false
+    },
+    {
+      "heading": "Your Next Opportunity Could Be Bigger Than You Think",
+      "description": "Today, it could be a customer looking for a quick repair. Tomorrow, it could be a company searching for someone to handle a major project. You never know where the next meaningful connection will lead. Put yourself in a position to be discovered and stay open to opportunities beyond what you already know.",
+      "skip": false
+    }
+  ],
+  "primaryCTA": {
+    "label": "Join as Tasa Africa",
+    "href": "/become-a-vendor"
+  }
+}

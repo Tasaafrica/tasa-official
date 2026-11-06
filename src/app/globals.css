@@ -1,23 +1,7 @@
 
 @import "tailwindcss";
+@import "./brand-colors.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #ffffff;
-  --container-padding: 1rem;
-  --container-max-width: 1280px;
-  --color-1: #0f766e;
-  --indigo: #334155;
-  --cool-blue:#334155;
-  --color-light: #ccfbf1;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #ffffff;
-    --foreground: #ffffff;
-  }
-}
 
 /* Base styles */
 * {
@@ -29,8 +13,6 @@ html {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family:
     var(--font-poppins),
     system-ui,
@@ -39,12 +21,15 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --color-1: #0f766e;
-  --indigo: #334155;
-  --color-light: #ccfbf1;
 }
-input{
-  color:black;
+
+.font-display,
+.font-heading {
+  font-family:
+    var(--font-plus-jakarta),
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 /* Responsive container utilities */
@@ -95,12 +80,12 @@ input{
 
 /* Header responsive utilities */
 .header-height {
-  height: 4rem; /* 64px */
+  height: 3.5rem; /* 56px */
 }
 
 @media (min-width: 768px) {
   .header-height {
-    height: 5rem; /* 80px */
+    height: 4rem; /* 64px */
   }
 }
 
@@ -109,28 +94,13 @@ input{
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Focus styles for accessibility */
-.focus-visible:focus-visible {
-  outline: 2px solid #0ea5e9;
-  outline-offset: 2px;
-}
-
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
   border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
 }
 
 /* Sidebar animations */
