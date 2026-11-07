@@ -63,12 +63,22 @@ const categories: FooterLink[] = [
 
 const clientsLinks: FooterLink[] = [
   {
+    name: "For Business & Clients",
+    links: "/how-tasa-works",
+  },
+  {
+    name: "For Investors",
+    links: "/investors",
+    disabled: true,
+  },
+  {
     name: "How TASA Works",
     links: "/how-tasa-works",
   },
   {
     name: "Customer Success Stories",
     links: "/customer-success-stories",
+    disabled: true,
   },
   {
     name: "Trust & Safety",
@@ -84,13 +94,29 @@ const clientsLinks: FooterLink[] = [
 
 const freelancersLinks: FooterLink[] = [
   {
-    name: "Become a TASA Vendor",
-    links: "/become-a-vendor",
+    name: "Tasa for Creatives",
+    links: "/creatives",
   },
   {
-    name: "TASA for minors",
+    name: "Tasa for Professionals",
+    links: "/professionals",
+  },
+  {
+    name: "Tasa for Artisans",
+    links: "/professionals",
+  },
+  {
+    name: "Tasa for Students",
+    links: "/students",
+  },
+  {
+    name: "Tasa for Minors",
     links: "/tasa-for-minors",
     disabled: true,
+  },
+  {
+    name: "Tasa for Business",
+    links: "/industries",
   },
   {
     name: "Vendor Support",
@@ -134,6 +160,11 @@ const companyLinks: FooterLink[] = [
     links: "/about",
   },
   {
+    name: "Investment & Funding",
+    links: "/investment-funding",
+    disabled: true,
+  },
+  {
     name: "Blog",
     links: "/blog",
   },
@@ -162,7 +193,7 @@ const companyLinks: FooterLink[] = [
 
 const columns: FooterColumn[] = [
   {
-    title: "Categories",
+    title: "Industry",
     links: categories,
   },
   {
@@ -170,7 +201,7 @@ const columns: FooterColumn[] = [
     links: clientsLinks,
   },
   {
-    title: "For Vendors",
+    title: "For Talents",
     links: freelancersLinks,
   },
   {
@@ -184,7 +215,7 @@ import Link from "next/link";
 import { FaFacebook, FaLinkedin, FaXTwitter } from "react-icons/fa6";
 
 const FooterLinksSection = () => (
-  <div className="mx-auto bg-[#0F172A] w-full border-t border-slate-700">
+  <div className="relative z-50 mx-auto bg-[#0F172A] w-full border-t border-slate-700">
     <div className="container-responsive py-12">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 text-center md:text-left">
         {columns.map((column) => (
@@ -197,18 +228,18 @@ const FooterLinksSection = () => (
             </h3>
             <ul className="space-y-3">
               {column.links.map((item) => (
-                <li key={item.links}>
+                <li key={`${item.title || item.name}-${item.links}`}>
                   {item.disabled ? (
-                    <span className="text-sm text-slate-400/70 select-none cursor-not-allowed">
+                    <span className="text-sm text-slate-500/70 select-none cursor-not-allowed">
                       {item.title || item.name}
                     </span>
                   ) : (
-                    <a
+                    <Link
                       href={`${item.links}`}
-                      className="text-sm text-gray-100 hover:text-teal-400 transition-colors duration-200"
+                      className="text-sm text-slate-100 hover:text-[var(--color-brand-secondary)] transition-colors duration-200"
                     >
                       {item.title || item.name}
-                    </a>
+                    </Link>
                   )}
                 </li>
               ))}
@@ -224,29 +255,29 @@ const FooterLinksSection = () => (
         <div className="flex items-center justify-center md:justify-start w-full md:w-auto mb-2 md:mb-0">
           <Link href="/">
             <Image
-              src="/logo/white_logo.png"
+              src="/logos/TAL_1.png"
               alt="TASA Logo"
-              width={112}
-              height={28}
-              className="w-[100px] md:w-[120px] h-auto object-contain cursor-pointer"
+              width={240}
+              height={200}
+              className="h-16 sm:h-18 w-auto object-contain cursor-pointer brightness-0 invert transition-transform duration-200 hover:scale-[1.02]"
             />
           </Link>
         </div>
         {/* Copyright center */}
-        <div className="flex-1 text-center text-gray-300">
+        <div className="flex-1 text-center text-slate-300">
           <p>
             &copy; {new Date().getFullYear()} TASA Africa - Skill and Service
             marketplace. All rights reserved.
           </p>
         </div>
         {/* Social icons right */}
-        <div className="flex items-center justify-center md:justify-end w-full md:w-auto gap-4 px-2 text-gray-300">
+        <div className="flex items-center justify-center md:justify-end w-full md:w-auto gap-4 px-2 text-slate-300">
           <a
             href="https://twitter.com/"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Twitter"
-            className="hover:text-[#CCFBF1] transition-colors p-2"
+            className="hover:text-[var(--color-brand-secondary)] transition-colors p-2"
           >
             <FaXTwitter className="h-5 w-5" />
           </a>
@@ -255,7 +286,7 @@ const FooterLinksSection = () => (
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook"
-            className="hover:text-[#CCFBF1] transition-colors p-2"
+            className="hover:text-[var(--color-brand-secondary)] transition-colors p-2"
           >
             <FaFacebook className="h-5 w-5" />
           </a>
@@ -264,7 +295,7 @@ const FooterLinksSection = () => (
             target="_blank"
             rel="noopener noreferrer"
             aria-label="LinkedIn"
-            className="hover:text-[#CCFBF1] transition-colors p-2"
+            className="hover:text-[var(--color-brand-secondary)] transition-colors p-2"
           >
             <FaLinkedin className="h-5 w-5" />
           </a>

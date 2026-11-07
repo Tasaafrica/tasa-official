@@ -1,0 +1,79 @@
+{
+  "badge": "Why Choose Tasa Africa",
+  "heading": "Built for African Creators.",
+  "highlight": "Designed for Total Creative Freedom.",
+  "description": "Your talent deserves more than just exposure. It deserves the chance to be discovered, valued, and turned into meaningful opportunities.",
+  "image": "/image/dancer-in-motion.png",
+  "imageAlt": "African dancer in dynamic creative motion symbolizing boundless creative expression",
+  "floatingBadges": [
+    {
+      "type": "security",
+      "label": "Security",
+      "title": "100% Escrow Protected",
+      "iconName": "ShieldCheck"
+    },
+    {
+      "type": "earnings",
+      "label": "Earnings",
+      "title": "Zero Unfair Cuts",
+      "iconName": "Coins"
+    }
+  ],
+  "items": [
+    {
+      "heading": "Let the Right People Discover Your Talent",
+      "description": "You shouldn't have to go viral before someone notices how good you are. Whether you're a designer, photographer, filmmaker, dancer, or another kind of creative, TASA gives you a place to showcase your work and make it easier for potential clients to discover what you bring to the table.",
+      "skip": false
+    },
+    {
+      "heading": "Find Opportunities Beyond Your Inner Circle",
+      "description": "You know you're good at what you do. But sometimes, the next opportunity is just outside the network you already have. TASA helps you put your skills in front of potential clients, explore projects that fit your expertise, and open yourself up to opportunities beyond friends, referrals, and social media.",
+      "skip": false
+    },
+    {
+      "heading": "Your Work Deserves Clear Terms and Fair Pay",
+      "description": "You've probably heard it before: 'Let's agree on the price later,' or 'It's just a small change.' Before you know it, the work has doubled but the budget hasn't. You deserve clearer conversations about your rates, deliverables, revisions, and payment before a project begins. TASA is built around helping you approach your work with greater clarity and professionalism.",
+      "skip": false
+    },
+    {
+      "heading": "Stop Guessing What Your Client Really Wants",
+      "description": "You start with one idea, then the instructions change. The deadline moves, new requests keep coming, and nobody seems to remember the original agreement. Your creativity works best when expectations are clear. With better project briefs, agreed deliverables, timelines, and revision terms, you and your client can start on the same page.",
+      "skip": false
+    },
+    {
+      "heading": "Spend More Time Creating, Less Time Chasing",
+      "description": "Finding clients, sending portfolios, explaining your services, following up on messages, and keeping track of project details can feel like a full-time job of its own. You got into your craft to create, not to spend every waking hour searching for the next gig. TASA brings your professional presence and opportunity search into one place, helping you spend less effort starting from scratch.",
+      "skip": false
+    },
+    {
+      "heading": "Build a Reputation That Works With You",
+      "description": "You shouldn't have to explain your entire journey from scratch every time you meet a new client. Give your skills, portfolio, and experience a professional home. As you complete projects and gather meaningful feedback, you can build a track record that helps potential clients understand what you're capable of.",
+      "skip": false
+    },
+    {
+      "heading": "Your First Opportunity Matters, Too",
+      "description": "Maybe you're just starting out. Maybe your talent is real, but your client list is still short. You shouldn't feel like you need years of experience before you can present yourself professionally. Put your best work forward, show people what you can do, and give yourself more chances to find that first client who sees your potential.",
+      "skip": false
+    },
+    {
+      "heading": "Take Your Experience Into Bigger Rooms",
+      "description": "You've built your skills, delivered great work, and learned what it takes to get the job done. Now you want more than the same opportunities on repeat. Use TASA to showcase your expertise, reach potential new clients, and explore projects that could take your work, network, and career further.",
+      "skip": false
+    },
+    {
+      "heading": "Find Your People. Create Something Bigger.",
+      "description": "Some ideas need a team to come alive. You might be a filmmaker looking for a motion designer, a brand owner searching for a photographer, or a dancer who needs a creative team for a project. TASA can help you discover people with complementary skills and explore collaborations that bring more ambitious ideas to life.",
+      "skip": false
+    },
+    {
+      "heading": "Make Room for Opportunities Beyond Borders",
+      "description": "Your talent isn't limited to the street, city, or country where you live. You may be ready to work with brands, businesses, agencies, and clients in new markets. TASA aims to make it easier to discover opportunities beyond your immediate network, while better project terms and reliable payment arrangements can help make working together more practical.",
+      "skip": false
+    }
+  ],
+  "primaryCTA": {
+    "label": "Join Tasa Africa",
+    "href": "/become-a-vendor"
+  }
+}
+
