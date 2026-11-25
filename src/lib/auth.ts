@@ -165,7 +165,7 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger, session }) {
       if (user) {
         // Initial sign in or first time OAuth
         token.role = (user as any).role;
@@ -175,6 +175,10 @@ export const authOptions: NextAuthOptions = {
         if (account) {
           token.accessToken = account.access_token;
         }
+      }
+      if (trigger === "update" && session) {
+        if (session.role) token.role = session.role;
+        if (session.user?.role) token.role = session.user.role;
       }
       return token;
     },

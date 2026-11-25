@@ -24,7 +24,7 @@ export const metadata: Metadata = {
       "Turn your creative, technical, or academic talents into income. Connect with verified clients across Africa and build your professional reputation.",
     url: "https://www.tasaafrica.com/students",
     siteName: "Tasa Africa",
-    images: ["/image/nigerian-student.png"],
+    images: ["/image/african-students.png"],
     locale: "en_US",
     type: "website",
   },
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     title: "For Students | Turn Your Skills into Real Income — Tasa Africa",
     description:
       "Join the student freelance revolution. Earn flexible income, build verified client portfolios, and gain real-world experience.",
-    images: ["/image/nigerian-student.png"],
+    images: ["/image/african-students.png"],
   },
 };
 

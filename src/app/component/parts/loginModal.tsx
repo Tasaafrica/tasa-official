@@ -1206,6 +1206,7 @@ export default function LoginModal({
         if (session?.authToken) {
           localStorage.setItem("auth_token", session.authToken);
         }
+        window.dispatchEvent(new CustomEvent("tasa:open-onboarding"));
         setTimeout(() => {
           onSuccess?.();
           onClose();

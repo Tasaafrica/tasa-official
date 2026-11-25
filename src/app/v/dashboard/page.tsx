@@ -1,18 +1,30 @@
 "use client";
 
-import { Star, TrendingUp, User } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  CheckCircle2,
+  Copy,
+  ExternalLink,
+  FolderGit2,
+  MapPin,
+  Plus,
+  Star,
+} from "lucide-react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { Toaster, toast } from "sonner";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
-import { vendorApi } from "@/lib/vendor";
-import { useVendorHeader } from "../context";
-import AccountCompletion from "@/components/dashboard/AccountCompletion";
+import { vendorApi, type VendorProject } from "@/lib/vendor";
 
 export default function VendorDashboard() {
   const { data: session } = useSession();
-  const { setTitle, setDescription } = useVendorHeader();
   const [loading, setLoading] = useState(true);
   const [vendorData, setVendorData] = useState<any>(null);
+  const [projects, setProjects] = useState<VendorProject[]>([]);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [stats, setStats] = useState({
     activeOrders: 0,
     totalEarnings: 0,
@@ -20,202 +32,276 @@ export default function VendorDashboard() {
     rating: 0,
   });
 
-  // Set header title and description
   useEffect(() => {
-    setTitle("Dashboard");
-    setDescription(
-      "Manage your services, track orders, and grow your business",
-    );
-  }, [setTitle, setDescription]);
-
-  useEffect(() => {
-    if (session?.user?.id && session?.authToken && !vendorData) {
-      fetchVendorData();
+    if (session?.user?.id && session?.authToken) {
+      loadDashboardData();
     } else if (!session) {
       setLoading(false);
     }
-  }, [session, vendorData]);
+  }, [session]);
 
-  const fetchVendorData = async () => {
+  const loadDashboardData = async () => {
+    if (!session?.user?.id || !session?.authToken) return;
+    const vendorId = session.user.id;
+    const authToken = session.authToken;
+
     try {
-      if (!session?.user?.id || !session?.authToken) {
-        return;
+      setLoading(true);
+      // Fetch vendor profile, stats, and portfolio projects in parallel
+      const [profileRes, statsRes, projectsRes] = await Promise.allSettled([
+        vendorApi.getById(vendorId, authToken),
+        vendorApi.getStats(vendorId, authToken),
+        vendorApi.getProjects(vendorId, authToken),
+      ]);
+
+      if (profileRes.status === "fulfilled" && profileRes.value.success && profileRes.value.data) {
+        setVendorData(profileRes.value.data);
       }
 
-      const result = await vendorApi.getById(
-        session.user.id,
-        session.authToken,
-      );
+      if (statsRes.status === "fulfilled" && statsRes.value.success && statsRes.value.data) {
+        setStats(statsRes.value.data);
+      }
 
-      if (result.success && result.data) {
-        setVendorData(result.data);
-        console.log("Vendor Data:", result.data);
+      if (projectsRes.status === "fulfilled" && projectsRes.value.success && projectsRes.value.data) {
+        setProjects(Array.isArray(projectsRes.value.data) ? projectsRes.value.data : []);
       }
     } catch (error) {
-      console.error("Error fetching vendor data:", error);
+      console.error("Error loading dashboard data:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Extract skills from vendor data
-  const skills = vendorData?.skills || [];
-  const coreSkills = skills
-    .filter((s: any) => s.type === "core")
-    .map((s: any) => s.name);
-  const peripheralSkills = skills
-    .filter((s: any) => s.type === "peripheral")
-    .map((s: any) => s.name);
-  const allSkills = [...coreSkills, ...peripheralSkills];
+  // Copy public profile link to clipboard
+  const handleCopyProfileLink = () => {
+    const slug = vendorData?.slug || vendorData?._id || session?.user?.id;
+    if (!slug) return;
+    const profileUrl = `${window.location.origin}/vendors/${slug}`;
+    navigator.clipboard.writeText(profileUrl);
+    setCopiedLink(true);
+    toast.success("Profile link copied to clipboard!");
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  // Skills processing
+  const coreSkills = Array.isArray(vendorData?.coreSkills)
+    ? vendorData.coreSkills.map((s: any) => (typeof s === "string" ? s : s?.name)).filter(Boolean)
+    : [];
+
+  const peripheralSkills = Array.isArray(vendorData?.peripheralSkills)
+    ? vendorData.peripheralSkills.map((s: any) => (typeof s === "string" ? s : s?.name)).filter(Boolean)
+    : [];
+
+  // Fallback to generic skills array if core/peripheral not split
+  const rawSkills = Array.isArray(vendorData?.skills)
+    ? vendorData.skills.map((s: any) => (typeof s === "string" ? s : s?.name)).filter(Boolean)
+    : [];
+
+  const displayCoreSkills = coreSkills.length > 0 ? coreSkills : rawSkills.slice(0, 5);
+  const displayPeripheralSkills =
+    peripheralSkills.length > 0
+      ? peripheralSkills
+      : rawSkills.slice(5, 10);
+
+  const vendorName = vendorData?.name || session?.user?.name || "Professional";
+  const vendorSlug = vendorData?.slug || vendorData?._id || session?.user?.id;
+  const locationLabel = [vendorData?.city, vendorData?.country || "Africa"].filter(Boolean).join(", ");
+  const vendorRating = stats.rating && stats.rating > 0 ? Number(stats.rating).toFixed(1) : "5.0";
 
   return (
-    <div className="relative min-h-[600px]">
-      {/* Loading Overlay */}
+    <div className="relative min-h-[600px] space-y-6 pb-12">
+      <Toaster position="top-right" richColors />
       <LoadingOverlay isVisible={loading} />
 
-      {/* Account Completion Status */}
-      <AccountCompletion />
+      {/* 1. Header & Vendor Identity */}
+      <div className="space-y-4 pt-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-text-primary)] tracking-tight">
+            {vendorName}
+          </h1>
 
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-[#334155] via-[#475569] to-[#334155] rounded-2xl p-6 lg:p-8 mb-6 shadow-xl text-white relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-400 rounded-full translate-y-1/2 -translate-x-1/2" />
         </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row items-center lg:items-start gap-6">
-          {/* Profile Image */}
-          <div className="flex-shrink-0">
-            <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30 shadow-lg overflow-hidden">
-              {vendorData?.profileImage || session?.user?.image ? (
-                <img
-                  src={vendorData?.profileImage || session?.user?.image}
-                  alt={vendorData?.name || session?.user?.name || "User"}
-                  className="w-full h-full object-cover"
-                />
+        {/* Divider line */}
+        <hr className="border-t border-slate-200/80" />
+
+        {/* Location, reviews, etc. */}
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs sm:text-sm text-slate-600">
+          {locationLabel && (
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-[var(--color-brand-primary)] shrink-0" />
+              <span>{locationLabel}</span>
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1.5 font-medium text-slate-700">
+            <Star className="w-4 h-4 fill-[var(--color-brand-accent)] text-[var(--color-brand-accent)] shrink-0" />
+            <span>{vendorRating}</span>
+            <span className="text-slate-500 font-normal">
+              ({stats.clientReviews} {stats.clientReviews === 1 ? "review" : "reviews"})
+            </span>
+          </span>
+          {vendorData?.category && (
+            <span className="inline-flex items-center gap-1 text-slate-500">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+              <span>{vendorData.category}</span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Main Workspace */}
+      <div className="space-y-6">
+        {/* Recent Portfolio Projects Section */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
+          <div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-[var(--color-text-primary)]">
+                Portfolio Showcases
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Visual proof of your work shown on your public profile
+              </p>
+            </div>
+            <Link
+              href="/v/portfolio"
+              className="text-xs font-bold text-[var(--color-brand-primary)] hover:underline inline-flex items-center gap-1"
+            >
+              <span>View All ({projects.length})</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {projects.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {projects.slice(0, 6).map((project, idx) => (
+                <div
+                  key={project._id || idx}
+                  className="group rounded-xl border border-slate-200 overflow-hidden bg-slate-50/40 hover:bg-white hover:border-[var(--color-brand-secondary)] transition-all flex flex-col"
+                >
+                  <div className="relative w-full h-40 bg-slate-200 overflow-hidden">
+                    {project.thumbnail ? (
+                      <img
+                        src={project.thumbnail}
+                        alt={project.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <FolderGit2 className="w-8 h-8" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3.5 flex-1 flex flex-col justify-between">
+                    <h4 className="text-xs sm:text-sm font-bold text-[var(--color-text-primary)] truncate">
+                      {project.title}
+                    </h4>
+                    {project.description && (
+                      <p className="text-[11px] text-slate-500 line-clamp-2 mt-1">
+                        {project.description}
+                      </p>
+                    )}
+                    <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                      <Link
+                        href="/v/portfolio"
+                        className="text-[var(--color-brand-primary)] font-semibold hover:underline"
+                      >
+                        Edit details
+                      </Link>
+                      {project.link && (
+                        <a
+                          href={project.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-slate-400 hover:text-slate-600 inline-flex items-center gap-0.5"
+                        >
+                          <span>Live preview</span>
+                          <ArrowUpRight className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center rounded-xl bg-slate-50 border border-slate-200/70 space-y-3">
+              <FolderGit2 className="w-8 h-8 text-slate-400 mx-auto" />
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                You haven&apos;t added any portfolio projects yet. Adding at least 2 case studies helps clients understand your quality.
+              </p>
+              <Link
+                href="/v/portfolio"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary)]/90 shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Upload Your First Project</span>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Verified Skills Breakdown */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-[var(--color-text-primary)]">
+                Verified Skills & Capabilities
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                How clients find you across category search filters
+              </p>
+            </div>
+            <Link
+              href="/v/settings"
+              className="text-xs font-semibold text-[var(--color-brand-primary)] hover:underline inline-flex items-center gap-1"
+            >
+              <span>Edit Skills</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="space-y-4">
+            {/* Core Skills */}
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                Core Skills (Primary Specializations)
+              </span>
+              {displayCoreSkills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {displayCoreSkills.map((skill: string, idx: number) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--color-bg-brand-soft)] text-[var(--color-brand-primary)] border border-[var(--color-brand-secondary)]/30"
+                    >
+                      <CheckCircle2 className="w-3 h-3 text-[var(--color-brand-primary)]" />
+                      {skill}
+                    </span>
+                  ))}
+                </div>
               ) : (
-                <User className="w-10 h-10 lg:w-12 lg:h-12 text-white" />
+                <p className="text-xs text-slate-400 italic">No core skills tagged yet.</p>
               )}
             </div>
-          </div>
 
-          {/* User Info */}
-          <div className="flex-1 text-center lg:text-left">
-            <h2 className="text-2xl lg:text-3xl font-bold mb-1">
-              {vendorData?.name || session?.user?.name || "Welcome back!"}
-            </h2>
-            {vendorData?.username && (
-              <p className="text-teal-300 font-medium text-sm mb-2">
-                @{vendorData.username}
-              </p>
-            )}
-            <p className="text-white/80 text-sm mb-4">
-              {vendorData?.bio || "Vendor"}
-            </p>
-
-            {/* Skills */}
-            {allSkills.length > 0 && (
-              <div className="flex flex-wrap gap-2 justify-center lg:justify-start mb-4">
-                {allSkills.slice(0, 4).map((skill: string, index: number) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium border border-white/30"
-                  >
-                    {skill}
-                  </span>
-                ))}
-                {allSkills.length > 4 && (
-                  <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium border border-white/30">
-                    +{allSkills.length - 4} more
-                  </span>
-                )}
+            {/* Peripheral Skills */}
+            {displayPeripheralSkills.length > 0 && (
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                  Peripheral Skills (Complementary Knowledge)
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {displayPeripheralSkills.map((skill: string, idx: number) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
-
-          {/* Stats */}
-          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-            {/* Rating */}
-            <div className="text-center lg:text-left">
-              <div className="flex items-center justify-center lg:justify-start gap-1 mb-1">
-                <Star className="w-5 h-5 fill-teal-400 text-teal-400" />
-                <span className="text-2xl font-bold">
-                  {stats.rating || "4.5"}
-                </span>
-              </div>
-              <p className="text-white/70 text-xs">Rating</p>
-            </div>
-
-            {/* Total Earnings */}
-            <div className="text-center lg:text-left">
-              <div className="flex items-center justify-center lg:justify-start gap-1 mb-1">
-                <TrendingUp className="w-5 h-5 text-teal-400" />
-                <span className="text-2xl font-bold">
-                  ₦{stats.totalEarnings || "0"}
-                </span>
-              </div>
-              <p className="text-white/70 text-xs">
-                Total Earnings{" "}
-                <span className="text-teal-400">(Coming Soon)</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-gray-100 p-4 lg:p-5 shadow-sm">
-          <h3 className="text-xs font-medium text-gray-500 mb-2">
-            Active Orders
-          </h3>
-          <p className="text-2xl font-semibold text-gray-900">
-            {stats.activeOrders}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4 lg:p-5 shadow-sm">
-          <h3 className="text-xs font-medium text-gray-500 mb-2">
-            Total Earnings
-          </h3>
-          <p className="text-2xl font-semibold text-gray-900">
-            ₦{stats.totalEarnings}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4 lg:p-5 shadow-sm">
-          <h3 className="text-xs font-medium text-gray-500 mb-2">
-            Client Reviews
-          </h3>
-          <p className="text-2xl font-semibold text-gray-900">
-            {stats.clientReviews}
-          </p>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 lg:p-5 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <button className="flex items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors text-left">
-            <div className="flex-1">
-              <h3 className="text-xs font-medium text-gray-900">
-                Manage Services
-              </h3>
-              <p className="text-[11px] text-gray-500 mt-0.5">
-                Update your skills and service offerings
-              </p>
-            </div>
-          </button>
-          <button className="flex items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors text-left">
-            <div className="flex-1">
-              <h3 className="text-xs font-medium text-gray-900">View Orders</h3>
-              <p className="text-[11px] text-gray-500 mt-0.5">
-                Track and manage your active orders
-              </p>
-            </div>
-          </button>
         </div>
       </div>
     </div>

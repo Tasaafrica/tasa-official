@@ -316,12 +316,12 @@ export default function SubcategoryPage({
       <PlainHero
         title={subcategory.name}
         breadcrumbs={[
-          { label: "Categories", href: "/categories" },
+          { label: "Categories", href: "/industries" },
           {
             label: subcategory.category?.name || "Category",
             href: subcategory.category
-              ? `/categories/${subcategory.category.slug}`
-              : "/categories",
+              ? `/${subcategory.category.slug}`
+              : "/industries",
           },
           { label: subcategory.name },
         ]}
@@ -464,7 +464,7 @@ export default function SubcategoryPage({
               </Button>
             </Link>
             {subcategory.category && (
-              <Link href={`/categories/${subcategory.category.slug}`}>
+              <Link href={`/${subcategory.category.slug}`}>
                 <Button
                   size="lg"
                   className="bg-[var(--indigo)] hover:bg-[var(--indigo)]/70 "

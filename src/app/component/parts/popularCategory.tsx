@@ -144,7 +144,7 @@ export default function PopularCategory({
                 <Link
                   href={
                     category.type === "category"
-                      ? `/categories/${category.slug}`
+                      ? `/${category.slug}`
                       : category.type === "subcategory"
                       ? `/subcategories/${category.slug}`
                       : `/skills/${category.slug}`

@@ -2,6 +2,7 @@
 import { ChevronDown, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
@@ -12,6 +13,8 @@ import { useAuth } from "@/hooks/useAuth";
 interface HeaderProps {
   variant?: "transparent" | "white" | "auto";
   invert?: boolean;
+  categorySlug?: string;
+  categoryName?: string;
 }
 
 interface TalentsDropdownProps {
@@ -114,15 +117,97 @@ const TalentsDropdown: React.FC<TalentsDropdownProps> = ({
   );
 };
 
+const CATEGORY_NAME_MAP: Record<string, string> = {
+  "graphics-design": "Graphics & Design",
+  "programming-tech": "Programming & Tech",
+  "digital-marketing": "Digital Marketing",
+  "video-animation": "Video & Animation",
+  "writing-translation": "Writing & Translation",
+  "business-consulting": "Business & Consulting",
+  "data-ai": "Data & AI",
+  "music-audio": "Music & Audio",
+  "lifestyle-wellness": "Lifestyle & Wellness",
+  "events-logistics": "Events & Logistics",
+  "home-maintenance": "Home Maintenance",
+  "personal-errand-services": "Personal & Errand Services",
+};
+
+const KNOWN_CATEGORY_SLUGS = Object.keys(CATEGORY_NAME_MAP);
+
 const Header: React.FC<HeaderProps> = ({
   variant = "auto",
   invert = false,
+  categorySlug,
+  categoryName,
 }) => {
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { openLogin, openSignup } = useAuthModal();
   const { openSearch } = useSearchModal();
+
+  // Helper to format category slug into human-friendly title
+  const formatCategoryName = (slug: string) => {
+    if (CATEGORY_NAME_MAP[slug]) return CATEGORY_NAME_MAP[slug];
+    return slug
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
+      .replace(/\bAnd\b/g, "&");
+  };
+
+  // Determine active category: props take priority, otherwise infer from route
+  const pathSegment = pathname?.replace(/^\//, "").split("/")[0]?.split("?")[0];
+  const isKnownCategoryPath = Boolean(
+    pathSegment && KNOWN_CATEGORY_SLUGS.includes(pathSegment)
+  );
+
+  const currentCategorySlug =
+    categorySlug ||
+    (pathname?.startsWith("/categories/")
+      ? pathname.split("/categories/")[1]?.split("/")[0]?.split("?")[0]
+      : isKnownCategoryPath
+        ? pathSegment
+        : undefined);
+
+  const currentCategoryName =
+    categoryName ||
+    (currentCategorySlug ? formatCategoryName(currentCategorySlug) : undefined);
+
+  // Attention glow state: glows until clicked by user or after 50s timeout
+  const [hasInteractedWithSearch, setHasInteractedWithSearch] = useState(false);
+  const [isGlowTimedOut, setIsGlowTimedOut] = useState(false);
+
+  useEffect(() => {
+    setHasInteractedWithSearch(false);
+    setIsGlowTimedOut(false);
+
+    if (!currentCategorySlug) return;
+
+    // Automatically stop glowing after 50 seconds whether interacted with or not
+    const timer = setTimeout(() => {
+      setIsGlowTimedOut(true);
+    }, 50000);
+
+    return () => clearTimeout(timer);
+  }, [currentCategorySlug]);
+
+  const handleSearchClick = () => {
+    setHasInteractedWithSearch(true);
+    openSearch(
+      currentCategorySlug
+        ? {
+            categorySlug: currentCategorySlug,
+            categoryName: currentCategoryName,
+          }
+        : undefined
+    );
+  };
+
+  const isCategoryActive = Boolean(currentCategoryName);
+  const shouldGlow =
+    isCategoryActive && !hasInteractedWithSearch && !isGlowTimedOut;
 
   // Get authentication state
   const { user, isAuthenticated, logout } = useAuth();
@@ -248,19 +333,48 @@ const Header: React.FC<HeaderProps> = ({
 
                 <TalentsDropdown isTransparent={isTransparent} />
 
-                {/* Search Industry Button */}
+                {/* Dynamic Search Industry / Category Button */}
                 <button
                   type="button"
-                  onClick={openSearch}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible cursor-pointer ${
-                    isTransparent
-                      ? "text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-white/40"
-                      : "text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)]"
+                  onClick={handleSearchClick}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm transition-all focus-visible cursor-pointer relative ${
+                    isCategoryActive
+                      ? `bg-[var(--color-highlight-soft)] border border-[var(--color-brand-accent)] text-[var(--color-brand-dark)] shadow-sm ${
+                          shouldGlow ? "animate-orange-glow" : ""
+                        } hover:bg-[var(--color-brand-accent)]/20 font-semibold`
+                      : isTransparent
+                        ? "text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-white/40 font-medium"
+                        : "text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)] font-medium"
                   }`}
-                  aria-label="Search Industry"
+                  aria-label={
+                    currentCategoryName
+                      ? `Search in ${currentCategoryName}`
+                      : "Search Industry"
+                  }
+                  title={
+                    currentCategoryName
+                      ? `Search within ${currentCategoryName}`
+                      : "Search across all industries"
+                  }
                 >
-                  <Search className="w-4 h-4" />
-                  <span>Search Industry</span>
+                  {shouldGlow && (
+                    <span className="relative flex h-2 w-2 mr-0.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-brand-accent)] opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-brand-accent)]" />
+                    </span>
+                  )}
+                  <Search
+                    className={`w-4 h-4 transition-colors ${
+                      isCategoryActive
+                        ? "text-[var(--color-brand-accent)]"
+                        : "text-[var(--color-brand-primary)]"
+                    }`}
+                  />
+                  <span>
+                    {currentCategoryName
+                      ? `Search in ${currentCategoryName}`
+                      : "Search Industry"}
+                  </span>
                 </button>
 
                 {mounted && isAuthenticated && user?.role === "client" && (
@@ -365,11 +479,38 @@ const Header: React.FC<HeaderProps> = ({
             <div className="lg:hidden flex items-center space-x-1.5">
               <button
                 type="button"
-                onClick={openSearch}
-                className="p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors cursor-pointer"
-                aria-label="Search"
+                onClick={handleSearchClick}
+                className={`p-1.5 rounded-lg transition-all cursor-pointer relative ${
+                  isCategoryActive
+                    ? `bg-[var(--color-highlight-soft)] border border-[var(--color-brand-accent)] text-[var(--color-brand-dark)] shadow-sm ${
+                        shouldGlow ? "animate-orange-glow" : ""
+                      }`
+                    : "text-[var(--color-text-secondary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)]"
+                }`}
+                aria-label={
+                  currentCategoryName
+                    ? `Search in ${currentCategoryName}`
+                    : "Search Industry"
+                }
+                title={
+                  currentCategoryName
+                    ? `Search in ${currentCategoryName}`
+                    : "Search Industry"
+                }
               >
-                <Search className="w-5 h-5" />
+                <Search
+                  className={`w-5 h-5 ${
+                    isCategoryActive
+                      ? "text-[var(--color-brand-accent)]"
+                      : ""
+                  }`}
+                />
+                {shouldGlow && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-brand-accent)] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[var(--color-brand-accent)]" />
+                  </span>
+                )}
               </button>
 
               {mounted && isAuthenticated && user ? (
@@ -409,7 +550,9 @@ const Header: React.FC<HeaderProps> = ({
         onClose={closeMobileMenu}
         onSignInClick={handleSignInClick}
         onJoinClick={handleJoinClick}
-        onSearchClick={openSearch}
+        categoryName={currentCategoryName}
+        shouldGlow={shouldGlow}
+        onSearchClick={handleSearchClick}
       />
     </>
   );

@@ -99,7 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         for (const cat of categoryList) {
           if (cat.slug) {
             dynamicRoutes.push({
-              url: `${baseUrl}/categories/${cat.slug}`,
+              url: `${baseUrl}/${cat.slug}`,
               lastModified: cat.updatedAt
                 ? new Date(cat.updatedAt)
                 : new Date(),

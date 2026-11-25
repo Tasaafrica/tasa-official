@@ -6,6 +6,10 @@ export interface UserData {
   name: string;
   email: string;
   role: string;
+  userType?: string;
+  accountType?: string;
+  onboardingCategory?: string;
+  onboardingCompleted?: boolean;
   profileImage?: string;
   isEmailVerified: boolean;
   createdAt?: string;

@@ -7,13 +7,14 @@ export interface VendorHeaderContextType {
   setDescription: (description: string) => void;
 }
 
+const noopContext: VendorHeaderContextType = {
+  setTitle: () => {},
+  setDescription: () => {},
+};
+
 export const VendorHeaderContext =
-  createContext<VendorHeaderContextType | null>(null);
+  createContext<VendorHeaderContextType>(noopContext);
 
 export const useVendorHeader = () => {
-  const context = useContext(VendorHeaderContext);
-  if (!context) {
-    throw new Error("useVendorHeader must be used within VendorLayout");
-  }
-  return context;
+  return useContext(VendorHeaderContext) || noopContext;
 };
