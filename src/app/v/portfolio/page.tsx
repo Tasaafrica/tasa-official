@@ -365,7 +365,7 @@ export default function PortfolioPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-800">Portfolio</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Manage and showcase your projects and case studies
+          Lets build your portfolio, manage and showcase your projects.
         </p>
       </div>
 

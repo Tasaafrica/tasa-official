@@ -42,7 +42,7 @@
   --color-button-secondary-text: #FFFFFF;
   --color-button-secondary-hover: #367F92;
 
-  --color-focus-ring: #489FB5;
+  --color-focus-ring: #334155;
 
   /* 6. ACCENT & HIGHLIGHTS */
   --color-highlight-bg: #FFA62B;
@@ -141,10 +141,10 @@
   color: var(--color-highlight-text);
 }
 
-/* Accessible keyboard focus */
+/* Accessible keyboard focus for navigation */
 :focus-visible {
-  outline: 3px solid var(--color-focus-ring);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 
 /* Disabled controls */
@@ -155,11 +155,22 @@
   cursor: not-allowed;
 }
 
-/* Form inputs */
+/* Form inputs: eliminate default & colored outlines */
 input,
 textarea,
 select {
   color: var(--color-text-primary);
+  outline: none;
+}
+
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+button:focus {
+  outline: none !important;
 }
 
 /* Custom scrollbars */

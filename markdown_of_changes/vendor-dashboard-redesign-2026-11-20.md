@@ -357,3 +357,58 @@ for admin review without re-registering.
 - Input is disabled at the 7-skill cap; Enter key supported.
 - TypeScript: 0 errors.
 ```
+
+
+---
+
+## 2026-11-25 — Custom Branded Category Dropdown & Elimination of Green Focus Outlines
+
+### Summary
+1. Replaced the native category select dropdown in **Settings → Skills Selection** with a custom branded dropdown component matching TASA Africa's design system.
+2. Removed the green/teal focus outline that appeared across form controls and input fields by reconfiguring global focus ring tokens and explicitly resetting outlines on inputs, textareas, and selects.
+
+### What Changed
+- **Global Outline Removal (`src/app/brand-colors.css`, `src/app/globals.css`)**:
+  - Replaced `--color-focus-ring: #489FB5` with Slate `#334155`, eliminating the offset teal/green halo on focused elements.
+  - Added explicit `outline: none !important` rules on `:focus` and `:focus-visible` for `input`, `textarea`, and `select` controls.
+- **Custom Branded Category Dropdown (`src/app/v/settings/page.tsx`)**:
+  - Replaced the browser-native `<select>` element with an accessible, branded custom dropdown.
+  - Features an interactive trigger button with an active brand Ocean Blue (`#489FB5`) dot indicator, chevron rotation, and smooth open/close transitions.
+  - Includes an embedded search input for quick category filtering.
+  - Active selection highlighted in soft Ocean Blue (`bg-[#489FB5]/10`, `text-[#334155]`) with a branded `Check` icon.
+  - Connected with outside-click detection to automatically close when clicking elsewhere on the page.
+- **Input Focus State Refinement**:
+  - Upgraded custom skill input to use rounded-xl styling with Ocean Blue (`#489FB5`) subtle focus border and ring without default browser outline.
+
+### Modifications
+
+| File | Lines Affected | Change |
+|---|---|---|
+| `src/app/brand-colors.css` | L45, L144-L167 | Set `--color-focus-ring: #334155` and disabled outlines on form controls |
+| `src/app/globals.css` | L151-L160 | Added global focus/focus-visible reset for input, textarea, and select |
+| `src/app/v/settings/page.tsx` | L107-L113 | Added `categoryDropdownOpen` and `categorySearch` state |
+| `src/app/v/settings/page.tsx` | L144-L153 | Updated `handleClickOutside` to close category dropdown on outside click |
+| `src/app/v/settings/page.tsx` | L497-L503 | Added `handleCategorySelect` handler |
+| `src/app/v/settings/page.tsx` | L1493-L1583 | Replaced native `<select>` with custom searchable branded dropdown |
+| `src/app/v/settings/page.tsx` | L1700-L1725 | Refined custom skill input styling with brand tokens |
+
+### TypeScript
+`tsc --noEmit` → exit code 0, 0 errors.
+
+### Commit Draft — Short
+```
+feat(settings): add custom branded category dropdown and remove green focus outlines
+```
+
+### Commit Draft — Long
+```
+Replace the native category select element in vendor Settings -> Skills Selection
+with a custom branded dropdown and eliminate the green/teal outline on input fields.
+
+- Updated --color-focus-ring in brand-colors.css to Slate #334155.
+- Removed default browser and colored outlines on input, select, and textarea.
+- Built a custom category dropdown with brand Ocean Blue dot indicator,
+  smooth chevron rotation, category search, and active checkmark.
+- Bound outside click handler to auto-close category dropdown.
+- Verified TypeScript compilation with tsc --noEmit (0 errors).
+```

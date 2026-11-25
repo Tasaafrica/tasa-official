@@ -108,6 +108,10 @@ export default function VendorSettings() {
   const [customSkillInput, setCustomSkillInput] = useState("");
   const [isSubmittingCustomSkill, setIsSubmittingCustomSkill] = useState(false);
 
+  // Category dropdown state
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [categorySearch, setCategorySearch] = useState("");
+
   // Location search and loading states
   const [countriesList, setCountriesList] = useState<CountryData[]>([]);
   const [statesList, setStatesList] = useState<StateData[]>([]);
@@ -144,6 +148,7 @@ export default function VendorSettings() {
         setCountryDropdownOpen(false);
         setStateDropdownOpen(false);
         setCityDropdownOpen(false);
+        setCategoryDropdownOpen(false);
       }
     };
 
@@ -488,6 +493,13 @@ export default function VendorSettings() {
     } finally {
       setIsLoadingSkills(false);
     }
+  };
+
+  const handleCategorySelect = (selectedCat: Category) => {
+    setSelectedCategorySlug(selectedCat.slug);
+    setCategory(selectedCat.name);
+    setCategoryDropdownOpen(false);
+    setCategorySearch("");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1478,33 +1490,99 @@ export default function VendorSettings() {
           </div>
         )}
 
-        {/* Category */}
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">
+        {/* Category Custom Branded Dropdown */}
+        <div className="relative dropdown-container mb-4">
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
             Category
           </label>
-          <select
-            value={selectedCategorySlug}
-            onChange={(e) => {
-              const slug = e.target.value;
-              setSelectedCategorySlug(slug);
-              const selectedCat = categories.find((cat) => cat.slug === slug);
-              if (selectedCat) {
-                setCategory(selectedCat.name);
-              }
-            }}
-            className="w-full px-3 py-2 border border-gray-200 mb-2 rounded-lg text-xs text-black focus:outline-none focus:ring-2 focus:ring-[#334155] focus:border-transparent transition-all"
-            disabled={isLoadingCategories}
-          >
-            <option value="">Select a category</option>
-            {categories.map((cat) => (
-              <option key={cat._id || cat.slug} value={cat.slug}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+              disabled={isLoadingCategories}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 border rounded-xl text-xs bg-white transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#334155]/20 ${
+                categoryDropdownOpen
+                  ? "border-[#489FB5] ring-2 ring-[#489FB5]/20 shadow-xs"
+                  : "border-slate-200 hover:border-slate-300"
+              } ${isLoadingCategories ? "bg-slate-50 cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+            >
+              <div className="flex items-center gap-2 truncate">
+                {selectedCategorySlug || category ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[#489FB5] shrink-0" />
+                    <span className="font-semibold text-slate-800 truncate">
+                      {categories.find((c) => c.slug === selectedCategorySlug)?.name || category}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-slate-400">
+                    {isLoadingCategories ? "Loading categories..." : "Select a category"}
+                  </span>
+                )}
+              </div>
+              <FiChevronDown
+                className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                  categoryDropdownOpen ? "rotate-180 text-[#489FB5]" : ""
+                }`}
+              />
+            </button>
+
+            {categoryDropdownOpen && (
+              <div className="absolute z-30 w-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-lg max-h-64 overflow-hidden flex flex-col animate-in fade-in-50 duration-150">
+                {categories.length > 5 && (
+                  <div className="p-2 border-b border-slate-100 bg-slate-50/70">
+                    <div className="relative">
+                      <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search categories..."
+                        value={categorySearch}
+                        onChange={(e) => setCategorySearch(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-[#489FB5] focus:ring-1 focus:ring-[#489FB5] text-slate-800 placeholder:text-slate-400 bg-white"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="overflow-y-auto flex-1 p-1 space-y-0.5">
+                  {categories.filter((cat) =>
+                    cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+                  ).length > 0 ? (
+                    categories
+                      .filter((cat) =>
+                        cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+                      )
+                      .map((cat) => {
+                        const isSelected =
+                          cat.slug === selectedCategorySlug || cat.name === category;
+                        return (
+                          <button
+                            key={cat._id || cat.slug}
+                            type="button"
+                            onClick={() => handleCategorySelect(cat)}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left text-xs transition-colors cursor-pointer ${
+                              isSelected
+                                ? "bg-[#489FB5]/10 text-[#334155] font-semibold"
+                                : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                            }`}
+                          >
+                            <span className="truncate">{cat.name}</span>
+                            {isSelected && (
+                              <Check className="w-3.5 h-3.5 text-[#489FB5] shrink-0 ml-2" />
+                            )}
+                          </button>
+                        );
+                      })
+                  ) : (
+                    <div className="p-3 text-center text-slate-400 text-xs">
+                      No categories found
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           {isLoadingCategories && (
-            <p className="text-[11px] text-gray-500 mt-1">
+            <p className="text-[11px] text-slate-500 mt-1">
               Loading categories...
             </p>
           )}
@@ -1629,13 +1707,13 @@ export default function VendorSettings() {
                 }}
                 placeholder="e.g. Motion Graphics, Leather Crafting..."
                 disabled={selectedSkills.length >= 7}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs text-black focus:outline-none focus:ring-2 focus:ring-[#334155] focus:border-transparent transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
+                className="flex-1 px-3.5 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#489FB5] focus:ring-2 focus:ring-[#489FB5]/15 transition-all disabled:bg-slate-50 disabled:cursor-not-allowed"
               />
               <button
                 type="button"
                 onClick={handleAddCustomSkill}
                 disabled={!customSkillInput.trim() || selectedSkills.length >= 7}
-                className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#334155] text-white rounded-lg text-xs font-medium hover:bg-[#475569] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#334155] text-white rounded-xl text-xs font-semibold hover:bg-[#1E293B] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add</span>

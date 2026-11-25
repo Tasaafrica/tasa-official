@@ -22,6 +22,46 @@ export type ClientSubtype =
 
 export type OnboardingSubtype = VendorSubtype | ClientSubtype;
 
+export function mapVendorSubtype(val: string): string {
+  switch (val) {
+    case "students":
+    case "student":
+      return "student";
+    case "creatives":
+    case "creative":
+      return "creative";
+    case "professionals":
+    case "professional":
+      return "professional";
+    case "artisan":
+    case "artisans":
+      return "artisan";
+    case "businesses":
+    case "business":
+      return "business";
+    default:
+      return val;
+  }
+}
+
+export function mapClientSubtype(val: string): string {
+  switch (val) {
+    case "businesses":
+    case "business":
+      return "business";
+    case "individuals":
+    case "individual":
+      return "individual";
+    case "organisations":
+    case "organisation":
+    case "organizations":
+    case "organization":
+      return "organisation";
+    default:
+      return val;
+  }
+}
+
 interface OnboardingOption<T extends string> {
   id: T;
   label: string;
@@ -112,19 +152,26 @@ export default function OnboardingModal({
     try {
       setIsSubmitting(true);
       const userId = session.user.id;
-      const authToken = (session as any).authToken;
+      const authToken =
+        (session as any).authToken ||
+        (typeof window !== "undefined"
+          ? localStorage.getItem("auth_token")
+          : null);
+
+      const clientType =
+        category === "client" ? mapClientSubtype(subtype) : null;
+      const vendorType =
+        category === "vendor" ? mapVendorSubtype(subtype) : null;
 
       const payload = {
         role: category,
-        userType: subtype,
-        accountType: subtype,
-        onboardingCategory: category,
-        onboardingCompleted: true,
+        client_type: clientType,
+        vendor_type: vendorType,
       };
 
-      // 1. Update user profile via API
-      const res = await fetch(`/api/users/${userId}`, {
-        method: "PUT",
+      // 1. Submit to /api/auth/onboarding/user-type
+      const res = await fetch("/api/auth/onboarding/user-type", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
@@ -132,15 +179,29 @@ export default function OnboardingModal({
         body: JSON.stringify(payload),
       });
 
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || data?.success === false) {
+        throw new Error(
+          data?.error || data?.message || "Failed to save account type",
+        );
+      }
+
       // 2. Cache in localStorage so user isn't prompted again
       localStorage.setItem(`tasa_onboarding_completed_${userId}`, "true");
       localStorage.setItem("tasa_user_type", subtype);
       localStorage.setItem("tasa_user_category", category);
+      if (clientType) localStorage.setItem("tasa_client_type", clientType);
+      if (vendorType) localStorage.setItem("tasa_vendor_type", vendorType);
 
       // 3. Update in-memory session if update is supported
       if (typeof update === "function") {
         try {
-          await update({ role: category });
+          await update({
+            role: category,
+            client_type: clientType,
+            vendor_type: vendorType,
+          });
         } catch (updateErr) {
           console.warn("Session in-memory update warning:", updateErr);
         }
@@ -158,9 +219,9 @@ export default function OnboardingModal({
       } else {
         router.push("/c/dashboard");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Onboarding submission error:", error);
-      toast.error("Failed to save selection. Please try again.");
+      toast.error(error?.message || "Failed to save selection. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -359,7 +420,7 @@ export default function OnboardingModal({
 
         {/* Modal Footer */}
         <div className="px-6 sm:px-8 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          { (
+          {step === 2 ? (
             <button
               type="button"
               onClick={handleBack}
@@ -368,6 +429,8 @@ export default function OnboardingModal({
             >
               Back
             </button>
+          ) : (
+            <div />
           )}
 
           {step === 2 && (

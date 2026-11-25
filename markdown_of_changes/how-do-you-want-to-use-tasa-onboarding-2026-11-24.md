@@ -120,3 +120,94 @@ Refined the Step 1 options in `src/components/onboarding/OnboardingModal.tsx`:
 - Updated Step 2 option cards to use slate-800 border and radio indicator matching Step 1
 - Restored standard conditional state checking in OnboardingProvider
 - Verified clean build with tsc --noEmit (0 errors)`
+
+
+---
+
+## Update: Wire Onboarding Modal to /api/auth/onboarding/user-type (2026-11-25)
+
+### Date
+2026-11-25
+
+### Summary
+Wired the onboarding modal submission directly to the backend endpoint `/api/auth/onboarding/user-type` with the contract payload:
+```json
+{
+  "role": "client",
+  "client_type": "business",
+  "vendor_type": "student"
+}
+```
+1. Created Next.js API proxy route `/api/auth/onboarding/user-type` that forwards authenticated requests with Bearer tokens to `${NEXT_PUBLIC_API_URL}/api/auth/onboarding/user-type` (handling both POST and PUT methods).
+2. Added subtype mappers (`mapVendorSubtype`, `mapClientSubtype`) to convert UI selections into canonical singular values (`student`, `creative`, `professional`, `artisan`, `business`, `individual`, `organisation`).
+3. Updated `OnboardingModal.tsx` to dispatch `{ role, client_type, vendor_type }` on submit.
+4. Updated `OnboardingProvider.tsx` and `UserData` to recognize `client_type` and `vendor_type` when verifying completion status.
+
+### Modifications
+- `src/app/api/auth/onboarding/user-type/route.ts` (NEW):
+  - **L1-L115**: Created route handling POST/PUT, extracting session/auth tokens, and forwarding payload to `${NEXT_PUBLIC_API_URL}/api/auth/onboarding/user-type`.
+- `src/components/onboarding/OnboardingModal.tsx`:
+  - **L25-L65**: Added `mapVendorSubtype` and `mapClientSubtype` mapping to canonical singular values.
+  - **L145-L210**: Updated `handleSubmit` to POST to `/api/auth/onboarding/user-type` with `{ role, client_type, vendor_type }`.
+  - **L420-L430**: Cleaned footer to only render the Back button when on `step === 2`.
+- `src/components/providers/OnboardingProvider.tsx`:
+  - **L75-L95**: Updated status check to detect `userData?.client_type` and `userData?.vendor_type`.
+- `src/lib/user.ts`:
+  - **L11-L12**: Added `client_type` and `vendor_type` to `UserData` interface.
+
+### Commit Draft - Short
+`feat(onboarding): wire OnboardingModal to /api/auth/onboarding/user-type endpoint`
+
+### Commit Draft - Long
+```text
+feat(onboarding): wire OnboardingModal to /api/auth/onboarding/user-type endpoint
+
+- Create Next.js API proxy route /api/auth/onboarding/user-type forwarding to backend with Bearer token
+- Map OnboardingModal category selections to canonical singular subtypes (student, creative, professional, artisan, business, individual, organisation)
+- Submit payload { role, client_type, vendor_type } upon completing onboarding
+- Update OnboardingProvider and UserData interface to check client_type and vendor_type
+- Verified clean build with tsc --noEmit (0 errors)
+```
+
+
+---
+
+## Update: Enable Onboarding Modal on Home Page for New and Uncompleted Users & Workspace Redirection (2026-11-25)
+
+### Date
+2026-11-25
+
+### Summary
+1. **Allowed Onboarding Modal on Home Page**:
+   - Removed the home page suppression check (`if (pathname === "/") return;`) in `OnboardingProvider.tsx`.
+   - Newly signed up users and existing users who have not yet completed their onboarding categorization will now see the onboarding modal pop up even if they are on the home page.
+2. **Targeted Display for Incomplete Users Only**:
+   - Users who have already made their selection (`client_type`, `vendor_type`, `userType`, `accountType`, `onboardingCompleted`) will never see the modal pop up.
+   - Cleared session dismissal flag upon fresh account creation so new signups always see the modal.
+3. **Workspace Redirection**:
+   - Once a user selects their categorization on the modal and submits, their selection is saved, completion is permanently cached, and they are redirected immediately to their respective dashboard:
+     - Talent/Vendors &rarr; `/v/dashboard` (vendor workspace)
+     - Clients &rarr; `/c/dashboard` (client workspace)
+4. **Clean Modal Transition**:
+   - Sequence-aligned `tasa:open-onboarding` event dispatch in `loginModal.tsx` immediately as the login modal closes to prevent visual overlap.
+
+### Modifications
+- `src/components/providers/OnboardingProvider.tsx`:
+  - **L30-L55**: Removed home page bypass so new/uncompleted users see the modal regardless of page.
+  - **L21-L26, L125-L135**: Cleared session dismissal flag on manual open events.
+- `src/app/component/parts/loginModal.tsx`:
+  - **L1142-L1146**: Triggered `tasa:open-onboarding` cleanly upon closing `loginModal`.
+
+### Commit Draft - Short
+`feat(onboarding): enable onboarding modal on home page for new users and redirect to dashboard`
+
+### Commit Draft - Long
+```text
+feat(onboarding): enable onboarding modal on home page for new users and redirect to dashboard
+
+- Remove home page suppression in OnboardingProvider so new and uncompleted users can categorize from the home page
+- Ensure modal only opens for users without client_type/vendor_type/userType/accountType
+- Redirect users upon onboarding completion to /v/dashboard (vendors) or /c/dashboard (clients)
+- Prevent completed users from ever seeing the onboarding modal again
+- Verified TypeScript compilation with tsc --noEmit (0 errors)
+```

@@ -8,6 +8,8 @@ export interface UserData {
   role: string;
   userType?: string;
   accountType?: string;
+  client_type?: string;
+  vendor_type?: string;
   onboardingCategory?: string;
   onboardingCompleted?: boolean;
   profileImage?: string;

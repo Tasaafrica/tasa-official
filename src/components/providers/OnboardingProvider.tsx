@@ -18,7 +18,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
-  const openOnboarding = () => setIsOpen(true);
+  const openOnboarding = () => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("tasa_onboarding_dismissed");
+    }
+    setIsOpen(true);
+  };
   const closeOnboarding = () => {
     setIsOpen(false);
     if (typeof window !== "undefined") {
@@ -33,22 +38,23 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       return;
     }
 
-    // Do NOT automatically open on the public home page
-    if (pathname === "/") {
-      setIsOpen(false);
-      return;
-    }
-
     // If dismissed in this browser session, do not auto-open
-    if (typeof window !== "undefined" && sessionStorage.getItem("tasa_onboarding_dismissed") === "true") {
+    if (
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("tasa_onboarding_dismissed") === "true"
+    ) {
       return;
     }
 
     const userId = session.user.id;
-    const localFlag = typeof window !== "undefined" ? localStorage.getItem(`tasa_onboarding_completed_${userId}`) : null;
+    const localFlag =
+      typeof window !== "undefined"
+        ? localStorage.getItem(`tasa_onboarding_completed_${userId}`)
+        : null;
 
     // If already marked completed in local storage, do not reopen automatically
     if (localFlag === "true") {
+      setIsOpen(false);
       return;
     }
 
@@ -73,11 +79,28 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
         if (!isMounted) return;
 
-        // If the user already has a userType or accountType or onboardingCompleted
-        if (userData?.userType || userData?.accountType || userData?.onboardingCompleted) {
+        // If the user already has a userType or accountType or onboardingCompleted or client/vendor type
+        if (
+          userData?.userType ||
+          userData?.accountType ||
+          userData?.onboardingCompleted ||
+          userData?.client_type ||
+          userData?.vendor_type
+        ) {
           localStorage.setItem(`tasa_onboarding_completed_${userId}`, "true");
-          if (userData?.userType) {
-            localStorage.setItem("tasa_user_type", userData.userType);
+          const assignedType =
+            userData?.userType ||
+            userData?.accountType ||
+            userData?.client_type ||
+            userData?.vendor_type;
+          if (assignedType) {
+            localStorage.setItem("tasa_user_type", assignedType);
+          }
+          if (userData?.client_type) {
+            localStorage.setItem("tasa_client_type", userData.client_type);
+          }
+          if (userData?.vendor_type) {
+            localStorage.setItem("tasa_vendor_type", userData.vendor_type);
           }
           if (userData?.role) {
             localStorage.setItem("tasa_user_category", userData.role);
@@ -101,7 +124,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   // Listen for manual trigger events (e.g. from registration or login)
   useEffect(() => {
-    const handleOpenEvent = () => setIsOpen(true);
+    const handleOpenEvent = () => {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("tasa_onboarding_dismissed");
+      }
+      setIsOpen(true);
+    };
     window.addEventListener("tasa:open-onboarding", handleOpenEvent);
     return () => {
       window.removeEventListener("tasa:open-onboarding", handleOpenEvent);

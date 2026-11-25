@@ -377,14 +377,7 @@ const Header: React.FC<HeaderProps> = ({
                   </span>
                 </button>
 
-                {mounted && isAuthenticated && user?.role === "client" && (
-                  <Link
-                    href="/become-a-vendor"
-                    className="ml-2 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--color-highlight-soft)] text-[var(--color-warning)] hover:bg-[var(--color-highlight-bg)]/20 border border-[var(--color-highlight-bg)]/40 transition-colors"
-                  >
-                    Become a Vendor
-                  </Link>
-                )}
+
               </nav>
 
               {/* Vertical Divider */}
@@ -437,10 +430,12 @@ const Header: React.FC<HeaderProps> = ({
                                 ? "/v/dashboard"
                                 : "/c/dashboard"
                             }
+                            target="_blank"
+                            rel="noopener noreferrer"
                             onClick={() => setIsUserMenuOpen(false)}
                             className="block px-4 py-2 text-sm text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors"
                           >
-                            Dashboard
+                            Workspace
                           </Link>
 
                           <button

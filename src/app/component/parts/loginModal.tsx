@@ -15,6 +15,10 @@ import {
 import { IoIosClose, IoMdMail } from "react-icons/io";
 import { z } from "zod";
 import OtpInput from "@/components/auth/OtpInput";
+import {
+  type EmailDomainSuggestion,
+  getEmailDomainSuggestion,
+} from "@/lib/email-validator";
 
 // Validation schemas
 const signinSchema = z.object({
@@ -39,7 +43,16 @@ const signupSchema = z
     email: z
       .string()
       .min(1, "Email is required")
-      .email("Invalid email address"),
+      .email("Invalid email address")
+      .superRefine((val, ctx) => {
+        const suggestion = getEmailDomainSuggestion(val);
+        if (suggestion) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Did you mean ${suggestion.suggested}? '${suggestion.originalDomain}' appears to be a typo.`,
+          });
+        }
+      }),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -173,6 +186,8 @@ export default function LoginModal({
       status: "idle",
       message: null,
     });
+  const [emailDomainSuggestion, setEmailDomainSuggestion] =
+    useState<EmailDomainSuggestion | null>(null);
 
   // Sign up (email OTP) stepper state
   const [signupStep, setSignupStep] = useState<
@@ -180,7 +195,7 @@ export default function LoginModal({
   >("credentials");
   const [signupEmail, setSignupEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [, setOtpVerified] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [providers, setProviders] = useState<Record<
     string,
@@ -268,6 +283,7 @@ export default function LoginModal({
       status: "idle",
       message: null,
     });
+    setEmailDomainSuggestion(null);
   };
 
   const switchToSignInWithEmail = (
@@ -346,6 +362,17 @@ export default function LoginModal({
 
     if (!isValidEmail(normalizedEmail)) {
       resetSignupEmailAvailability(normalizedEmail);
+      return "invalid";
+    }
+
+    const suggestion = getEmailDomainSuggestion(normalizedEmail);
+    if (suggestion) {
+      setEmailDomainSuggestion(suggestion);
+      setSignupEmailAvailability({
+        email: normalizedEmail,
+        status: "error",
+        message: `Did you mean ${suggestion.suggested}? '${suggestion.originalDomain}' appears to be a typo.`,
+      });
       return "invalid";
     }
 
@@ -428,10 +455,22 @@ export default function LoginModal({
     }
 
     if (!isValidEmail(normalizedEmail)) {
+      setEmailDomainSuggestion(null);
       setSignupEmailAvailability({
         email: normalizedEmail,
         status: "incomplete",
         message: "Please enter a complete email address",
+      });
+      return;
+    }
+
+    const domainSuggestion = getEmailDomainSuggestion(normalizedEmail);
+    setEmailDomainSuggestion(domainSuggestion);
+    if (domainSuggestion) {
+      setSignupEmailAvailability({
+        email: normalizedEmail,
+        status: "error",
+        message: `Did you mean ${domainSuggestion.suggested}? '${domainSuggestion.originalDomain}' appears to be a typo.`,
       });
       return;
     }
@@ -471,6 +510,7 @@ export default function LoginModal({
       setSuccess(null);
     }
 
+    setOtpVerified(false);
     scheduleSignupEmailCheck(email);
   };
 
@@ -481,8 +521,29 @@ export default function LoginModal({
       return;
     }
 
+    const domainSuggestion = getEmailDomainSuggestion(normalizedEmail);
+    setEmailDomainSuggestion(domainSuggestion);
+    if (domainSuggestion) {
+      setSignupEmailAvailability({
+        email: normalizedEmail,
+        status: "error",
+        message: `Did you mean ${domainSuggestion.suggested}? '${domainSuggestion.originalDomain}' appears to be a typo.`,
+      });
+      return;
+    }
+
     clearPendingEmailCheck();
     await verifySignupEmailAvailability(normalizedEmail);
+  };
+
+  const handleApplyEmailSuggestion = (suggestedEmail: string) => {
+    signupForm.setValue("email", suggestedEmail, {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+    setEmailDomainSuggestion(null);
+    scheduleSignupEmailCheck(suggestedEmail);
   };
 
   // --- Username availability check ---
@@ -993,7 +1054,14 @@ export default function LoginModal({
 
       if (result?.error) {
         console.error("Login modal sign in error:", result.error);
-        setError("Invalid email or password");
+        const domainSuggestion = getEmailDomainSuggestion(data.email);
+        if (domainSuggestion) {
+          setError(
+            `Invalid email or password. Did you mean ${domainSuggestion.suggested}?`,
+          );
+        } else {
+          setError("Invalid email or password");
+        }
       } else if (result?.ok) {
         setSuccess("Successfully signed in!");
         setTimeout(async () => {
@@ -1021,11 +1089,11 @@ export default function LoginModal({
       setError(null);
       setSuccess(null);
 
-      // if (!otpVerified) {
-      //   setError("Please verify your email before creating an account.");
-      //   setSignupStep("otp");
-      //   return;
-      // }
+      if (!otpVerified) {
+        setError("Please verify your email before creating an account.");
+        setSignupStep("otp");
+        return;
+      }
 
       const normalizedEmail = data.email.trim().toLowerCase();
       const name = data.name.trim();
@@ -1057,24 +1125,36 @@ export default function LoginModal({
         return;
       }
 
-      // Account created successfully, now send OTP and go to verify step
-      setSuccess("Account created successfully! Just one more thing....");
+      setSuccess("Account created successfully! Signing you in...");
 
-      // Automatically send OTP
-      try {
-        const otpResponse = await fetch("/api/otp/send", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: normalizedEmail }),
-        });
-        if (otpResponse.ok) {
-          setResendCooldown(30);
+      // Automatically sign in the newly registered user
+      const signInResult = await signIn("credentials", {
+        email: normalizedEmail,
+        password: data.password,
+        redirect: false,
+      });
+
+      if (signInResult?.ok) {
+        const session = await getSession();
+        if (session?.authToken) {
+          localStorage.setItem("auth_token", session.authToken);
         }
-      } catch (otpErr) {
-        console.error("Failed to auto-send OTP:", otpErr);
+        setTimeout(() => {
+          onSuccess?.();
+          onClose();
+          window.dispatchEvent(new CustomEvent("tasa:open-onboarding"));
+        }, 1000);
+      } else {
+        setError(
+          "Account created, but automatic sign-in failed. Please sign in with your credentials.",
+        );
+        setTimeout(() => {
+          switchToSignInWithEmail(
+            normalizedEmail,
+            "Account created! Please sign in with your credentials.",
+          );
+        }, 1500);
       }
-
-      setSignupStep("otp");
     } catch (error) {
       console.error("Login modal signup error:", error);
       setError("An unexpected error occurred. Please try again.");
@@ -1191,31 +1271,8 @@ export default function LoginModal({
       }
 
       setOtpVerified(true);
-      setSuccess("Email verified! Signing you in...");
-
-      // Final sign in after OTP verification
-      const data = signupForm.getValues();
-      const signInResult = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      });
-
-      if (signInResult?.ok) {
-        const session = await getSession();
-        if (session?.authToken) {
-          localStorage.setItem("auth_token", session.authToken);
-        }
-        window.dispatchEvent(new CustomEvent("tasa:open-onboarding"));
-        setTimeout(() => {
-          onSuccess?.();
-          onClose();
-        }, 1000);
-      } else {
-        setError(
-          "Verification successful, but failed to sign in automatically. Please try signing in manually.",
-        );
-      }
+      setSuccess("Email verified! Enter your details to complete your account.");
+      setSignupStep("personal");
     } catch (error) {
       console.error("Verify OTP error:", error);
       setError("An unexpected error occurred. Please try again.");
@@ -1245,6 +1302,16 @@ export default function LoginModal({
     if (!isValid) return;
 
     const normalizedEmail = normalizeEmail(signupForm.getValues("email"));
+    const domainSuggestion = getEmailDomainSuggestion(normalizedEmail);
+    if (domainSuggestion) {
+      setEmailDomainSuggestion(domainSuggestion);
+      signupForm.setError("email", {
+        type: "manual",
+        message: `Did you mean ${domainSuggestion.suggested}? '${domainSuggestion.originalDomain}' appears to be a typo. Please fix it to receive your verification code.`,
+      });
+      return;
+    }
+
     const availability = await verifySignupEmailAvailability(normalizedEmail);
 
     if (availability !== "available") {
@@ -1252,7 +1319,8 @@ export default function LoginModal({
     }
 
     setSignupEmail(normalizedEmail);
-    setSignupStep("personal");
+    // Send OTP to email and proceed to OTP verification step
+    await handleSendOtp({ email: normalizedEmail });
   };
 
   const handleSignupSubmitFromPersonal = async () => {
@@ -1295,13 +1363,13 @@ export default function LoginModal({
       return;
     }
 
-    if (signupStep === "personal") {
-      void handleSignupSubmitFromPersonal();
+    if (signupStep === "otp") {
+      void handleVerifyOtp();
       return;
     }
 
-    if (signupStep === "otp") {
-      void handleVerifyOtp();
+    if (signupStep === "personal") {
+      void handleSignupSubmitFromPersonal();
       return;
     }
   };
@@ -1363,22 +1431,22 @@ export default function LoginModal({
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex overflow-hidden h-5/6 relative animate-in fade-in-0 zoom-in-95">
         {/* Left Side - Motivation & Image */}
-        <div className="hidden md:flex w-1/2 h-full p-0 text-white bg-gradient-to-b from-teal-600 via-teal-700 to-teal-800 flex-col justify-between relative">
+        <div className="hidden md:flex w-1/2 h-full p-0 text-white bg-gradient-to-b from-[#334155] via-[#1e293b] to-[#0f172a] flex-col justify-between relative">
           <div className="p-8 pb-0 z-10 relative">
             <h2 className="text-3xl text-left font-bold mb-6 text-white">
               It all starts here <i className="text-2xl block">- Gain access</i>
             </h2>
             <ul className="space-y-4 mt-4 text-white text-lg">
               <li className="flex items-center gap-2">
-                <FiCheckCircle className="h-5 w-5 text-teal-300 flex-shrink-0" />
+                <FiCheckCircle className="h-5 w-5 text-[#82C0CC] flex-shrink-0" />
                 Quality work, Fast delivery
               </li>
               <li className="flex items-center gap-2">
-                <FiCheckCircle className="h-5 w-5 text-teal-300 flex-shrink-0" />
+                <FiCheckCircle className="h-5 w-5 text-[#82C0CC] flex-shrink-0" />
                 Skills for any project
               </li>
               <li className="flex items-center gap-2">
-                <FiCheckCircle className="h-5 w-5 text-teal-300 flex-shrink-0" />
+                <FiCheckCircle className="h-5 w-5 text-[#82C0CC] flex-shrink-0" />
                 Skilled hands ready to deliver
               </li>
             </ul>
@@ -1437,7 +1505,7 @@ export default function LoginModal({
                     : "Already have an account? "}
                   <button
                     type="button"
-                    className="text-teal-600 hover:underline font-medium"
+                    className="text-[#489FB5] hover:underline font-medium"
                     onClick={toggleMode}
                     disabled={isLoading}
                   >
@@ -1513,7 +1581,7 @@ export default function LoginModal({
                   <button
                     type="button"
                     onClick={() => setShowEmailForm(false)}
-                    className="text-teal-600 hover:text-teal-700"
+                    className="text-[#489FB5] hover:text-[#388295] font-medium"
                     disabled={isLoading}
                   >
                     Back
@@ -1542,7 +1610,7 @@ export default function LoginModal({
                         type="email"
                         id="email"
                         {...signinForm.register("email")}
-                        className="w-full p-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full p-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#489FB5] focus:border-transparent"
                         placeholder="Enter your email"
                         disabled={isLoading}
                       />
@@ -1565,7 +1633,7 @@ export default function LoginModal({
                           type={showPassword ? "text" : "password"}
                           id="password"
                           {...signinForm.register("password")}
-                          className="w-full p-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent pr-10"
+                          className="w-full p-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#489FB5] focus:border-transparent pr-10"
                           placeholder="Enter your password"
                           disabled={isLoading}
                         />
@@ -1587,7 +1655,7 @@ export default function LoginModal({
 
                     <button
                       type="submit"
-                      className="w-full bg-teal-600 text-white p-3 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-[#334155] text-white p-3 rounded-lg hover:bg-[#1E293B] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                       disabled={isLoading}
                     >
                       {isLoading ? "Signing in..." : "Sign In"}
@@ -1599,6 +1667,88 @@ export default function LoginModal({
                     onSubmit={handleSignupStepperSubmit} /* STEPPER */
                     className="space-y-4"
                   >
+                    {/* Stepper Progress Indicator */}
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                            signupStep === "credentials"
+                              ? "bg-[#334155] text-white"
+                              : "bg-[#489FB5] text-white"
+                          }`}
+                        >
+                          1
+                        </span>
+                        <span
+                          className={`text-xs ${
+                            signupStep === "credentials"
+                              ? "font-semibold text-slate-900"
+                              : "text-slate-500"
+                          }`}
+                        >
+                          Account
+                        </span>
+                      </div>
+                      <div className="flex-1 mx-2 h-0.5 bg-slate-200">
+                        <div
+                          className="h-full bg-[#334155] transition-all duration-300"
+                          style={{
+                            width: signupStep === "credentials" ? "0%" : "100%",
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                            signupStep === "otp"
+                              ? "bg-[#334155] text-white"
+                              : signupStep === "personal"
+                                ? "bg-[#489FB5] text-white"
+                                : "bg-slate-200 text-slate-500"
+                          }`}
+                        >
+                          2
+                        </span>
+                        <span
+                          className={`text-xs ${
+                            signupStep === "otp"
+                              ? "font-semibold text-slate-900"
+                              : "text-slate-500"
+                          }`}
+                        >
+                          Verify OTP
+                        </span>
+                      </div>
+                      <div className="flex-1 mx-2 h-0.5 bg-slate-200">
+                        <div
+                          className="h-full bg-[#334155] transition-all duration-300"
+                          style={{
+                            width: signupStep === "personal" ? "100%" : "0%",
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                            signupStep === "personal"
+                              ? "bg-[#334155] text-white"
+                              : "bg-slate-200 text-slate-500"
+                          }`}
+                        >
+                          3
+                        </span>
+                        <span
+                          className={`text-xs ${
+                            signupStep === "personal"
+                              ? "font-semibold text-slate-900"
+                              : "text-slate-500"
+                          }`}
+                        >
+                          Profile
+                        </span>
+                      </div>
+                    </div>
+
                     {/* Hidden inputs for submission/validation */}
                     <input type="hidden" {...signupForm.register("email")} />
 
@@ -1617,15 +1767,17 @@ export default function LoginModal({
                               id="signupEmail"
                               {...signupEmailField}
                               className={`w-full rounded-lg border p-3 pr-10 text-black focus:ring-2 focus:border-transparent ${
-                                showSignupEmailAvailability &&
-                                signupEmailAvailability.status === "available"
+                                emailDomainSuggestion
+                                  ? "border-amber-400 focus:ring-amber-500"
+                                  : showSignupEmailAvailability &&
+                                    signupEmailAvailability.status === "available"
                                   ? "border-green-400 focus:ring-green-500"
                                   : showSignupEmailAvailability &&
                                       signupEmailAvailability.status === "error"
                                     ? "border-red-300 focus:ring-red-500"
                                     : showSignupEmailIncomplete
                                       ? "border-amber-300 focus:ring-amber-500"
-                                      : "border-gray-300 focus:ring-teal-500"
+                                      : "border-gray-300 focus:ring-[#489FB5]"
                               }`}
                               placeholder="Enter your email"
                               disabled={isLoading}
@@ -1643,24 +1795,55 @@ export default function LoginModal({
                                 <FiLoader className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-gray-400" />
                               )}
                             {showSignupEmailAvailability &&
+                              !emailDomainSuggestion &&
                               signupEmailAvailability.status ===
                                 "available" && (
                                 <FiCheckCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-green-500" />
                               )}
-                            {showSignupEmailAvailability &&
-                              signupEmailAvailability.status === "error" && (
-                                <FiAlertCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-red-500" />
-                              )}
-                            {showSignupEmailIncomplete && (
-                                <FiAlertCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-500" />
-                              )}
+                            {((showSignupEmailAvailability &&
+                              signupEmailAvailability.status === "error") ||
+                              emailDomainSuggestion) && (
+                              <FiAlertCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-500" />
+                            )}
+                            {showSignupEmailIncomplete && !emailDomainSuggestion && (
+                              <FiAlertCircle className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-500" />
+                            )}
                           </div>
+
+                          {/* Email typo suggestion interactive chip */}
+                          {emailDomainSuggestion && (
+                            <div className="mt-2.5 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between gap-2.5 text-xs text-amber-900 animate-in fade-in duration-150 shadow-sm">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FiAlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                                <span className="truncate">
+                                  Did you mean{" "}
+                                  <strong className="underline font-semibold text-amber-950">
+                                    {emailDomainSuggestion.suggested}
+                                  </strong>
+                                  ?
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleApplyEmailSuggestion(
+                                    emailDomainSuggestion.suggested,
+                                  )
+                                }
+                                className="px-2.5 py-1 bg-[#334155] text-white rounded-lg text-[11px] font-semibold hover:bg-[#1E293B] transition-colors flex-shrink-0 shadow-sm"
+                              >
+                                Fix email
+                              </button>
+                            </div>
+                          )}
+
                           {signupForm.formState.errors.email && (
                             <p className="text-red-500 text-sm mt-1">
                               {signupForm.formState.errors.email.message}
                             </p>
                           )}
                           {!signupForm.formState.errors.email &&
+                            !emailDomainSuggestion &&
                             showSignupEmailAvailability &&
                             signupEmailAvailability.status === "checking" && (
                               <p className="mt-1 text-sm text-gray-500">
@@ -1668,6 +1851,7 @@ export default function LoginModal({
                               </p>
                             )}
                           {!signupForm.formState.errors.email &&
+                            !emailDomainSuggestion &&
                             showSignupEmailAvailability &&
                             signupEmailAvailability.status === "available" && (
                               <p className="mt-1 text-sm text-green-600">
@@ -1675,6 +1859,7 @@ export default function LoginModal({
                               </p>
                             )}
                           {!signupForm.formState.errors.email &&
+                            !emailDomainSuggestion &&
                             showSignupEmailAvailability &&
                             signupEmailAvailability.status === "error" &&
                             signupEmailAvailability.message && (
@@ -1682,7 +1867,8 @@ export default function LoginModal({
                                 {signupEmailAvailability.message}
                               </p>
                             )}
-                          {showSignupEmailIncomplete &&
+                          {!emailDomainSuggestion &&
+                            showSignupEmailIncomplete &&
                             signupEmailAvailability.message && (
                               <p className="mt-1 text-sm text-amber-600">
                                 {signupEmailAvailability.message}
@@ -1703,7 +1889,7 @@ export default function LoginModal({
                               type={showPassword ? "text" : "password"}
                               id="signupPassword"
                               {...signupForm.register("password")}
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent pr-10 text-black"
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#489FB5] focus:border-transparent pr-10 text-black"
                               placeholder="Create a password"
                               disabled={isLoading}
                               onChange={(e) => {
@@ -1748,7 +1934,7 @@ export default function LoginModal({
                               type={showConfirmPassword ? "text" : "password"}
                               id="confirmPassword"
                               {...signupForm.register("confirmPassword")}
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent pr-10 text-black"
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#489FB5] focus:border-transparent pr-10 text-black"
                               placeholder="Confirm your password"
                               disabled={isLoading}
                             />
@@ -1777,18 +1963,16 @@ export default function LoginModal({
 
                     {signupStep === "otp" && (
                       <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-teal-700 font-medium bg-teal-50 p-2 rounded-lg border border-teal-100">
-                          <FiCheckCircle className="h-5 w-5" />
-                          <span>Account created successfully!</span>
-                        </div>
-
-                        <p className="text-xl font-bold text-teal-800 animate-pulse text-center">
-                          Just one more thing....
-                        </p>
-
-                        <div className="text-sm text-gray-700">
-                          Enter the 6-digit code sent to{" "}
-                          <span className="font-medium">{signupEmail}</span>.
+                        <div className="text-center space-y-1">
+                          <h3 className="text-lg font-bold text-slate-900">
+                            Verify your email
+                          </h3>
+                          <p className="text-xs sm:text-sm text-slate-600">
+                            Enter the 6-digit code sent to{" "}
+                            <span className="font-semibold text-slate-800">
+                              {signupEmail}
+                            </span>
+                          </p>
                         </div>
 
                         <OtpInput
@@ -1798,10 +1982,10 @@ export default function LoginModal({
                           autoFocus
                         />
 
-                        <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center justify-between text-xs sm:text-sm pt-1">
                           <button
                             type="button"
-                            className="text-gray-700 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="text-slate-600 hover:text-slate-900 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={handleSignupBackToEmail}
                             disabled={isLoading}
                           >
@@ -1810,7 +1994,7 @@ export default function LoginModal({
 
                           <button
                             type="button"
-                            className="text-teal-700 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="text-[#489FB5] font-medium hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={handleResendOtp}
                             disabled={
                               isLoading || resendCooldown > 0 || !signupEmail
@@ -1825,6 +2009,27 @@ export default function LoginModal({
                     )}
                     {signupStep === "personal" && (
                       <div className="space-y-4">
+                        {/* Verified Email Confirmation Badge */}
+                        <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                          <div className="flex items-center gap-2 text-slate-700 min-w-0">
+                            <FiCheckCircle className="h-4 w-4 text-[#489FB5] flex-shrink-0" />
+                            <span className="truncate">
+                              Verified:{" "}
+                              <strong className="text-slate-900">
+                                {signupEmail}
+                              </strong>
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleSignupBackToEmail}
+                            className="text-[#489FB5] hover:underline font-medium ml-2 flex-shrink-0"
+                            disabled={isLoading}
+                          >
+                            Change
+                          </button>
+                        </div>
+
                         <div>
                           <label
                             htmlFor="signupName"
@@ -1836,7 +2041,7 @@ export default function LoginModal({
                             type="text"
                             id="signupName"
                             {...signupForm.register("name")}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#489FB5] focus:border-transparent text-black"
                             placeholder="Enter your name"
                             disabled={isLoading}
                           />
@@ -1871,7 +2076,7 @@ export default function LoginModal({
                                     ? "border-red-300 focus:ring-red-500"
                                     : showSignupUsernameIncomplete
                                       ? "border-amber-300 focus:ring-amber-500"
-                                      : "border-gray-300 focus:ring-teal-500"
+                                      : "border-gray-300 focus:ring-[#489FB5]"
                               }`}
                               placeholder="Choose a username"
                               disabled={isLoading}
@@ -1941,7 +2146,7 @@ export default function LoginModal({
                       {signupStep === "personal" && (
                         <button
                           type="button"
-                          className="w-1/3 border border-gray-300 text-gray-700 p-3 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-1/3 border border-gray-300 text-gray-700 p-3 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                           onClick={() => setSignupStep("credentials")}
                           disabled={isLoading}
                         >
@@ -1954,7 +2159,7 @@ export default function LoginModal({
                           signupStep === "credentials" || signupStep === "otp"
                             ? "w-full"
                             : "w-2/3"
-                        } bg-teal-600 text-white p-3 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                        } bg-[#334155] text-white p-3 rounded-lg hover:bg-[#1E293B] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium`}
                         disabled={
                           isLoading ||
                           (signupStep === "credentials" && isCheckingEmail) ||
@@ -1966,7 +2171,7 @@ export default function LoginModal({
                         {signupStep === "otp"
                           ? isLoading
                             ? "Verifying..."
-                            : "Verify OTP"
+                            : "Verify Code"
                           : signupStep === "personal"
                             ? isLoading
                               ? "Creating Account..."
