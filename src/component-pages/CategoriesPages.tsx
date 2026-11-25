@@ -101,15 +101,19 @@ export default function CategoriesPage({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Header />
+    <div className="min-h-screen bg-[var(--color-bg-page)] text-[var(--color-text-primary)]">
+      <Header
+        variant="white"
+        categoryName={categoryName}
+        categorySlug={categorySlug}
+      />
 
       <CategoryHero
         title={categoryName}
         categorySlug={categorySlug}
         description={`Discover specialized services and expertise within ${categoryName.toLowerCase()}. Find the perfect vendor for your needs.`}
         breadcrumbs={[
-          { label: "Categories", href: "/categories" },
+          { label: "Categories", href: "/industries" },
           { label: categoryName },
         ]}
         onSearch={setSearchQuery}
@@ -118,53 +122,11 @@ export default function CategoriesPage({
       />
 
 
-      <section className="pb-8 mt-6">
-        <div className="container mx-auto px-4 sm:px-8 md:px-10 lg:px-16">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
-              
-              Featured Skills & Services
-            </h2>
-          </div>
-
-          {featuredSkills.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {featuredSkills.map((skill) => (
-                <Link
-                  key={skill._id}
-                  href={`/skills/${skill.slug}`}
-                  className="group p-4 hover:border-teal-200 transition-all"
-                >
-                  <p className="text-sm font-semibold text-slate-900 group-hover:text-teal-700 transition-colors">
-                    {skill.name}
-                  </p>
-                  <p className="mt-2 text-xs text-slate-500 line-clamp-2">
-                    {skill.description ||
-                      `Explore expert ${skill.name.toLowerCase()} services and qualified vendors.`}
-                  </p>
-                  <span className="mt-4 inline-flex items-center text-xs font-semibold text-teal-700">
-                    View <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                  </span>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
-              <p className="text-slate-600">No featured skills available yet.</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      
-
-
-
       <section className="pb-12 sm:pb-16">
-        <div className="container mx-auto px-4 sm:px-8 md:px-10 lg:px-16">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 md:p-8">
+        <div className="container-responsive">
+          <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5 sm:p-6 md:p-8 shadow-xs">
             <div className="mb-5 sm:mb-6">
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 text-center sm:text-left">
+              <h3 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] text-center sm:text-left">
                 More Skills & Services In {categoryName}
               </h3>
             </div>
@@ -175,14 +137,14 @@ export default function CategoriesPage({
                   <Link
                     key={skill._id}
                     href={`/skills/${skill.slug}`}
-                    className="text-sm text-slate-700 hover:text-teal-700 transition-colors py-1 text-center sm:text-left"
+                    className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-brand-primary)] transition-colors py-1 text-center sm:text-left"
                   >
                     {skill.name}
                   </Link>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-[var(--color-text-secondary)]">
                 No additional skills available yet.
               </p>
             )}
@@ -190,18 +152,18 @@ export default function CategoriesPage({
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 bg-slate-100">
-        <div className="container mx-auto px-4 sm:px-8 md:px-10 lg:px-16 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+      <section className="py-12 sm:py-16 bg-[var(--color-bg-subtle)] border-t border-[var(--color-border)]">
+        <div className="container-responsive text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-4">
             Need Something Specific?
           </h2>
-          <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Can't find what you're looking for? Our professionals are ready to
+          <p className="text-base sm:text-lg text-[var(--color-text-secondary)] mb-8 max-w-2xl mx-auto">
+            Can&apos;t find what you&apos;re looking for? Our professionals are ready to
             help with custom solutions.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link href="/contact">
-              <Button size="lg" className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700">
+              <Button size="lg" className="w-full sm:w-auto bg-[var(--color-brand-primary)] hover:bg-[var(--color-button-secondary-hover)] text-white font-semibold">
                 Contact Us
               </Button>
             </Link>
@@ -209,7 +171,7 @@ export default function CategoriesPage({
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full sm:w-auto border-slate-300 text-slate-700 hover:bg-slate-200"
+                className="w-full sm:w-auto border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] bg-white"
               >
                 Explore All Categories
               </Button>

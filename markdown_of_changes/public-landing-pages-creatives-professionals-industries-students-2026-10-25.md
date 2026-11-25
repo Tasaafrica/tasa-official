@@ -2010,6 +2010,195 @@ Generated monochrome all-white (`#FFFFFF`) and dark slate brand color (`#334155`
 - Created web-ready and high-resolution assets in public/logos/ and wordmark in public/logo/
 - Verified with TypeScript validation`
 
+---
+
+## Update: Centered Widescreen Hero Layout on Students Landing Page
+
+### Date
+2026-11-08
+
+### Summary
+Updated the Hero section of the Students landing page (`/students`) to a clean centered layout featuring the widescreen banner `african-students.png`:
+1. **Centered Hero Headline**:
+   - Removed the eyebrow badge (`Campus Talent & Student Creators`) and reduced excessive top padding on the hero section from `pt-28 sm:pt-32 lg:pt-36` to `pt-8 sm:pt-10 lg:pt-12` to eliminate awkward empty spacing below the header.
+   - Updated headline to: *"Your Talent Can Take You Further."* with brand-primary styling on the key accent phrase.
+2. **Centered Widescreen Hero Image**:
+   - Integrated `/image/african-students.png` (2048x768 widescreen) in a centered rounded container with border and subtle elevation shadow directly below the headline.
+3. **Centered Description, Actions & Highlights**:
+   - Updated narrative description to: *"Turn what you know, what you create and what you can do into real opportunities. Showcase your skills, connect with clients and start building your professional journey while you learn."*
+   - Centered CTA buttons ("Join the Student Community" & "Explore In-Demand Skills") and centered key metrics ("Zero Fees", "Part-Time", "Protected Escrow").
+4. **Metadata Alignment**:
+   - Updated OpenGraph and Twitter card image references in `src/app/students/layout.tsx` to `/image/african-students.png`.
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L4-L18**: Removed unused `CheckCircle2` and `GraduationCap` icon imports.
+  - **L164-L260**: Reduced top padding from `pt-28 sm:pt-32 lg:pt-36` to `pt-8 sm:pt-10 lg:pt-12`, removed the `Campus Talent & Student Creators` badge, centered the headline, widescreen image banner `/image/african-students.png`, narrative description, CTAs, and highlight metrics.
+- `src/app/students/layout.tsx`:
+  - **L27, L36**: Updated OpenGraph and Twitter card preview images to `/image/african-students.png`.
+
+### Commit Draft - Short
+`feat(students): remove eyebrow badge and reduce hero top spacing`
+
+### Commit Draft - Long
+`feat(students): remove eyebrow badge and reduce hero top spacing
+
+- Removed 'Campus Talent & Student Creators' badge and unused GraduationCap import
+- Reduced hero top padding to pt-8 sm:pt-10 lg:pt-12 for balanced vertical spacing
+- Centered headline 'Your Talent Can Take You Further.' and widescreen banner
+- Verified TypeScript compilation and responsiveness`
+
+---
+
+## Update: Redesigned Students FAQ Section to Match Creatives Page
+
+### Date
+2026-11-08
+
+### Summary
+Redesigned the FAQ section on the Students landing page (`/students`) to match the 2-column sticky layout and interactive accordion styling from the Creatives page:
+1. **Split-Screen Sticky Layout**:
+   - Replaced centered single-column layout with a 12-column responsive grid (`grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16`).
+   - Left column (`lg:col-span-5 lg:sticky lg:top-28`) features a bold, clean typography stack: uppercase brand accent pill label (`Common Questions`), large headline (`FAQ`), and helpful introductory narrative.
+2. **Interactive Modern Accordions**:
+   - Right column (`lg:col-span-7 space-y-3.5`) features elevated white card containers with border, subtle shadow, and circular rotating `Plus` toggle icons (`rotate-45` on active state).
+   - Smooth animated opening and collapse transitions using native CSS Grid transitions (`grid-rows-[1fr]` to `grid-rows-[0fr]`), avoiding Turbopack HMR cache collisions with dynamic `AnimatePresence` chunk factories.
+3. **Comprehensive Student Answers**:
+   - Expanded student questions covering course balancing, lack of commercial experience, escrow payouts, zero registration fees, pausing during exam periods, and escrow protection against client non-payment.
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L1-L22**: Imported `Plus` icon from `lucide-react`, removing `ChevronDown` and avoiding extra dynamic `AnimatePresence` chunk dependencies.
+  - **L110-L154**: Restructured `STUDENT_FAQS` schema with `question` and `answer`, initialized default open index (`useState<number | null>(0)`), and added `toggleFaq` handler.
+  - **L480-L555**: Redesigned FAQ section into the 2-column sticky split layout with GPU-accelerated CSS Grid accordion transitions (`grid-rows-[1fr]/[0fr]`) and rotating plus icon toggles.
+
+### Commit Draft - Short
+`feat(students): redesign FAQ section to match creatives layout with CSS grid transitions`
+
+### Commit Draft - Long
+`feat(students): redesign FAQ section to match creatives layout with CSS grid transitions
+
+- Transformed students FAQ into a 2-column responsive layout with sticky header column
+- Replaced Framer Motion AnimatePresence with GPU-accelerated CSS grid transitions to resolve Turbopack HMR chunk factory collision
+- Enhanced student FAQ copy to cover course flexibility, exams, escrow security, and zero fees
+- Verified TypeScript compilation and responsive styling`
+
+---
+
+## Update: Replaced "Why Start Now" with "Learn. Create. Earn. Grow." Section
+
+### Date
+2026-11-08
+
+### Summary
+Completely replaced the legacy "Why Start Now?" benefits section on the Students landing page (`/students`) with a high-impact, 3-column visual arena titled **"Learn. Create. Earn. Grow."** showcasing `African-female-student.png`:
+1. **Bold Centered Headline**:
+   - Replaced "Why Start Now? The Best Way to Earn & Learn" with headline: *"Learn. Create. Earn. Grow."* (with brand primary accent styling).
+   - Added descriptive subheadline explaining how students turn academic studies into real-world independence.
+2. **Featured Portrait Visual**:
+   - Centered `African-female-student.png` (1536x2752 transparent portrait cutout) framed by subtle brand radial gradients and elevation shadow.
+3. **Flanking 4 Pillars**:
+   - **01. Learn**: Master practical skills through real client briefs that complement coursework.
+   - **02. Create**: Produce tangible deliverables across design, code, writing, and multimedia.
+   - **03. Earn**: Protected milestone payments in escrow deposited directly to local bank or mobile wallet.
+   - **04. Grow**: Graduate with verified proof of work, five-star reviews, and career-launching professional networks.
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L4-L16**: Cleaned up unused `Clock` and `ShieldCheck` icon imports.
+  - **L77-L105**: Replaced `STUDENT_BENEFITS` with `STUDENT_PILLARS` containing the 4 pillars (Learn, Create, Earn, Grow) with icons, numbers, and structured copy.
+  - **L287-L380**: Implemented the new 3-column visual stage featuring `African-female-student.png` in the center and the 4 pillar cards flanking on the left and right.
+
+### Commit Draft - Short
+`feat(students): replace benefits section with Learn. Create. Earn. Grow. stage`
+
+### Commit Draft - Long
+`feat(students): replace benefits section with Learn. Create. Earn. Grow. stage
+
+- Replaced 'Why Start Now' section with 'Learn. Create. Earn. Grow.' visual stage
+- Integrated African-female-student.png portrait asset in the center of the 4 pillars
+- Structured 4 student pillars: Learn (01), Create (02), Earn (03), Grow (04)
+- Cleaned up unused icon imports and verified TypeScript compilation`
+
+---
+
+## Update: Added "TASA for Minors" Section on Students Landing Page
+
+### Date
+2026-11-16
+
+### Summary
+Added a dedicated **"TASA for Minors"** section immediately preceding the FAQ section on the Students landing page (`/students`) to provide a secure, parent-supported pathway for talented students aged 13–17:
+1. **Pill Badge & Header**:
+   - Eyebrow badge: `Age 13–17 & Parent Guidance` with `ShieldCheck` icon.
+   - Headline: *"TASA for Minors"* with brand primary accent and introductory narrative explaining safety, parental consent, and ethical freelancing.
+2. **4 Core Protection Pillars for Minors**:
+   - **Parental Co-Pilot**: Accounts created and managed with parent or legal guardian consent and oversight.
+   - **Guardian-Linked Payouts**: Escrow earnings deposited directly to a verified parent or guardian's bank or mobile money account.
+   - **Studies Always First**: Capped project commitments and flexible delivery schedules so schooling and exams always take priority.
+   - **Safe & Escrow Protected**: Upfront milestone escrow funding preventing non-payment, scope creep, or unfair client interactions.
+3. **Parent/Guardian Callout Banner**:
+   - Dedicated prompt for parents and guardians to co-setup profiles and review guidelines with a direct *"Get Started Together"* CTA.
+4. **FAQ Complement**:
+   - Added a specific question and answer to `STUDENT_FAQS` clarifying age requirements (13–17), guardian consent, and payout rules.
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L4-L20**: Imported `Lock`, `ShieldCheck`, `Sparkles`, and `Users` from `lucide-react`.
+  - **L140-L147**: Added under-18 FAQ question and answer to `STUDENT_FAQS`.
+  - **L525-L640**: Added the responsive `TASA for Minors` section directly before the FAQ section.
+- `src/app/layout.tsx`:
+  - **L32**: Cleaned up stray typo character artifact on `Source_Sans_3` font declaration.
+
+### Commit Draft - Short
+`feat(students): add TASA for Minors section before FAQ`
+
+### Commit Draft - Long
+`feat(students): add TASA for Minors section before FAQ
+
+- Created dedicated 'TASA for Minors' section with 4 safety and parental guidance pillars
+- Added parent/guardian co-pilot callout banner with direct onboarding CTA
+- Added minor eligibility question and answer to STUDENT_FAQS
+- Cleaned up font definition in layout.tsx and verified with TypeScript compilation`
+
+---
+
+## Update: Replaced Skills Boxes with "teen-on-books.png" & Redesigned How It Works
+
+### Date
+2026-11-17
+
+### Summary
+1. **Replaced Skills Boxes with Featured Illustration**:
+   - In the *"What Skills Can You Offer?"* section (`#student-tracks`), removed the 6 skill cards and replaced them with `teen-on-books.png` (1536x1024) with alt text: *"Balanced on Books, Brimming with Skills"*.
+   - Centered the illustration within a responsive container featuring ambient radial glow and subtle elevation.
+   - Removed unused icons (`Code`, `Laptop`, `Palette`, `Video`) from `STUDENT_SKILL_TRACKS`.
+2. **Redesigned 4-Step "How It Works" Section**:
+   - In the *"How to Get Started on Tasa"* section (`#how-it-works`), removed verbose paragraph descriptions across all steps.
+   - Introduced purpose-fit visual icons for each step:
+     - **01**: `UserPlus` (*"Sign Up as a Vendor"*)
+     - **02**: `Sparkles` (*"Publish Your First Gig"*)
+     - **03**: `CheckCircle2` (*"Deliver with Care"*)
+     - **04**: `Wallet` (*"Withdraw Earnings"*)
+   - Styled cards with brand-soft icon badges, mono numbers (`01`–`04`), and hover transitions.
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L4-L18**: Cleaned up unused icon imports and added `CheckCircle2`, `UserPlus`, `Wallet`.
+  - **L28-L50**: Replaced `STUDENT_SKILL_TRACKS` with `STUDENT_STEPS`.
+  - **L365-L400**: Replaced skill cards grid in `#student-tracks` with centered `teen-on-books.png` asset and specified alt text.
+  - **L405-L480**: Implemented concise 4-step layout without description text.
+
+### Commit Draft - Short
+`feat(students): replace skills boxes with teen-on-books visual and streamline how it works`
+
+### Commit Draft - Long
+`feat(students): replace skills boxes with teen-on-books visual and streamline how it works
+
+- Replaced 6 skill track cards with teen-on-books.png illustration and descriptive alt text
+- Streamlined 4-step 'How to Get Started' section by removing body copy and using icons
+- Added UserPlus, Sparkles, CheckCircle2, and Wallet icons for the 4 steps
+- Cleaned up unused Lucide icon imports and verified with TypeScript compilation`
 
 
 
@@ -2032,3 +2221,342 @@ Generated monochrome all-white (`#FFFFFF`) and dark slate brand color (`#334155`
 
 
 
+
+
+---
+
+## Update: Refined "How to Get Started on TASA" Section & Closing CTA
+
+### Date
+2026-11-18
+
+### Summary
+1. **Updated Step Content & Structure in "How to Get Started on TASA"**:
+   - Updated section heading to "How to Get Started on TASA" and subtitle to "Your journey from learning a skill to finding real opportunities starts with a few simple steps."
+   - Updated the 4 steps with official copy and descriptions:
+     - **01 — Create Your Account**: "Join TASA and set up your profile. Tell us a little about yourself, what you're learning and the skills you're developing." (`UserPlus` icon)
+     - **02 — Showcase What You Can Do**: "Add your skills, projects, experience and portfolio. Whether you've worked with a client or completed a personal project, let people see what you're capable of." (`Sparkles` icon)
+     - **03 — Discover Opportunities**: "Explore projects, connect with potential clients and find opportunities that match your abilities. Start conversations and put your skills to work." (`Compass` icon)
+     - **04 — Build Your Experience**: "Take on opportunities, deliver great work, earn from your skills and build a professional reputation that can open doors to even bigger possibilities." (`Award` icon)
+2. **Added Closing CTA**:
+   - Integrated closing callout block: "Ready to take your first step? Join TASA and put your talent to work."
+   - Added primary interactive button "Join TASA Today" triggering student onboarding modal via `handleCTAClick`.
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L4-L18**: Updated icon imports, adding `Award` and `Compass`.
+  - **L29-L55**: Updated `STUDENT_STEPS` array with new step titles, icons, and descriptions.
+  - **L415-L485**: Rendered step descriptions on the cards and added the centered closing CTA block beneath the grid.
+
+### Commit Draft - Short
+`feat(students): update how to get started on TASA section and add closing CTA`
+
+### Commit Draft - Long
+`feat(students): update how to get started on TASA section and add closing CTA
+
+- Updated 'How to Get Started on TASA' section header and subtitle
+- Added detailed step descriptions and custom icons for all 4 student onboarding steps:
+  1. Create Your Account
+  2. Showcase What You Can Do
+  3. Discover Opportunities
+  4. Build Your Experience
+- Added closing CTA block with interactive Join TASA button
+- Verified TypeScript compilation and brand color compliance`
+---
+
+## Update: Redesigned "How to Get Started on TASA" with Creatives Card Style
+
+### Date
+2026-11-18
+
+### Summary
+- Redesigned the *"How to Get Started on TASA"* section (`#how-it-works`) on the Students page to match the dark slate card layout from the *"Your talent deserves better!"* section on the Creatives page.
+- Migrated the section background to clean `bg-white` for optimal contrast against the surrounding subtle neutral tracks section.
+- Replaced the light card styling with dark slate cards (`bg-[var(--color-brand-dark)]`), crisp white circular step number badges (`w-10 h-10 rounded-full bg-white text-[var(--color-brand-dark)]`), top-right accent icon badges, bold white titles, and readable `text-slate-300` descriptions.
+- Retained the centered closing CTA block with interactive "Join TASA Today" button.
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L410-L475**: Redesigned `#how-it-works` using the Creatives value proposition dark card pattern (`bg-[var(--color-brand-dark)] text-white`), circular white number pills, and interactive hover transitions.
+
+### Commit Draft - Short
+`style(students): redesign how to get started section to match creatives dark card pattern`
+
+### Commit Draft - Long
+`style(students): redesign how to get started section to match creatives dark card pattern
+
+- Switched #how-it-works container to clean bg-white with border-b
+- Adopted the 'Your talent deserves better!' dark card style (bg-[var(--color-brand-dark)])
+- Added white circular number badge (01–04) and companion icon badge
+- Styled step titles in bold white and descriptions in text-slate-300
+- Verified TypeScript compilation and brand color compliance`
+
+
+---
+
+## Update: Removed Top-Right Icons from Student How-It-Works Cards
+
+### Date
+2026-11-18
+
+### Summary
+- Removed the top-right companion icons from the 4 student onboarding step cards in `#how-it-works`, achieving the pure, minimalist card layout matching the Creatives *"Your talent deserves better!"* design.
+- Streamlined each card to feature only the bold white circular number badge (`w-10 h-10 rounded-full bg-white text-[var(--color-brand-dark)]`), bold white title, and `text-slate-300` description.
+- Cleaned up unused Lucide icon imports (`Award`, `Compass`, `UserPlus`) and data definitions.
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L4-L18**: Cleaned up icon imports (`Award`, `Compass`, `UserPlus` removed).
+  - **L26-L55**: Removed `icon` properties from `STUDENT_STEPS`.
+  - **L420-L450**: Simplified card top header to display solely the white number circle badge with smooth hover scale.
+
+### Commit Draft - Short
+`style(students): remove companion icons from how-it-works cards for minimalist layout`
+
+### Commit Draft - Long
+`style(students): remove companion icons from how-it-works cards for minimalist layout
+
+- Removed top-right icon badges from the 4 step cards in #how-it-works
+- Kept the prominent white circular number badge (01, 02, 03, 04)
+- Removed unused icon imports from lucide-react (Award, Compass, UserPlus)
+- Verified clean TypeScript compilation`
+
+
+---
+
+## Update: Updated Student FAQs with 8 Comprehensive Questions & Answers
+
+### Date
+2026-11-18
+
+### Summary
+- Updated `STUDENT_FAQS` in `src/app/students/page.tsx` with 8 clear, student-focused questions and answers:
+  1. *Do I have to be a university or college student to join TASA?* (Open to secondary, university, graduates, and self-taught learners)
+  2. *What if I don't have any work experience?* (Highlights personal projects, assignments, and practice work)
+  3. *What kind of skills can I offer on TASA?* (Creative, digital, technical, academic, and entrepreneurial skills)
+  4. *Can I actually make money on TASA?* (Explains paid opportunities based on value delivered)
+  5. *How do I find clients or projects?* (Profiles, search, and client connections)
+  6. *Can I work with clients outside my country?* (Pan-African and global reach)
+  7. *Can I join TASA while still studying?* (Flexible pacing and part-time capability)
+  8. *How do I get started?* (Immediate onboarding and profile setup)
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L84-L125**: Replaced `STUDENT_FAQS` dataset with the 8 new questions and comprehensive answers.
+
+### Commit Draft - Short
+`feat(students): update FAQ section with 8 student-centric questions and answers`
+
+### Commit Draft - Long
+`feat(students): update FAQ section with 8 student-centric questions and answers
+
+- Replaced existing student FAQs with 8 practical and motivating Q&As
+- Addressed education level requirements, lack of prior experience, eligible skills, monetisation, finding clients, cross-border projects, studying concurrently, and getting started
+- Retained collapsible 2-column sticky layout with GPU-accelerated CSS grid transitions`
+
+
+---
+
+## Update: Updated Campus Creators Unite CTA Banner Copy
+
+### Date
+2026-11-18
+
+### Summary
+- Updated the headline and description of the *"Campus Creators Unite"* bottom CTA banner in `src/app/students/page.tsx`:
+  - **Headline**: "Your Future Starts Before Graduation."
+  - **Description**: "Don't wait until you graduate to make your mark. Build your student profile, showcase your skills, connect with real opportunities and start earning while building experience. Join a growing community of young African talents shaping their future with TASA."
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L666-L677**: Updated headline and description copy in the CTA banner section.
+
+### Commit Draft - Short
+`feat(students): update campus creators unite CTA banner headline and narrative`
+
+### Commit Draft - Long
+`feat(students): update campus creators unite CTA banner headline and narrative
+
+- Replaced placeholder banner headline with 'Your Future Starts Before Graduation.'
+- Updated supportive description urging students to build their profile and earn before graduating
+- Verified TypeScript compilation and syntax compliance`
+
+
+---
+
+## Update: Streamlined TASA for Minors Section
+
+### Date
+2026-11-18
+
+### Summary
+- Simplified the *"TASA for Minors"* section (`#tasa-for-minors`) in `src/app/students/page.tsx`:
+  - Removed the top pill badge (`Age 13–17 & Parent Guidance`).
+  - Removed the 4 pillar cards in the grid (`Parental Co-Pilot`, `Guardian-Linked Payouts`, `Studies Always First`, `Safe & Escrow Protected`).
+  - Removed the bottom parent/guardian callout bar and CTA button (`Get Started Together`).
+  - Preserved only the centered heading (*"TASA for Minors"*) and clear explanatory narrative text.
+- Cleaned up unused Lucide icon imports (`Lock`, `ShieldCheck`, `Sparkles`, `Users`).
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L4-L12**: Cleaned up icon imports (`Lock`, `ShieldCheck`, `Sparkles`, `Users` removed).
+  - **L460-L485**: Simplified `#tasa-for-minors` to only render the centered heading and description.
+
+### Commit Draft - Short
+`refactor(students): simplify TASA for minors section to heading and narrative`
+
+### Commit Draft - Long
+`refactor(students): simplify TASA for minors section to heading and narrative
+
+- Removed badge, 4 feature cards, and bottom parent callout CTA from #tasa-for-minors
+- Retained clean centered heading and supportive description
+- Removed unused icon imports (Lock, ShieldCheck, Sparkles, Users)
+- Verified TypeScript compilation and syntax compliance`
+
+
+---
+
+## Update: Updated Student Pillars Copy (Learn, Create, Earn, Grow)
+
+### Date
+2026-11-18
+
+### Summary
+- Updated the 4 core pillar descriptions in `STUDENT_PILLARS` (`src/app/students/page.tsx`):
+  - **Learn**: "Keep growing your knowledge, discover new skills and develop your potential."
+  - **Create**: "Turn your ideas and creativity into meaningful projects that showcase what you can do."
+  - **Earn**: "Put your skills to work, take on opportunities and earn from your abilities."
+  - **Grow**: "Gain real-world experience, build valuable connections and develop a reputation that takes you further."
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L49-L78**: Updated `STUDENT_PILLARS` array with the new concise descriptions.
+
+### Commit Draft - Short
+`feat(students): update learn create earn grow pillar descriptions`
+
+### Commit Draft - Long
+`feat(students): update learn create earn grow pillar descriptions
+
+- Updated copy for Learn, Create, Earn, and Grow pillars in student visual arena
+- Replaced previous longer descriptions with concise, inspiring statements
+- Verified TypeScript compilation and syntax compliance`
+
+
+---
+
+## Update: Refined Learn, Create, Earn, Grow Card Styling
+
+### Date
+2026-11-18
+
+### Summary
+- Refined the 4 feature cards in the *"Learn. Create. Earn. Grow."* section (`src/app/students/page.tsx`):
+  - Removed the mono step numbers (`01`–`04`) from the top right of each card.
+  - Removed card hover animations/transforms (`hover:border`, `hover:shadow-md`, scale transitions) for a stable, professional look.
+  - Updated the icon color to use the primary text color (`text-[var(--color-text-primary)]`, Slate `#334155`) with a subtle neutral icon badge (`bg-[var(--color-bg-subtle)]`).
+  - Added a thicker straight left accent border in brand orange (`var(--color-brand-accent)`, Amber Orange `#FFA62B`) using an inset vertical bar (`top-3.5 bottom-3.5 w-1 sm:w-1.5 rounded-r-full`) that completely excludes the top-left and bottom-left curved corner radius parts.
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L290-L370**: Updated left and right column cards to remove number badges, remove hover movements, adopt text color for icons, and include the straight brand orange left accent bar.
+
+### Commit Draft - Short
+`style(students): refine learn create earn grow cards with straight orange accent border and text-colored icons`
+
+### Commit Draft - Long
+`style(students): refine learn create earn grow cards with straight orange accent border and text-colored icons
+
+- Removed step numbering badges and hover effects from pillar cards
+- Styled icons using the primary text color token (var(--color-text-primary))
+- Added a thicker brand orange left accent bar (var(--color-brand-accent)) excluding corner radii
+- Adjusted left padding for balanced spacing and verified TypeScript compilation`
+
+
+---
+
+## Update: Added Joyful Teen Illustration to TASA for Minors Section
+
+### Date
+2026-11-18
+
+### Summary
+- Positioned `joyful-teen-holding-tasa-sign.png` on the left-hand side of the *"TASA for Minors"* section (`#tasa-for-minors`) in `src/app/students/page.tsx`:
+  - Placed in the background layer (`z-0`) anchored to the bottom-left (`bottom-0`).
+  - Added subtle responsive opacity handling (`opacity-30 sm:opacity-90 lg:opacity-100`) so the centered text content body remains perfectly centered, readable, and elevated (`relative z-10`).
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L470-L485**: Added responsive background Image container for `joyful-teen-holding-tasa-sign.png` on the left, keeping the main headline and description centered above it.
+
+### Commit Draft - Short
+`feat(students): add joyful-teen illustration to left of TASA for minors section`
+
+### Commit Draft - Long
+`feat(students): add joyful-teen illustration to left of TASA for minors section
+
+- Positioned joyful-teen-holding-tasa-sign.png on the left-hand side of #tasa-for-minors
+- Configured layer ordering (z-0 background, z-10 text body) to keep text centered and accessible
+- Added responsive opacity and drop shadow for clean blending
+- Verified TypeScript compilation and syntax compliance`
+
+
+---
+
+## Update: Enabled Pop-Out Effect for Joyful Teen in TASA for Minors Section
+
+### Date
+2026-11-18
+
+### Summary
+- Removed `overflow-hidden` from the *"TASA for Minors"* section (`#tasa-for-minors`) in `src/app/students/page.tsx` to prevent the upper portion of `joyful-teen-holding-tasa-sign.png` from being powerclipped.
+- Added a 3D pop-out effect where the teenager's upper body and TASA sign extend gracefully above the top section border into the upper whitespace.
+- Sized the image dynamically (`w-[150px] sm:w-[200px] md:w-[240px] lg:w-[280px] xl:w-[320px]`) with an elevated drop shadow (`drop-shadow-[0_20px_35px_rgba(51,65,85,0.18)]`).
+- Maintained `z-20` on the centered text container so all text remains crisp, centered, and interactive.
+
+### Modifications
+- `src/app/students/page.tsx`:
+  - **L467-L485**: Replaced `overflow-hidden` with `relative z-10` on the section, scaled up the illustration to allow natural pop-out across the top boundary, and elevated the centered text container to `z-20`.
+
+### Commit Draft - Short
+`style(students): add pop-out effect for joyful teen illustration beyond section border`
+
+### Commit Draft - Long
+`style(students): add pop-out effect for joyful teen illustration beyond section border
+
+- Removed overflow-hidden on #tasa-for-minors to allow illustration to extend past borders
+- Configured pop-out sizing and bottom anchoring for joyful-teen-holding-tasa-sign.png
+- Elevated centered text content to z-20 for unhindered legibility
+- Verified TypeScript compilation and syntax compliance`
+
+
+---
+
+## Update: Refined Mobile Pop-Out and Selective Gradient Mask for Joyful Teen
+
+### Date
+2026-11-18
+
+### Summary
+- Increased the mobile sizing of `joyful-teen-holding-tasa-sign.png` (`w-[220px]`, height ~330px) in `#tasa-for-minors` so it stands tall and extends high above the heading text.
+- Introduced `.mobile-popout-mask` in `src/app/globals.css`:
+  - The upper portion (the top ~42% containing the teen's head, face, and TASA sign) remains at 100% full opacity (crisp, unfaded, and vivid above the heading text).
+  - The lower portion smoothly transitions to a soft fade behind the centered text content to preserve effortless readability.
+  - Automatically disabled on tablet and desktop screens (`@media (max-width: 639px)`), where the illustration sits fully opaque in the left margin.
+
+### Modifications
+- `src/app/globals.css`:
+  - **L168-L185**: Added `.mobile-popout-mask` responsive linear gradient mask utility for screens under 640px.
+- `src/app/students/page.tsx`:
+  - **L476-L485**: Increased mobile width to `w-[220px]` and replaced static container opacity with `.mobile-popout-mask`.
+
+### Commit Draft - Short
+`style(students): enhance mobile pop-out height and selective mask for joyful teen`
+
+### Commit Draft - Long
+`style(students): enhance mobile pop-out height and selective mask for joyful teen
+
+- Increased mobile image size to w-[220px] to rise high above heading
+- Created .mobile-popout-mask to keep the top 42% of the image at 100% opacity
+- Softened lower image area behind text on mobile for maximum legibility
+- Verified TypeScript compilation and syntax compliance`

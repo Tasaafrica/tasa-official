@@ -1,6 +1,9 @@
+"use client";
+
 import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Home, Search } from "lucide-react";
+import { ArrowRight, ChevronDown, Home, Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 interface Skill {
@@ -28,191 +31,263 @@ interface CategoryHeroProps {
 export default function CategoryHero({
   title,
   categorySlug,
-  description,
   breadcrumbs,
-  onSearch,
   totalSkills,
   skills,
 }: CategoryHeroProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const filteredSkills = searchQuery.trim()
-    ? skills
-        .filter((skill) =>
-          skill.name.toLowerCase().includes(searchQuery.toLowerCase()),
-        )
-        .slice(0, 6)
-    : [];
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSearch) onSearch(searchQuery);
-    setIsDropdownOpen(false);
-  };
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [imageSrc, setImageSrc] = useState(`/categoryHero/${categorySlug}.png`);
+  const skillsBarRef = useRef<HTMLDivElement>(null);
+  const [glowTriggered, setGlowTriggered] = useState(false);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsDropdownOpen(false);
+    setImageSrc(`/categoryHero/${categorySlug}.png`);
+  }, [categorySlug]);
+
+  // Trigger one-time orange border glow when user scrolls toward the featured skills area
+  useEffect(() => {
+    let triggered = false;
+
+    const handleScrollCheck = () => {
+      if (triggered || !skillsBarRef.current) return;
+      const rect = skillsBarRef.current.getBoundingClientRect();
+      const windowHeight =
+        window.innerHeight || document.documentElement.clientHeight;
+
+      // Element is visible / being scrolled toward in viewport
+      const isInView = rect.top <= windowHeight * 0.88 && rect.bottom >= 0;
+
+      if (isInView && (window.scrollY > 10 || rect.top > 80)) {
+        triggered = true;
+        setGlowTriggered(true);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    window.addEventListener("scroll", handleScrollCheck, { passive: true });
+
+    // IntersectionObserver to capture mobile gesture scrolling and smooth navigation
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !triggered) {
+          if (window.scrollY > 10) {
+            triggered = true;
+            setGlowTriggered(true);
+          }
+        }
+      },
+      {
+        threshold: 0.25,
+        rootMargin: "0px 0px -40px 0px",
+      }
+    );
+
+    if (skillsBarRef.current) {
+      observer.observe(skillsBarRef.current);
+    }
+
+    // Check immediately in case page is already scrolled
+    if (window.scrollY > 10) {
+      handleScrollCheck();
+    }
+
+    // Graceful fallback for large high-res displays where content is visible without scrolling
+    const fallbackTimer = setTimeout(() => {
+      if (!triggered && skillsBarRef.current) {
+        const rect = skillsBarRef.current.getBoundingClientRect();
+        const windowHeight =
+          window.innerHeight || document.documentElement.clientHeight;
+        if (rect.top <= windowHeight * 0.9 && rect.bottom >= 0) {
+          triggered = true;
+          setGlowTriggered(true);
+        }
+      }
+    }, 2500);
+
+    return () => {
+      window.removeEventListener("scroll", handleScrollCheck);
+      observer.disconnect();
+      clearTimeout(fallbackTimer);
+    };
   }, []);
 
   return (
-    <div className="relative w-full bg-slate-950 pt-16">
-      {/* Background Decorative Gradients */}
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-[radial-gradient(circle_at_60%_20%,rgba(20,184,166,0.15)_0%,transparent_50%)] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-1/2 h-full bg-[radial-gradient(circle_at_20%_80%,rgba(14,165,233,0.1)_0%,transparent_50%)] pointer-events-none" />
+    <section className="relative w-full bg-gradient-to-b from-white via-white to-[var(--color-bg-subtle)]/40 border-b border-[var(--color-border)] pt-8 pb-8 sm:pt-10 sm:pb-10 lg:pt-12 lg:pb-12 overflow-hidden">
+      {/* Background Decorative Ambient Glows */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[45rem] h-[30rem] bg-[var(--color-bg-brand-soft)]/50 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      {/* Grid Lines Overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.15] pointer-events-none overflow-hidden"
-        style={{
-          backgroundImage: `linear-gradient(to right, #334155 1px, transparent 1px), linear-gradient(to bottom, #334155 1px, transparent 1px)`,
-          backgroundSize: "40px 40px",
-          maskImage:
-            "radial-gradient(ellipse at center, black, transparent 80%)",
-        }}
-      />
-
-      <div className="container-responsive relative z-10 py-5 md:py-5">
-        {/* Breadcrumbs - Light version for dark bg */}
-        <nav className="flex items-center gap-2 text-xs text-slate-500 ">
-          <Link href="/" className="hover:text-slate-300 transition-colors">
-            <Home className="h-3.5 w-3.5" />
-          </Link>
-          <span className="opacity-40">/</span>
-          {breadcrumbs.map((crumb, index) => (
-            <React.Fragment key={index}>
-              {crumb.href ? (
-                <Link
-                  href={crumb.href}
-                  className="hover:text-slate-300 transition-colors"
-                >
-                  {crumb.label}
-                </Link>
-              ) : (
-                <span className="text-slate-300 font-medium">
-                  {crumb.label}
-                </span>
-              )}
-              {index < breadcrumbs.length - 1 && (
-                <span className="opacity-40">/</span>
-              )}
-            </React.Fragment>
-          ))}
-        </nav>
-
-        <div className="grid lg:grid-cols-2 gap-16 items-center py-10">
-          {/* Left Column: Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+      <div className="container-responsive relative z-10">
+        <div className="flex flex-col items-center text-center max-w-5xl mx-auto">
+          {/* Breadcrumbs Navigation (Centered) */}
+          <nav
+            aria-label="Breadcrumbs"
+            className="flex items-center justify-center gap-2 text-xs text-[var(--color-text-secondary)] mb-5 flex-wrap"
           >
-            <h1 className="text-3xl md:text-5xl font-bold text-white leading-[1.1] mb-6 tracking-tight break-words">
+            <Link
+              href="/"
+              className="hover:text-[var(--color-brand-primary)] transition-colors inline-flex items-center gap-1.5 font-medium"
+            >
+              <Home className="h-3.5 w-3.5 text-[var(--color-text-secondary)]" />
+              <span className="sr-only sm:not-sr-only">Home</span>
+            </Link>
+            <span className="text-[var(--color-border-strong)]">/</span>
+            {breadcrumbs.map((crumb, index) => (
+              <React.Fragment key={index}>
+                {crumb.href ? (
+                  <Link
+                    href={crumb.href}
+                    className="hover:text-[var(--color-brand-primary)] transition-colors font-medium"
+                  >
+                    {crumb.label}
+                  </Link>
+                ) : (
+                  <span className="text-[var(--color-text-primary)] font-semibold truncate max-w-[200px] sm:max-w-none">
+                    {crumb.label}
+                  </span>
+                )}
+                {index < breadcrumbs.length - 1 && (
+                  <span className="text-[var(--color-border-strong)]">/</span>
+                )}
+              </React.Fragment>
+            ))}
+          </nav>
+
+          {/* 1. Category / Industry Name Headline (Centered) */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-3xl mx-auto text-center"
+          >
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold tracking-[-0.03em] text-[var(--color-text-primary)] leading-[1.14]">
               {title}
             </h1>
-
-            <p className="text-md text-slate-400 leading-relaxed max-w-xl mb-10">
-              {description ||
-                `You name it, we've got it`}
-            </p>
-
-            {/* Glassmorphism Search Bar */}
-            <div className="max-w-md relative group mb-6" ref={dropdownRef}>
-              <form onSubmit={handleSearch} className="relative z-20">
-                <div className="absolute inset-0 bg-teal-500/20 blur-2xl rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                <div className="relative flex items-center p-1 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
-                  <Search className="ml-4 w-5 h-5 text-slate-500" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setIsDropdownOpen(true);
-                      if (onSearch) onSearch(e.target.value);
-                    }}
-                    onFocus={() => setIsDropdownOpen(true)}
-                    placeholder={`Search in ${title}...`}
-                    className="w-full !text-white bg-transparent border-none focus:ring-0 focus:outline-none placeholder-slate-500 px-4 py-3"
-                  />
-                  <button
-                    type="submit"
-                    className="flex items-center justify-center gap-2 p-3 sm:px-6 sm:py-3 bg-white text-slate-950 font-bold rounded-xl hover:bg-teal-400 transition-all active:scale-95 flex-shrink-0"
-                  >
-                    <Search className="w-5 h-5 sm:hidden" />
-                    <span className="hidden sm:inline">Explore</span>
-                    <ArrowRight className="w-4 h-4 hidden sm:block" />
-                  </button>
-                </div>
-              </form>
-
-              {/* Suggestions Dropdown */}
-              <AnimatePresence>
-                {isDropdownOpen && filteredSkills.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-20 backdrop-blur-xl"
-                  >
-                    <div className="p-2">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 py-2">
-                        Suggested Skills
-                      </p>
-                      {filteredSkills.map((skill) => (
-                        <Link
-                          key={skill._id}
-                          href={`/skills/${skill.slug}`}
-                          className="flex items-center justify-between px-4 py-3 hover:bg-white/5 rounded-xl transition-colors group/item"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          <span className="text-slate-300 group-hover/item:text-white transition-colors">
-                            {skill.name}
-                          </span>
-                          <ArrowRight className="w-4 h-4 text-slate-600 opacity-0 group-hover/item:opacity-100 group-hover/item:text-teal-500 transition-all transform -translate-x-2 group-hover/item:translate-x-0" />
-                        </Link>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="text-slate-500 text-sm mt-3">
-                Use search to quickly find relevant skills and top vendors.
-              </div>
-            </div>
           </motion.div>
 
-          {/* Right Column: Dynamic Hero Image */}
+          {/* 2. Wide Image Banner (Centered, widescreen cropped to <= 200px) */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, x: 30 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-            className="hidden lg:block relative group h-full"
+            initial={{ opacity: 0, scale: 0.98, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="w-full max-w-5xl mx-auto my-6 sm:my-8 relative"
           >
-            <div className="relative z-10 p-4 overflow-hidden">
-              <img
-                src={`/categoryhero/${categorySlug}.png`}
-                alt={`${title} services`}
-                className="w-full h-full object-cover rounded-[3rem] transition-transform duration-700 group-hover:scale-105"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    "/categoryhero/graphics-design.png"; // Fallback to a known available image
+            {/* Banner Frame - Widescreen cropped (not compressed) to max-h-200px */}
+            <div className="relative w-full h-[180px] sm:h-[200px] max-h-[200px] rounded-2xl sm:rounded-3xl overflow-hidden">
+              <Image
+                src={imageSrc}
+                alt={`${title} services banner`}
+                fill
+                sizes="(max-width: 1280px) 100vw, 1024px"
+                className="w-full h-full object-cover object-center select-none"
+                priority
+                onError={() => {
+                  setImageSrc("/categoryHero/graphics-design.png");
                 }}
               />
             </div>
           </motion.div>
+
+          {/* 3. Straight Line Across Right Under Hero Image */}
+          <div className="w-full border-t border-[var(--color-border)]/80 mt-2 sm:mt-3" />
+
+          {/* 4. Single Straight Line of Featured Skills (Non-scrollable, dropdown immediately after Featured Skills text/icon) */}
+          <div
+            ref={skillsBarRef}
+            className="w-full py-2.5 sm:py-3 flex items-center gap-2.5 sm:gap-4 overflow-hidden"
+          >
+            {/* Toggle Button: Mobile Icon vs Desktop Text with Dropdown Chevron Immediately After */}
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              aria-expanded={isExpanded}
+              aria-label={isExpanded ? "Collapse featured skills" : "View all skills in columns"}
+              title={isExpanded ? "Collapse featured skills" : "View all skills in columns"}
+              className="inline-flex items-center gap-1.5 py-0.5 text-xs sm:text-sm font-semibold shrink-0 cursor-pointer group select-none transition-colors"
+            >
+              {/* Mobile: Sparkles icon replacing "Featured Skills" text */}
+              <span
+                className={`inline-flex sm:hidden items-center justify-center w-7 h-7 rounded-lg transition-all duration-300 ${
+                  glowTriggered
+                    ? "animate-orange-border-glow-once"
+                    : "border border-transparent hover:border-[var(--color-brand-accent)]/40 hover:bg-[var(--color-highlight-soft)]/30"
+                }`}
+                aria-hidden="true"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[var(--color-brand-accent)]" />
+              </span>
+
+              {/* Desktop: "Featured Skills" text */}
+              <span
+                className={`hidden sm:inline-flex items-center px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] group-hover:text-[var(--color-brand-primary)] transition-all duration-300 ${
+                  glowTriggered
+                    ? "animate-orange-border-glow-once"
+                    : "border border-transparent hover:border-[var(--color-brand-accent)]/40 hover:bg-[var(--color-highlight-soft)]/30"
+                }`}
+              >
+                Featured Skills
+              </span>
+
+              {/* Dropdown Chevron immediately after */}
+              <div className="w-5 h-5 rounded-full flex items-center justify-center group-hover:bg-[var(--color-bg-brand-soft)] transition-colors">
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-[var(--color-brand-primary)] transition-transform duration-300 ${
+                    isExpanded ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </button>
+
+            <span className="text-[var(--color-border-strong)] shrink-0 select-none">|</span>
+
+            {/* Non-scrollable Single Straight Line Nav - Maintains a straight line without scrolling */}
+            <nav
+              className="flex items-center gap-x-5 sm:gap-x-7 text-xs sm:text-sm font-medium flex-nowrap whitespace-nowrap overflow-hidden"
+              aria-label="Featured category skills"
+            >
+              {skills.map((skill) => (
+                <Link
+                  key={skill._id}
+                  href={`/skills/${skill.slug}`}
+                  className="font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-brand-primary)] transition-colors duration-150 whitespace-nowrap shrink-0"
+                >
+                  {skill.name}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* 5. Parallel Straight Line Across Under the Arranged Skills */}
+          <div className="w-full border-t border-[var(--color-border)]/80" />
+
+          {/* 6. Expandable Responsive Columns (2-cols on mobile, 3-cols on tablet, 4-cols on desktop) */}
+          <AnimatePresence>
+            {isExpanded && skills && skills.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
+                className="w-full overflow-hidden"
+              >
+                <div className="pt-6 pb-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 sm:gap-y-3.5 text-left">
+                    {skills.map((skill) => (
+                      <Link
+                        key={skill._id}
+                        href={`/skills/${skill.slug}`}
+                        className="group flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-[var(--color-bg-brand-soft)]/50 text-xs sm:text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-brand-primary)] transition-all"
+                      >
+                        <span className="truncate">{skill.name}</span>
+                        <ArrowRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all shrink-0 ml-1.5 text-[var(--color-brand-primary)]" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

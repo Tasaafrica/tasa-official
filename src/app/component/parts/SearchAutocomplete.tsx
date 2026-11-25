@@ -82,7 +82,7 @@ export default function SearchAutocomplete({
 
     const destination =
       itemType === "category"
-        ? `/categories/${item.slug || item._id}`
+        ? `/${item.slug || item._id}`
         : itemType === "subcategory"
           ? `/subcategories/${item.slug || item._id}`
           : `/skills/${item.slug || item._id}`;

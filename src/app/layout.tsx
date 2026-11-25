@@ -10,6 +10,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import { AuthModalProvider } from "@/components/providers/AuthModalProvider";
 import { SearchModalProvider } from "@/components/providers/SearchModalProvider";
+import { OnboardingProvider } from "@/components/providers/OnboardingProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -95,7 +96,6 @@ export const metadata: Metadata = {
       },
     ],
   },
-  manifest: "/manifest.json",
   appleWebApp: {
     title: "Tasa Africa",
     statusBarStyle: "default",
@@ -134,12 +134,14 @@ export default async function RootLayout({
         {/**Google analytics */}
         {gaId && <GoogleAnalytics gaId={gaId} />}
         <SessionProvider session={session}>
-          <SearchModalProvider>
-            <AuthModalProvider>
-              <Toaster position="top-right" richColors />
-              <EmailVerificationWrapper>{children}</EmailVerificationWrapper>
-            </AuthModalProvider>
-          </SearchModalProvider>
+          <OnboardingProvider>
+            <SearchModalProvider>
+              <AuthModalProvider>
+                <Toaster position="top-right" richColors />
+                <EmailVerificationWrapper>{children}</EmailVerificationWrapper>
+              </AuthModalProvider>
+            </SearchModalProvider>
+          </OnboardingProvider>
         </SessionProvider>
         {/**vercel analytics */}
         <Analytics />

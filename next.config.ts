@@ -16,6 +16,22 @@ const nextConfig: NextConfig = {
     domains: ["tasa-server.onrender.com", "lh3.googleusercontent.com", "images.unsplash.com"],
     unoptimized: false,
   },
+
+  // Permanent redirects for category routes
+  async redirects() {
+    return [
+      {
+        source: "/categories/:slug",
+        destination: "/:slug",
+        permanent: true,
+      },
+      {
+        source: "/category/:slug",
+        destination: "/:slug",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

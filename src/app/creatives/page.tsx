@@ -463,7 +463,7 @@ export default function CreativesPage() {
               {/* Bottom Navigation Link */}
               <div className="mt-12 sm:mt-16 text-center">
                 <Link
-                  href="/categories/graphics-design"
+                  href="/graphics-design"
                   className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] bg-white font-semibold text-sm transition-all shadow-sm active:scale-[0.98]"
                 >
                   <span>Explore Creative Industry</span>

@@ -34,3 +34,38 @@ Configured dual-theme favicon support for Tasa Africa with automatic OS and brow
 - Updated web app manifests with Tasa Africa branding
 - Verified clean compilation with tsc --noEmit`
 
+---
+
+## Update: Resolved Conflicting Public and Page File for /manifest.json (2026-11-08)
+
+### Date
+2026-11-08
+
+### Summary
+Resolved Next.js route collision error (`A conflicting public file and page file was found for path /manifest.json`):
+- **Conflict Cause**: Next.js App Router automatically generates a metadata route handler from `src/app/manifest.json`. Having a duplicate static file at `public/manifest.json` caused a collision over the root URL route `/manifest.json`.
+- **Resolution**:
+  - Removed `public/manifest.json` so Next.js natively manages and serves `src/app/manifest.json`.
+  - Removed duplicate App Router conventions from `public/` (`public/favicon.ico`, `public/apple-icon.png`, `public/icon0.svg`, `public/icon1.png`) to avoid further route collisions.
+  - Retained static dark-mode assets (`favicon-light.ico`, `icon0-light.svg`, `icon1-light.png`, `apple-icon-light.png`, `manifest-light.json`, and `public/tasa_africa-favicon/` icons) in `public/`.
+  - Removed redundant `manifest: "/manifest.json"` from `metadata` in `src/app/layout.tsx` to let Next.js automatically inject the manifest link tag.
+
+### Modifications
+- `public/`:
+  - Removed duplicate `public/manifest.json`, `public/favicon.ico`, `public/apple-icon.png`, `public/icon0.svg`, and `public/icon1.png`.
+- `src/app/layout.tsx`:
+  - Removed redundant `manifest` key from `metadata` object.
+
+### Commit Draft - Short
+`fix(metadata): resolve conflicting public and page file for manifest.json and favicons`
+
+### Commit Draft - Long
+`fix(metadata): resolve conflicting public and page file for manifest.json and favicons
+
+- Removed public/manifest.json to resolve route collision with src/app/manifest.json
+- Removed duplicate favicon.ico, apple-icon.png, icon0.svg, and icon1.png from public folder
+- Preserved static -light favicon assets in public for dark mode query links
+- Removed redundant manifest key in layout metadata
+- Verified clean TypeScript compilation with tsc --noEmit`
+
+

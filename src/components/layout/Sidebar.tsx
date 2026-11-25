@@ -21,6 +21,8 @@ interface SidebarProps {
   onSignInClick: () => void;
   onJoinClick: () => void;
   onSearchClick: () => void;
+  categoryName?: string;
+  shouldGlow?: boolean;
 }
 
 export default function Sidebar({
@@ -29,6 +31,8 @@ export default function Sidebar({
   onSignInClick,
   onJoinClick,
   onSearchClick,
+  categoryName,
+  shouldGlow = false,
 }: SidebarProps) {
   const { user, isAuthenticated, logout, session } = useAuth();
   const [userData, setUserData] = useState<any>(null);
@@ -226,14 +230,34 @@ export default function Sidebar({
               </div>
 
               <button
-                className="flex items-center w-full px-3.5 py-2.5 rounded-xl text-sm font-medium text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+                className={`flex items-center w-full px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  categoryName
+                    ? `bg-[var(--color-highlight-soft)] border border-[var(--color-brand-accent)] text-[var(--color-brand-dark)] shadow-sm ${
+                        shouldGlow ? "animate-orange-glow" : ""
+                      }`
+                    : "text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-bg-subtle)]"
+                }`}
                 onClick={() => {
                   onSearchClick();
                   onClose();
                 }}
               >
-                <Search className="w-5 h-5 mr-3 text-[var(--color-brand-primary)]" />
-                Find a Service
+                {categoryName && shouldGlow && (
+                  <span className="relative flex h-2 w-2 mr-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-brand-accent)] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-brand-accent)]" />
+                  </span>
+                )}
+                <Search
+                  className={`w-5 h-5 mr-3 ${
+                    categoryName
+                      ? "text-[var(--color-brand-accent)]"
+                      : "text-[var(--color-brand-primary)]"
+                  }`}
+                />
+                <span>
+                  {categoryName ? `Search in ${categoryName}` : "Find a Service"}
+                </span>
               </button>
 
               {isAuthenticated && user?.role === "client" && (

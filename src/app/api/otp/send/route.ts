@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { getEmailDomainSuggestion } from "@/lib/email-validator";
 
 type BackendResponse = {
   success?: boolean;
@@ -23,6 +24,17 @@ export async function POST(request: NextRequest) {
     if (!email) {
       return NextResponse.json(
         { success: false, error: "Email is required" },
+        { status: 400 },
+      );
+    }
+
+    const domainSuggestion = getEmailDomainSuggestion(email);
+    if (domainSuggestion) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Invalid email domain. Did you mean ${domainSuggestion.suggested}?`,
+        },
         { status: 400 },
       );
     }

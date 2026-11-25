@@ -13,51 +13,51 @@ interface FooterColumn {
 const categories: FooterLink[] = [
   {
     title: "Graphics & Design",
-    links: "/categories/graphics-design",
+    links: "/graphics-design",
   },
   {
     title: "Digital Marketing",
-    links: "/categories/digital-marketing",
+    links: "/digital-marketing",
   },
   {
     title: "Writing & Translation",
-    links: "/categories/writing-translation",
+    links: "/writing-translation",
   },
   {
     title: "Video & Animation",
-    links: "/categories/video-animation",
+    links: "/video-animation",
   },
   {
     title: "Music & Audio",
-    links: "/categories/music-audio",
+    links: "/music-audio",
   },
   {
     title: "Programming & Tech",
-    links: "/categories/programming-tech",
+    links: "/programming-tech",
   },
   {
     title: "Data & AI",
-    links: "/categories/data-ai",
+    links: "/data-ai",
   },
   {
     title: "Business & Consulting",
-    links: "/categories/business-consulting",
+    links: "/business-consulting",
   },
   {
     title: "Lifestyle & Wellness",
-    links: "/categories/lifestyle-wellness",
+    links: "/lifestyle-wellness",
   },
   {
     title: "Personal & Errand Services",
-    links: "/categories/personal-errand-services",
+    links: "/personal-errand-services",
   },
   {
     title: "Home & Maintenance",
-    links: "/categories/home-maintenance",
+    links: "/home-maintenance",
   },
   {
     title: "Events & Logistics",
-    links: "/categories/events-logistics",
+    links: "/events-logistics",
   },
 ];
 

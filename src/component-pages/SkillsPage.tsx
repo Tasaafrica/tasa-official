@@ -364,7 +364,7 @@ export default function SkillsPage({ skill }: SkillsPageProps) {
         breadcrumbs={[
           {
             label: category?.name || "Category",
-            href: `/categories/${categorySlug}`,
+            href: `/${categorySlug}`,
           },
           { label: skill.name },
         ]}

@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { getEmailDomainSuggestion } from "@/lib/email-validator";
 
 type BackendResponse = {
   success?: boolean;
@@ -30,6 +31,18 @@ export async function GET(request: NextRequest) {
       console.log("[CHECK-EMAIL] Invalid email format:", trimmedEmail);
       return NextResponse.json(
         { success: false, error: "Invalid email format" },
+        { status: 400 },
+      );
+    }
+
+    const domainSuggestion = getEmailDomainSuggestion(trimmedEmail);
+    if (domainSuggestion) {
+      console.log("[CHECK-EMAIL] Domain typo detected:", trimmedEmail, "Suggested:", domainSuggestion.suggested);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Invalid email domain. Did you mean ${domainSuggestion.suggested}?`,
+        },
         { status: 400 },
       );
     }

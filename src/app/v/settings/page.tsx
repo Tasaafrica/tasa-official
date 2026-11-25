@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronUp,
   Mail,
+  Plus,
   RotateCcw,
   Save,
   X,
@@ -23,8 +24,7 @@ import {
   type VendorUpdateData,
   vendorApi,
 } from "@/lib/vendor";
-import { useVendorHeader } from "../context";
-import VendorDashboard from "../dashboard/page";
+import AccountCompletion from "@/components/dashboard/AccountCompletion";
 
 // Location data types
 interface CountryData {
@@ -45,7 +45,6 @@ interface CityData {
 
 export default function VendorSettings() {
   const { data: session, update } = useSession();
-  const { setTitle, setDescription } = useVendorHeader();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -90,12 +89,6 @@ export default function VendorSettings() {
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string>("");
 
-  // Set header title and description
-  useEffect(() => {
-    setTitle("Settings");
-    setDescription("Manage your profile and services");
-  }, [setTitle, setDescription]);
-
   // Category and skills selection
   const [categories, setCategories] = useState<Category[]>([]);
   const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
@@ -110,6 +103,14 @@ export default function VendorSettings() {
   const [openSkillDropdown, setOpenSkillDropdown] = useState<string | null>(
     null,
   );
+
+  // Custom skill submission state
+  const [customSkillInput, setCustomSkillInput] = useState("");
+  const [isSubmittingCustomSkill, setIsSubmittingCustomSkill] = useState(false);
+
+  // Category dropdown state
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [categorySearch, setCategorySearch] = useState("");
 
   // Location search and loading states
   const [countriesList, setCountriesList] = useState<CountryData[]>([]);
@@ -147,6 +148,7 @@ export default function VendorSettings() {
         setCountryDropdownOpen(false);
         setStateDropdownOpen(false);
         setCityDropdownOpen(false);
+        setCategoryDropdownOpen(false);
       }
     };
 
@@ -493,6 +495,13 @@ export default function VendorSettings() {
     }
   };
 
+  const handleCategorySelect = (selectedCat: Category) => {
+    setSelectedCategorySlug(selectedCat.slug);
+    setCategory(selectedCat.name);
+    setCategoryDropdownOpen(false);
+    setCategorySearch("");
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -743,6 +752,80 @@ export default function VendorSettings() {
     return "";
   };
 
+  // Custom skill helpers
+  const normalizeSkillName = (name: string) =>
+    name
+      .trim()
+      .replace(/\s+/g, " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+
+  const handleAddCustomSkill = () => {
+    if (!selectedCategorySlug) {
+      toast.error("Please select a category before adding a custom skill");
+      return;
+    }
+    const normalizedSkill = normalizeSkillName(customSkillInput);
+    if (!normalizedSkill) return;
+
+    const alreadySelected = selectedSkills.some(
+      (s) => s.toLowerCase() === normalizedSkill.toLowerCase(),
+    );
+    if (alreadySelected) {
+      setCustomSkillInput("");
+      return;
+    }
+
+    const existsInList = availableSkills.some(
+      (s) =>
+        s.name?.toLowerCase() === normalizedSkill.toLowerCase() ||
+        s.slug?.toLowerCase() === normalizedSkill.toLowerCase(),
+    );
+    if (existsInList) {
+      toast.error(
+        `"${normalizedSkill}" already exists in the available skills list. Please select it from the list instead.`,
+      );
+      setCustomSkillInput("");
+      return;
+    }
+
+    const totalSkillsLimit = 7;
+    if (selectedSkills.length >= totalSkillsLimit) {
+      toast.error(`You can select up to ${totalSkillsLimit} skills only.`);
+      return;
+    }
+
+    setSelectedSkills((prev) => [...prev, normalizedSkill]);
+    // Default to peripheral since custom skills can't be core (no ID)
+    setSkillTypes((prev) => ({ ...prev, [normalizedSkill]: "peripheral" }));
+    setCustomSkillInput("");
+    toast.info(`"${normalizedSkill}" added. It will be submitted for review when you save.`);
+  };
+
+  const handleSubmitCustomSkillsForReview = async (customSkillNames: string[]) => {
+    if (customSkillNames.length === 0) return;
+    if (!session?.user?.id || !session?.authToken) return;
+
+    const selectedCat = categories.find((cat) => cat.slug === selectedCategorySlug);
+    const payload = {
+      userID: session.user.id,
+      category: selectedCat?.name || category || "",
+      skills: customSkillNames,
+    };
+
+    const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
+    await fetch(`${apiBase}/api/vendors/SkillReview`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.authToken}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    // We don't block on failure — it's a best-effort review submission
+  };
+
   const handleSaveSkills = async () => {
     setLoading(true);
     setMessage(null);
@@ -760,6 +843,15 @@ export default function VendorSettings() {
       const peripheralSkillNames = selectedSkills.filter(
         (skill) => skillTypes[skill] === "peripheral",
       );
+
+      // Identify custom skills (no matching ID in availableSkills or vendorData)
+      const customSkillsToReview = selectedSkills.filter(
+        (skill) => findSkillId(skill) === "",
+      );
+      // Submit custom skills for review (non-blocking)
+      if (customSkillsToReview.length > 0) {
+        handleSubmitCustomSkillsForReview(customSkillsToReview);
+      }
 
       const coreSkillIds = coreSkillNames
         .map((name) => findSkillId(name))
@@ -827,8 +919,11 @@ export default function VendorSettings() {
         </div>
       )}
 
+      {/* Profile Completion UI */}
+      <AccountCompletion />
+
       {/* Profile Section */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 lg:p-6 mb-4 shadow-sm">
+      <div id="profile-info-section" className="bg-white rounded-xl border border-gray-100 p-4 lg:p-6 mb-4 shadow-sm scroll-mt-24">
         <h2 className="text-sm font-semibold text-gray-900 mb-4">
           Profile Information
         </h2>
@@ -1307,7 +1402,7 @@ export default function VendorSettings() {
       </div>
 
       {/* Skills Selection Section */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 lg:p-6 mb-6 shadow-sm">
+      <div id="skills-selection-section" className="bg-white rounded-xl border border-gray-100 p-4 lg:p-6 mb-6 shadow-sm scroll-mt-24">
         <h2 className="text-sm font-semibold text-gray-900 mb-4">
           Skills Selection
         </h2>
@@ -1356,20 +1451,32 @@ export default function VendorSettings() {
                 <div className="flex flex-wrap gap-2">
                   {selectedSkills
                     .filter((skill) => skillTypes[skill] === "peripheral")
-                    .map((skill) => (
-                      <div
-                        key={skill}
-                        className="flex items-center space-x-1.5 px-2 py-1 bg-gray-100 text-gray-700 rounded text-[11px]"
-                      >
-                        <span>{skill}</span>
-                        <button
-                          onClick={() => handleSkillToggle(skill)}
-                          className="hover:text-red-600 transition-colors"
+                    .map((skill) => {
+                      const isCustom = findSkillId(skill) === "";
+                      return (
+                        <div
+                          key={skill}
+                          className={`flex items-center space-x-1.5 px-2 py-1 rounded text-[11px] ${
+                            isCustom
+                              ? "bg-amber-50 text-amber-800 border border-amber-200"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
+                          <span>{skill}</span>
+                          {isCustom && (
+                            <span className="text-[9px] font-semibold text-amber-600 uppercase tracking-wide">
+                              review
+                            </span>
+                          )}
+                          <button
+                            onClick={() => handleSkillToggle(skill)}
+                            className="hover:text-red-600 transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   {selectedSkills.filter(
                     (skill) => skillTypes[skill] === "peripheral",
                   ).length === 0 && (
@@ -1383,33 +1490,99 @@ export default function VendorSettings() {
           </div>
         )}
 
-        {/* Category */}
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">
+        {/* Category Custom Branded Dropdown */}
+        <div className="relative dropdown-container mb-4">
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
             Category
           </label>
-          <select
-            value={selectedCategorySlug}
-            onChange={(e) => {
-              const slug = e.target.value;
-              setSelectedCategorySlug(slug);
-              const selectedCat = categories.find((cat) => cat.slug === slug);
-              if (selectedCat) {
-                setCategory(selectedCat.name);
-              }
-            }}
-            className="w-full px-3 py-2 border border-gray-200 mb-2 rounded-lg text-xs text-black focus:outline-none focus:ring-2 focus:ring-[#334155] focus:border-transparent transition-all"
-            disabled={isLoadingCategories}
-          >
-            <option value="">Select a category</option>
-            {categories.map((cat) => (
-              <option key={cat._id || cat.slug} value={cat.slug}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+              disabled={isLoadingCategories}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 border rounded-xl text-xs bg-white transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#334155]/20 ${
+                categoryDropdownOpen
+                  ? "border-[#489FB5] ring-2 ring-[#489FB5]/20 shadow-xs"
+                  : "border-slate-200 hover:border-slate-300"
+              } ${isLoadingCategories ? "bg-slate-50 cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+            >
+              <div className="flex items-center gap-2 truncate">
+                {selectedCategorySlug || category ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[#489FB5] shrink-0" />
+                    <span className="font-semibold text-slate-800 truncate">
+                      {categories.find((c) => c.slug === selectedCategorySlug)?.name || category}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-slate-400">
+                    {isLoadingCategories ? "Loading categories..." : "Select a category"}
+                  </span>
+                )}
+              </div>
+              <FiChevronDown
+                className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                  categoryDropdownOpen ? "rotate-180 text-[#489FB5]" : ""
+                }`}
+              />
+            </button>
+
+            {categoryDropdownOpen && (
+              <div className="absolute z-30 w-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-lg max-h-64 overflow-hidden flex flex-col animate-in fade-in-50 duration-150">
+                {categories.length > 5 && (
+                  <div className="p-2 border-b border-slate-100 bg-slate-50/70">
+                    <div className="relative">
+                      <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search categories..."
+                        value={categorySearch}
+                        onChange={(e) => setCategorySearch(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-[#489FB5] focus:ring-1 focus:ring-[#489FB5] text-slate-800 placeholder:text-slate-400 bg-white"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="overflow-y-auto flex-1 p-1 space-y-0.5">
+                  {categories.filter((cat) =>
+                    cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+                  ).length > 0 ? (
+                    categories
+                      .filter((cat) =>
+                        cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+                      )
+                      .map((cat) => {
+                        const isSelected =
+                          cat.slug === selectedCategorySlug || cat.name === category;
+                        return (
+                          <button
+                            key={cat._id || cat.slug}
+                            type="button"
+                            onClick={() => handleCategorySelect(cat)}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left text-xs transition-colors cursor-pointer ${
+                              isSelected
+                                ? "bg-[#489FB5]/10 text-[#334155] font-semibold"
+                                : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                            }`}
+                          >
+                            <span className="truncate">{cat.name}</span>
+                            {isSelected && (
+                              <Check className="w-3.5 h-3.5 text-[#489FB5] shrink-0 ml-2" />
+                            )}
+                          </button>
+                        );
+                      })
+                  ) : (
+                    <div className="p-3 text-center text-slate-400 text-xs">
+                      No categories found
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           {isLoadingCategories && (
-            <p className="text-[11px] text-gray-500 mt-1">
+            <p className="text-[11px] text-slate-500 mt-1">
               Loading categories...
             </p>
           )}
@@ -1510,6 +1683,46 @@ export default function VendorSettings() {
               })}
             </div>
           </>
+        )}
+
+        {/* Can't find your skill? — Custom skill submission */}
+        {selectedCategorySlug && (
+          <div className="mt-5 pt-4 border-t border-gray-100">
+            <p className="text-xs font-semibold text-gray-700 mb-1.5">
+              Can&apos;t find your skill?
+            </p>
+            <p className="text-[11px] text-gray-500 mb-3">
+              Add it below — it will be submitted for review and added to your profile once approved. Custom skills are automatically set as peripheral.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customSkillInput}
+                onChange={(e) => setCustomSkillInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddCustomSkill();
+                  }
+                }}
+                placeholder="e.g. Motion Graphics, Leather Crafting..."
+                disabled={selectedSkills.length >= 7}
+                className="flex-1 px-3.5 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#489FB5] focus:ring-2 focus:ring-[#489FB5]/15 transition-all disabled:bg-slate-50 disabled:cursor-not-allowed"
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomSkill}
+                disabled={!customSkillInput.trim() || selectedSkills.length >= 7}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#334155] text-white rounded-xl text-xs font-semibold hover:bg-[#1E293B] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add</span>
+              </button>
+            </div>
+            {selectedSkills.length >= 7 && (
+              <p className="text-[11px] text-amber-600 mt-1.5">Maximum 7 skills reached.</p>
+            )}
+          </div>
         )}
       </div>
 

@@ -202,7 +202,7 @@ export default function IndustriesPage() {
                   {INDUSTRY_LINKS.map((cat) => (
                     <Link
                       key={cat.slug}
-                      href={`/categories/${cat.slug}`}
+                      href={`/${cat.slug}`}
                       className="font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-brand-primary)] transition-colors duration-150"
                     >
                       {cat.name}
